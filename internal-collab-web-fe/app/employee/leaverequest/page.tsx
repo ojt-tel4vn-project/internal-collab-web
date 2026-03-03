@@ -1,7 +1,5 @@
-import { DashboardNavbar } from "@/components/dashboard/Navbar";
-import { SidebarNav } from "@/components/dashboard/SidebarNav";
-import { AlertTriangleIcon, CalendarIcon, ChevronDownIcon } from "@/components/dashboard/Icons";
-import { navItems as baseNavItems } from "../_data";
+import { AlertTriangleIcon, CalendarIcon, ChevronDownIcon } from "@/components/home/Icons";
+import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 
 const historyTabs = ["All", "Approved", "Pending"] as const;
 
@@ -33,14 +31,10 @@ const summary = {
 };
 
 export default function LeaveRequestPage() {
-    const navItems = baseNavItems.map((item) => ({ ...item, active: item.label === "Leave" }));
-
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <DashboardNavbar user={{ initials: "AJ", name: "Alex Johnson", role: "Product Designer" }} notificationCount={1} />
-
             <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <SidebarNav items={navItems} />
+                <EmployeeSideNav />
 
                 <section className="flex-1 space-y-6">
                     <div className="flex items-start justify-between gap-4">

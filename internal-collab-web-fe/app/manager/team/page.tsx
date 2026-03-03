@@ -1,15 +1,7 @@
 "use client";
 
-import { DashboardNavbar } from "@/components/dashboard/Navbar";
-import { SidebarNav } from "@/components/dashboard/SidebarNav";
-import { GridIcon, ClockIcon, CalendarIcon, PencilIcon } from "@/components/dashboard/Icons";
-import type { NavItem } from "@/types/dashboard";
-
-const navItems: NavItem[] = [
-    { label: "Home", href: "/manager", icon: GridIcon },
-    { label: "Team", href: "/manager/team", active: true, icon: ClockIcon },
-    { label: "Leave Approvals", href: "/manager/leave-approvals", icon: CalendarIcon, badge: "4" },
-];
+import { ManagerSideNav } from "@/components/navigation/ManagerSideNav";
+import { PencilIcon } from "@/components/home/Icons";
 
 const stats = [
     { label: "Total Members", value: 12, icon: "👥" },
@@ -84,10 +76,8 @@ function ProductivityBar({ value }: { value: number }) {
 export default function ManagerTeamPage() {
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <DashboardNavbar user={{ initials: "AJ", name: "Alex Johnson", role: "Product Designer" }} notificationCount={1} />
-
             <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <SidebarNav items={navItems} />
+                <ManagerSideNav />
 
                 <section className="flex-1 space-y-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">

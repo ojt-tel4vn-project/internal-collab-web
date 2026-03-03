@@ -1,7 +1,5 @@
-import { DashboardNavbar } from "@/components/dashboard/Navbar";
-import { SidebarNav } from "@/components/dashboard/SidebarNav";
-import { DocumentIcon, DownloadIcon, AlertTriangleIcon } from "@/components/dashboard/Icons";
-import { navItems as baseNavItems } from "../_data";
+import { DocumentIcon, DownloadIcon, AlertTriangleIcon } from "@/components/home/Icons";
+import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 
 const filters = ["All Documents", "Onboarding", "Quy định", "Hướng dẫn"];
 
@@ -87,14 +85,10 @@ function StatusPill({ status }: { status: string }) {
 }
 
 export default function DocumentsPage() {
-    const navItems = baseNavItems.map((item) => ({ ...item, active: item.label === "Documents" }));
-
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <DashboardNavbar user={{ initials: "AJ", name: "Alex Johnson", role: "Product Designer" }} notificationCount={1} />
-
             <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <SidebarNav items={navItems} />
+                <EmployeeSideNav />
 
                 <section className="flex-1 space-y-6">
                     <div className="flex flex-col gap-4">
@@ -172,8 +166,8 @@ export default function DocumentsPage() {
                                 <div className="mt-4 flex items-center gap-3">
                                     <button
                                         className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold shadow-sm ${doc.action === "Mark as Read"
-                                                ? "bg-blue-600 text-white hover:bg-blue-700"
-                                                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                            ? "bg-blue-600 text-white hover:bg-blue-700"
+                                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                                             }`}
                                     >
                                         {doc.action}

@@ -1,10 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { DashboardNavbar } from "@/components/dashboard/Navbar";
-import { SidebarNav } from "@/components/dashboard/SidebarNav";
-import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "@/components/dashboard/Icons";
-import { navItems as baseNavItems } from "../_data";
+import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "@/components/home/Icons";
+import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 
 const stats = [
     { label: "Present Days", value: "22/31", color: "text-blue-600" },
@@ -67,17 +64,10 @@ const entries = [
 ];
 
 export default function AttendancePage() {
-    const navItems = useMemo(
-        () => baseNavItems.map((item) => ({ ...item, active: item.label === "Attendance" })),
-        []
-    );
-
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <DashboardNavbar user={{ initials: "AJ", name: "Alex Johnson", role: "Product Designer" }} notificationCount={1} />
-
             <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <SidebarNav items={navItems} />
+                <EmployeeSideNav />
 
                 <section className="flex-1 space-y-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
