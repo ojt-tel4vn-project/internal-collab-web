@@ -1,0 +1,55 @@
+"use client";
+
+import { useState } from "react";
+import { DashboardCalendar } from "@/components/dashboard/Calendar";
+import { DashboardNavbar } from "@/components/dashboard/Navbar";
+import { LeaderboardCard } from "@/components/dashboard/Leaderboard";
+import { MilestonesCard } from "@/components/dashboard/Milestones";
+import { SidebarNav } from "@/components/dashboard/SidebarNav";
+import { TaskList } from "@/components/dashboard/TaskList";
+import { leaderboard, milestones, navItems } from "./_data";
+
+export default function EmployeeDashboardPage() {
+    const [viewMode, setViewMode] = useState<"monthly" | "weekly">("monthly");
+
+    return (
+        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
+            <DashboardNavbar
+                user={{ initials: "AJ", name: "Alex Johnson", role: "Product Designer" }}
+                notificationCount={1}
+            />
+
+            <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
+                <SidebarNav items={navItems} />
+
+                <section className="flex-1 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-2xl font-bold text-slate-900">Daily Focus Dashboard</h1>
+                        <div className="inline-flex items-center rounded-full bg-white p-1 text-sm font-semibold shadow-sm">
+                            <button
+                                className={`rounded-full px-4 py-1 ${viewMode === "monthly" ? "bg-blue-600 text-white shadow" : "text-slate-500"}`}
+                                onClick={() => setViewMode("monthly")}
+                            >
+                                Daily
+                            </button>
+                            <button
+                                className={`rounded-full px-4 py-1 ${viewMode === "weekly" ? "bg-blue-600 text-white shadow" : "text-slate-500"}`}
+                                onClick={() => setViewMode("weekly")}
+                            >
+                                Weekly
+                            </button>
+                        </div>
+                    </div>
+
+                    <DashboardCalendar viewMode={viewMode} />
+                    <TaskList />
+                </section>
+
+                <aside className="flex w-full max-w-sm flex-col gap-6">
+                    <LeaderboardCard entries={leaderboard} />
+                    <MilestonesCard milestones={milestones} />
+                </aside>
+            </div>
+        </main>
+    );
+}
