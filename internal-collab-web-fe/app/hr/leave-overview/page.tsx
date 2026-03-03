@@ -1,20 +1,6 @@
 "use client";
 
-import { DashboardNavbar } from "@/components/dashboard/Navbar";
-import { SidebarNav } from "@/components/dashboard/SidebarNav";
-import { GridIcon, ClockIcon, CalendarIcon, DocumentIcon, NoteIcon } from "@/components/dashboard/Icons";
-import type { NavItem } from "@/types/dashboard";
-
-const navItems: NavItem[] = [
-    { label: "Dashboard", href: "/hr", icon: GridIcon },
-    { label: "Employees", href: "/hr/employeemanagement", icon: ClockIcon },
-    { label: "Config", href: "/hr/pointsconfig", icon: NoteIcon },
-    { label: "Attendance", href: "/hr/attendancemanagement", icon: CalendarIcon },
-    { label: "Documents", href: "/hr/documents", icon: DocumentIcon },
-    { label: "Leave Overview", href: "/hr/leaveoverview", active: true, icon: CalendarIcon },
-];
-
-const hrUser = { initials: "HM", name: "HR Manager", role: "Admin Role" };
+import { HRSideNav } from "@/components/navigation/HRSideNav";
 
 const summaryCards = [
     { label: "Total Requests", value: 18, helper: "This month", tone: "text-blue-600" },
@@ -52,10 +38,8 @@ function TypePill({ type }: { type: string }) {
 export default function HrLeaveOverviewPage() {
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <DashboardNavbar user={hrUser} notificationCount={1} />
-
             <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-8">
-                <SidebarNav items={navItems} role={{ label: "Admin Role", value: "HR Manager" }} />
+                <HRSideNav />
 
                 <section className="flex-1 space-y-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">

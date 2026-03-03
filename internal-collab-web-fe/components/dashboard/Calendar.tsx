@@ -47,15 +47,24 @@ export function DashboardCalendar({ baseDate, viewMode = "monthly" }: CalendarPr
 
     const { weeks, label, focusIndex } = useMemo(() => buildWeeks(viewDate), [viewDate]);
 
+    const shiftMonth = (delta: number) => {
+        setViewDate((d) => {
+            const currentDay = d.getDate();
+            const target = new Date(d.getFullYear(), d.getMonth() + delta, 1);
+            const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+            return new Date(target.getFullYear(), target.getMonth(), Math.min(currentDay, lastDay));
+        });
+    };
+
     const goPrev = () =>
-        setViewDate((d) =>
-            viewMode === "weekly" ? new Date(d.getFullYear(), d.getMonth(), d.getDate() - 7) : new Date(d.getFullYear(), d.getMonth() - 1, 1)
-        );
+        setViewDate((d) => (viewMode === "weekly" ? new Date(d.getFullYear(), d.getMonth(), d.getDate() - 7) : d));
     const goNext = () =>
-        setViewDate((d) =>
-            viewMode === "weekly" ? new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7) : new Date(d.getFullYear(), d.getMonth() + 1, 1)
-        );
+        setViewDate((d) => (viewMode === "weekly" ? new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7) : d));
     const goToday = () => setViewDate(new Date());
+
+    // Re-route monthly navigation through month shifter to preserve selected day across months
+    const handlePrev = () => (viewMode === "weekly" ? goPrev() : shiftMonth(-1));
+    const handleNext = () => (viewMode === "weekly" ? goNext() : shiftMonth(1));
 
     return (
         <div className="rounded-3xl border border-slate-100 bg-white px-6 py-5 shadow-sm">
@@ -66,7 +75,7 @@ export function DashboardCalendar({ baseDate, viewMode = "monthly" }: CalendarPr
                 </div>
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={goPrev}
+                        onClick={handlePrev}
                         className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:bg-slate-50"
                         aria-label="Previous period"
                     >
@@ -79,7 +88,7 @@ export function DashboardCalendar({ baseDate, viewMode = "monthly" }: CalendarPr
                         Today
                     </button>
                     <button
-                        onClick={goNext}
+                        onClick={handleNext}
                         className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:bg-slate-50"
                         aria-label="Next period"
                     >

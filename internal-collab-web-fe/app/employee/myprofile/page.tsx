@@ -1,6 +1,4 @@
-import { DashboardNavbar } from "@/components/dashboard/Navbar";
-import { SidebarNav } from "@/components/dashboard/SidebarNav";
-import { navItems as baseNavItems } from "../_data";
+import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 
 const personalInfo = [
     { label: "Full Name", value: "Alex Johnson" },
@@ -12,14 +10,10 @@ const personalInfo = [
 ];
 
 export default function MyProfilePage() {
-    const navItems = baseNavItems.map((item) => ({ ...item, active: item.label === "Home" }));
-
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <DashboardNavbar user={{ initials: "AJ", name: "Alex Johnson", role: "Product Designer" }} notificationCount={1} />
-
             <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <SidebarNav items={navItems} />
+                <EmployeeSideNav />
 
                 <section className="flex-1 space-y-6">
                     <div className="space-y-1">

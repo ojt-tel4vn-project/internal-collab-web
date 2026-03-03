@@ -1,7 +1,5 @@
-import { DashboardNavbar } from "@/components/dashboard/Navbar";
-import { SidebarNav } from "@/components/dashboard/SidebarNav";
 import { CrownIcon } from "@/components/dashboard/Icons";
-import { navItems as baseNavItems } from "../_data";
+import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 
 const top3 = [
     { name: "Maria G.", points: "850 pts", rank: 2, color: "bg-slate-200", badge: "🥈" },
@@ -27,15 +25,11 @@ const stickerTypes = [
 ];
 
 export default function LeaderboardPage() {
-    const navItems = baseNavItems.map((item) => ({ ...item, active: item.label === "Home" }));
-
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <DashboardNavbar user={{ initials: "AJ", name: "Alex Johnson", role: "Product Designer" }} notificationCount={1} />
-
             <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
                 <div className="flex w-[260px] flex-col gap-4">
-                    <SidebarNav items={navItems} />
+                    <EmployeeSideNav />
 
                     <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-sm">
                         <div className="flex items-center justify-between text-[11px] font-semibold uppercase text-slate-500">

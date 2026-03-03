@@ -1,18 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardNavbar } from "@/components/dashboard/Navbar";
-import { SidebarNav } from "@/components/dashboard/SidebarNav";
-import { GridIcon, ClockIcon, CalendarIcon, DocumentIcon, NoteIcon } from "@/components/dashboard/Icons";
-import type { NavItem } from "@/types/dashboard";
-
-const navItems: NavItem[] = [
-    { label: "Dashboard", href: "/hr", icon: GridIcon },
-    { label: "Employees", href: "/hr/employeemanagement", active: true, icon: ClockIcon },
-    { label: "Config", href: "/hr/pointsconfig", icon: NoteIcon },
-    { label: "Attendance", href: "/hr/attendancemanagement", icon: CalendarIcon },
-    { label: "Documents", href: "/hr/documents", icon: DocumentIcon },
-];
+import { HRSideNav } from "@/components/navigation/HRSideNav";
 
 const stats = [
     { label: "Total Employees", value: "48", icon: "👥" },
@@ -111,10 +100,8 @@ export default function HrEmployeeManagementPage() {
 
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <DashboardNavbar user={{ initials: "HM", name: "HR Manager", role: "Admin" }} notificationCount={1} />
-
             <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-8">
-                <SidebarNav items={navItems} role={{ label: "Admin Role", value: "HR Manager" }} />
+                <HRSideNav />
 
                 <section className="grid w-full gap-6 lg:grid-cols-[2fr_1fr]">
                     <div className="space-y-6">
