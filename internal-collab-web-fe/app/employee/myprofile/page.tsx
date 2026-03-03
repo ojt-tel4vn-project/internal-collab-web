@@ -24,43 +24,163 @@ export default function MyProfilePage() {
                     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
                         <div className="space-y-4">
                             <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-                                <div className="flex flex-col items-center gap-3">
-                                    <div className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-white bg-blue-50 text-3xl font-bold text-slate-900 shadow-inner">
-                                        AJ
+                                <div className="flex items-start justify-between">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div
+                                            className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-blue-50 text-3xl font-bold text-slate-900 shadow-inner ${editing ? "cursor-pointer" : "cursor-default"}`}
+                                            onClick={() => {
+                                                if (!editing) return;
+                                                fileInputRef.current?.click();
+                                            }}
+                                            title={editing ? "Chọn ảnh từ máy" : undefined}
+                                        >
+                                            {formAvatar || profile.avatar_url ? (
+                                                <img
+                                                    src={formAvatar || profile.avatar_url || ""}
+                                                    alt="Avatar"
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            ) : (
+                                                initials
+                                            )}
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    const reader = new FileReader();
+                                                    reader.onload = () => {
+                                                        const result = reader.result?.toString() || "";
+                                                        setFormAvatar(result);
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }}
+                                            />
+                                            {editing && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white text-xs font-semibold">Chọn ảnh</div>
+                                            )}
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-lg font-semibold text-slate-900">{displayName}</p>
+                                            <p className="text-sm font-semibold text-blue-600">{profile.position || "—"}</p>
+                                        </div>
+                                        <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-semibold">
+                                            <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{departmentName}</span>
+                                            <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 ${statusLabel.toLowerCase() === "active" ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-700"}`}>
+                                                <span className={`h-2 w-2 rounded-full ${statusLabel.toLowerCase() === "active" ? "bg-emerald-500" : "bg-slate-400"}`} />
+                                                {statusLabel}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="text-center">
-                                        <p className="text-lg font-semibold text-slate-900">Alex Johnson</p>
-                                        <p className="text-sm font-semibold text-blue-600">Product Designer</p>
-                                    </div>
-                                    <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-semibold">
-                                        <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">Engineering</span>
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-emerald-600">
-                                            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Active
-                                        </span>
+
+                                    <div className="flex flex-col items-end gap-2 text-xs font-semibold text-slate-500">
+                                        {!editing ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditing(true)}
+                                                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-blue-300 hover:text-blue-600"
+                                            >
+                                                <span>✎</span> Edit profile
+                                            </button>
+                                        ) : (
+                                            <span>Edit mode</span>
+                                        )}
+                                        {saveMessage && <span className="text-emerald-600">{saveMessage}</span>}
                                     </div>
                                 </div>
 
                                 <div className="mt-5 space-y-3 text-sm text-slate-700">
                                     <div className="flex items-center gap-3">
-                                        <span className="text-slate-400">✉️</span>
+                                        <span className="text-slate-400">✶</span>
                                         <span className="font-semibold">Email</span>
-                                        <span className="text-slate-500">alex.j@collabhub.com</span>
+                                        <span className="text-slate-500">{profile.email || "—"}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-slate-400">🗓️</span>
+                                        <span className="text-slate-400">✶</span>
                                         <span className="font-semibold">Joined</span>
-                                        <span className="text-slate-500">Oct 12, 2021</span>
+                                        <span className="text-slate-500">{formatDate(profile.join_date)}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-slate-400">👤</span>
+                                        <span className="text-slate-400">✶</span>
                                         <span className="font-semibold">Manager</span>
-                                        <span className="text-slate-500">Sarah Connor</span>
+                                        <span className="text-slate-500">{managerName}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-slate-400">🎂</span>
+                                        <span className="text-slate-400">✶</span>
                                         <span className="font-semibold">Birthday</span>
-                                        <span className="text-slate-500">July 14</span>
+                                        <span className="text-slate-500">{formatDate(profile.date_of_birth)}</span>
                                     </div>
+                                </div>
+
+                                <div className="mt-6 border-t border-slate-100 pt-4">
+                                    {editing && (
+                                        <form className="space-y-4" onSubmit={handleSave}>
+                                            <div className="space-y-2">
+                                                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Phone</p>
+                                                <input
+                                                    value={formPhone}
+                                                    onChange={(e) => setFormPhone(e.target.value)}
+                                                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none focus:border-blue-500"
+                                                    placeholder="e.g. +84 912 345 678"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Address</p>
+                                                <input
+                                                    value={formAddress}
+                                                    onChange={(e) => setFormAddress(e.target.value)}
+                                                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none focus:border-blue-500"
+                                                    placeholder="Your address"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Avatar (upload or URL)</p>
+                                                <input
+                                                    value={formAvatar}
+                                                    onChange={(e) => setFormAvatar(e.target.value)}
+                                                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none focus:border-blue-500"
+                                                    placeholder="Paste URL or pick a file"
+                                                />
+                                                <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => fileInputRef.current?.click()}
+                                                        className="rounded-full border border-slate-200 px-3 py-1 hover:border-blue-300 hover:text-blue-600"
+                                                    >
+                                                        Upload from device
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setEditing(false);
+                                                            setSaveMessage(null);
+                                                            setFormAddress(profile.address || "");
+                                                            setFormPhone(profile.phone || "");
+                                                            setFormAvatar(profile.avatar_url || "");
+                                                        }}
+                                                        className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-slate-300"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        type="submit"
+                                                        disabled={saving}
+                                                        className={`rounded-xl px-5 py-3 text-sm font-semibold text-white shadow ${saving ? "bg-slate-400" : "bg-blue-600 hover:bg-blue-700"}`}
+                                                    >
+                                                        {saving ? "Saving..." : "Save"}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -73,29 +193,16 @@ export default function MyProfilePage() {
                                 </div>
 
                                 <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                                    {personalInfo.map((field) => (
+                                    {personalFields.map((field) => (
                                         <div key={field.label} className="space-y-1">
                                             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{field.label}</p>
                                             <p className="text-sm font-semibold text-slate-900">{field.value}</p>
                                         </div>
                                     ))}
-                                    <div className="space-y-1">
-                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Reporting To</p>
-                                        <div className="flex items-center gap-3 text-sm font-semibold text-slate-900">
-                                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">SC</span>
-                                            Sarah Connor
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Employment Status</p>
-                                        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
-                                            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Full-Time Active
-                                        </div>
-                                    </div>
                                 </div>
 
                                 <div className="mt-6 flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                                    <span className="text-blue-500">ℹ️</span>
+                                    <span className="text-slate-500">ⓘ</span>
                                     <p>
                                         To update your personal details or employment information, please contact the HR Department directly or submit a ticket via the Help Desk.
                                     </p>
@@ -103,54 +210,14 @@ export default function MyProfilePage() {
                             </div>
 
                             <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-                                <h2 className="text-lg font-semibold text-slate-900">Security Settings</h2>
-
-                                <div className="mt-6 grid items-start gap-6 lg:grid-cols-2 xl:grid-cols-[1.2fr_1fr]">
-                                    <div className="space-y-4">
-                                        {[
-                                            { label: "Current Password", placeholder: "password123" },
-                                            { label: "New Password", placeholder: "newpassword" },
-                                            { label: "Confirm New Password", placeholder: "newpassword" },
-                                        ].map((field) => (
-                                            <div key={field.label} className="space-y-2">
-                                                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{field.label}</p>
-                                                <input
-                                                    type="password"
-                                                    placeholder={field.placeholder}
-                                                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none focus:border-blue-500"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-700 h-full">
-                                        <div className="flex items-center gap-2 font-semibold text-slate-900">
-                                            <span className="text-slate-500">🔒</span>
-                                            <span>Password Requirements</span>
+                                <h2 className="text-lg font-semibold text-slate-900">Account Activity</h2>
+                                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                                    {activityFields.map((field) => (
+                                        <div key={field.label} className="space-y-1 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{field.label}</p>
+                                            <p className="text-sm font-semibold text-slate-900">{field.value}</p>
                                         </div>
-                                        <div className="space-y-2 text-sm">
-                                            <label className="flex items-center gap-2">
-                                                <input type="radio" checked readOnly className="h-4 w-4 text-emerald-500" />
-                                                <span>Minimum 8 characters long</span>
-                                            </label>
-                                            <label className="flex items-center gap-2">
-                                                <input type="radio" checked readOnly className="h-4 w-4 text-emerald-500" />
-                                                <span>At least one uppercase letter</span>
-                                            </label>
-                                            <label className="flex items-center gap-2">
-                                                <input type="radio" checked readOnly className="h-4 w-4 text-emerald-500" />
-                                                <span>At least one special character (!@#$%)</span>
-                                            </label>
-                                            <label className="flex items-center gap-2">
-                                                <input type="radio" checked readOnly className="h-4 w-4 text-emerald-500" />
-                                                <span>At least one number</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 flex justify-end">
-                                    <button className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-blue-700">Update Password</button>
+                                    ))}
                                 </div>
                             </div>
                         </div>
