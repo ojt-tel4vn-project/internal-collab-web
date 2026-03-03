@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "@/components/dashboard/Icons";
+import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "@/components/home/Icons";
 import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 
 const stats = [

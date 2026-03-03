@@ -1,5 +1,5 @@
 import type { LeaderboardItem, Milestone, NavItem, TaskItem } from "@/types/dashboard";
-import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon } from "@/components/dashboard/Icons";
+import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon } from "@/components/home/Icons";
 
 export const navItems: NavItem[] = [
   { label: "Home", href: "/employee", active: true, icon: GridIcon },

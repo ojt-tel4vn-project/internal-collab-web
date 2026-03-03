@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon } from "../dashboard/Icons";
+import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon } from "../home/Icons";
 import type { NavItem } from "@/types/dashboard";
 
 const NAV_ITEMS: NavItem[] = [
@@ -12,7 +12,6 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Documents", href: "/employee/documents", icon: DocumentIcon },
     { label: "My Profile", href: "/employee/myprofile", icon: GridIcon },
     { label: "Notifications", href: "/employee/notification", icon: ClockIcon },
-    { label: "Change Password", href: "/employee/change-password", icon: CalendarIcon },
 ];
 
 function isActive(pathname: string, href: string) {

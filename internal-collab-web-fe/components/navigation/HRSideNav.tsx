@@ -2,19 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon, NoteIcon } from "../dashboard/Icons";
+import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon, NoteIcon } from "../home/Icons";
 import type { NavItem } from "@/types/dashboard";
 
 const NAV_ITEMS: NavItem[] = [
-    { label: "Dashboard", href: "/hr/home", icon: GridIcon },
+    { label: "Home", href: "/hr/home", icon: GridIcon },
     { label: "Employees", href: "/hr/employeemanagement", icon: ClockIcon },
     { label: "Attendance", href: "/hr/attendancemanagement", icon: CalendarIcon },
     { label: "Documents", href: "/hr/documents", icon: DocumentIcon },
     { label: "Leave Overview", href: "/hr/leave-overview", icon: CalendarIcon },
     { label: "Points Config", href: "/hr/points-config", icon: NoteIcon },
-    { label: "My Profile", href: "/hr/my-profile", icon: GridIcon },
-    { label: "Notifications", href: "/hr/notification", icon: ClockIcon },
-    { label: "Change Password", href: "/hr/change-password", icon: CalendarIcon },
 ];
 
 function isActive(pathname: string, href: string) {

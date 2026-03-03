@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardCalendar } from "@/components/dashboard/Calendar";
-import { LeaderboardCard } from "@/components/dashboard/Leaderboard";
-import { MilestonesCard } from "@/components/dashboard/Milestones";
-import { TaskList } from "@/components/dashboard/TaskList";
+import { DashboardCalendar } from "@/components/home/Calendar";
+import { LeaderboardCard } from "@/components/home/Leaderboard";
+import { MilestonesCard } from "@/components/home/Milestones";
+import { TaskList } from "@/components/home/TaskList";
 import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 import { leaderboard, milestones } from "../_data";
 

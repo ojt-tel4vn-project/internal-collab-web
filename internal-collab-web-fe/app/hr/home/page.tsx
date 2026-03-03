@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { TaskList } from "@/components/dashboard/TaskList";
-import { LeaderboardCard } from "@/components/dashboard/Leaderboard";
-import { DashboardCalendar } from "@/components/dashboard/Calendar";
+import { TaskList } from "@/components/home/TaskList";
+import { LeaderboardCard } from "@/components/home/Leaderboard";
+import { DashboardCalendar } from "@/components/home/Calendar";
+import { MilestonesCard } from "@/components/home/Milestones";
 import { leaderboard } from "@/app/employee/_data";
-import { CalendarIcon } from "@/components/dashboard/Icons";
+import { CalendarIcon } from "@/components/home/Icons";
 import { HRSideNav } from "@/components/navigation/HRSideNav";
+import type { Milestone } from "@/types/dashboard";
 
 const stats = [
     { label: "Total Employees", value: "48", change: "+2.4%", tone: "text-emerald-600" },
@@ -15,9 +17,9 @@ const stats = [
     { label: "Attendance Rate", value: "94%", change: "+0.8%", tone: "text-emerald-600" },
 ];
 
-const upcomingEvents = [
-    { title: "Town Hall Meeting", detail: "Oct 14th • 10:00 AM • Conference Room A", accent: "bg-amber-500" },
-    { title: "Quarterly Review", detail: "Oct 18th • 09:00 AM • Online", accent: "bg-emerald-500" },
+const upcomingEvents: Milestone[] = [
+    { day: 14, month: "Oct", title: "Town Hall Meeting", subtitle: "10:00 AM • Conference Room A" },
+    { day: 18, month: "Oct", title: "Quarterly Review", subtitle: "09:00 AM • Online" },
 ];
 
 export default function HrDashboardPage() {
@@ -69,20 +71,7 @@ export default function HrDashboardPage() {
                                 <DashboardCalendar viewMode={viewMode} />
                             </div>
 
-                            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-slate-900">Upcoming Events</h3>
-                                <div className="mt-4 space-y-3">
-                                    {upcomingEvents.map((event) => (
-                                        <div key={event.title} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3">
-                                            <span className={`h-10 w-1 rounded-full ${event.accent}`}></span>
-                                            <div>
-                                                <p className="text-sm font-semibold text-slate-900">{event.title}</p>
-                                                <p className="text-xs font-semibold text-slate-500">{event.detail}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <MilestonesCard milestones={upcomingEvents} />
                         </div>
 
                         <div className="space-y-4">

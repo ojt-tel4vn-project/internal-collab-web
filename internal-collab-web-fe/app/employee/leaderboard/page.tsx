@@ -1,4 +1,4 @@
-import { CrownIcon } from "@/components/dashboard/Icons";
+import { CrownIcon } from "@/components/home/Icons";
 import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 
 const top3 = [
