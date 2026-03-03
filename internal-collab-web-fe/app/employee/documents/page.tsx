@@ -1,4 +1,4 @@
-import { DocumentIcon, DownloadIcon, AlertTriangleIcon } from "@/components/dashboard/Icons";
+import { DocumentIcon, DownloadIcon, AlertTriangleIcon } from "@/components/home/Icons";
 import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 
 const filters = ["All Documents", "Onboarding", "Quy định", "Hướng dẫn"];

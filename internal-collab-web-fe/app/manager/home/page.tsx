@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardCalendar } from "@/components/dashboard/Calendar";
+import { DashboardCalendar } from "@/components/home/Calendar";
 import { ManagerSideNav } from "@/components/navigation/ManagerSideNav";
+import { MilestonesCard } from "@/components/home/Milestones";
+import type { Milestone } from "@/types/dashboard";
 
 const stats = [
     { label: "Team Members", value: "24" },
@@ -16,9 +18,9 @@ const onLeaveToday = [
     { name: "Donna Paulsen", note: "Sick Leave" },
 ];
 
-const milestones = [
-    { date: "Oct 24", title: "5-Year Anniversary", desc: "Rachel Green" },
-    { date: "Nov 02", title: "Product Launch", desc: "Engineering Team" },
+const milestones: Milestone[] = [
+    { day: 24, month: "Oct", title: "5-Year Anniversary", subtitle: "Rachel Green" },
+    { day: 2, month: "Nov", title: "Product Launch", subtitle: "Engineering Team" },
 ];
 
 export default function ManagerHomePage() {
@@ -68,20 +70,7 @@ export default function ManagerHomePage() {
                         </div>
 
                         <div className="space-y-4">
-                            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                                <h3 className="text-sm font-semibold text-slate-900">Upcoming Milestones</h3>
-                                <div className="mt-4 space-y-3">
-                                    {milestones.map((m) => (
-                                        <div key={m.title} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3">
-                                            <span className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-700">{m.date}</span>
-                                            <div>
-                                                <p className="text-sm font-semibold text-slate-900">{m.title}</p>
-                                                <p className="text-xs font-semibold text-slate-500">{m.desc}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <MilestonesCard milestones={milestones} />
 
                             <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">

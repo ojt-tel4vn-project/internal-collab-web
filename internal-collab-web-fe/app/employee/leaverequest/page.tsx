@@ -1,4 +1,4 @@
-import { AlertTriangleIcon, CalendarIcon, ChevronDownIcon } from "@/components/dashboard/Icons";
+import { AlertTriangleIcon, CalendarIcon, ChevronDownIcon } from "@/components/home/Icons";
 import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 
 const historyTabs = ["All", "Approved", "Pending"] as const;

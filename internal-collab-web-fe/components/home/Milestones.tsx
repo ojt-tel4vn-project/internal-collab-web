@@ -11,7 +11,7 @@ const colorMap = ["orange", "blue"] as const;
 export function MilestonesCard({ milestones }: MilestonesProps) {
     return (
         <SectionCard
-            title="Company Milestones"
+            title="Upcoming Events"
             icon={<NoteIcon className="h-5 w-5 text-orange-500" />}
         >
             <ul className="space-y-3">

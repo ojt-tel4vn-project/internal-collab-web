@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon } from "../dashboard/Icons";
+import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon } from "../home/Icons";
 import type { NavItem } from "@/types/dashboard";
 
 const NAV_ITEMS: NavItem[] = [
@@ -10,10 +10,9 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Team", href: "/manager/team", icon: ClockIcon },
     { label: "Leave Approvals", href: "/manager/leave-approvals", icon: CalendarIcon, badge: "4" },
     { label: "Documents", href: "/manager/documents", icon: DocumentIcon },
-    { label: "My Team", href: "/manager/myteam", icon: ClockIcon },
     { label: "My Profile", href: "/manager/myprofile", icon: GridIcon },
     { label: "Notifications", href: "/manager/notification", icon: ClockIcon },
-    { label: "Change Password", href: "/manager/change-password", icon: CalendarIcon },
+
 ];
 
 function isActive(pathname: string, href: string) {
