@@ -104,3 +104,14 @@ export async function proxyToBackend({
     contentType: response.headers.get("content-type") ?? "application/json",
   };
 }
+
+/*
+Tóm tắt:
+- Quản lý cấu hình URL backend API từ `API_LINK` (fallback localhost khi môi trường dev).
+- Chuẩn hóa và ghép URL endpoint backend an toàn qua `buildApiUrl`.
+- Đọc token từ cookie request (`access_token`, `token_type`) để gắn Authorization khi cần.
+- Cung cấp hàm `proxyToBackend` dùng chung cho route handlers:
+  nhận method/path/body/headers, gọi backend, và trả về dữ liệu phản hồi chuẩn hóa
+  gồm `ok`, `status`, `text`, `contentType`.
+- Giúp các API route trong app tránh lặp logic gọi backend và xử lý header cơ bản.
+*/

@@ -58,9 +58,10 @@ export async function POST(request: Request) {
     const normalizedRoles = normalizeRoles(data.user?.roles ?? []);
     const isProduction = process.env.NODE_ENV === "production";
     const tokenType = (data.token_type ?? "Bearer").trim() || "Bearer";
+    const requirePasswordChange = Boolean(data.require_password_change);
 
     const response = NextResponse.json({
-      require_password_change: Boolean(data.require_password_change),
+      require_password_change: requirePasswordChange,
       user: data.user
         ? {
             ...data.user,
@@ -109,6 +110,16 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 * 7,
     });
 
+    response.cookies.set({
+      name: "require_password_change",
+      value: requirePasswordChange ? "1" : "",
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: requirePasswordChange ? 60 * 60 * 24 * 7 : 0,
+    });
+
     return response;
   } catch {
     return NextResponse.json(
@@ -117,3 +128,13 @@ export async function POST(request: Request) {
     );
   }
 }
+
+/*
+Tóm tắt:
+- Nhận email/password từ frontend và proxy sang backend `/auth/login`.
+- Chuẩn hóa dữ liệu trả về (đặc biệt là danh sách role của user).
+- Set cookie phiên đăng nhập:
+  `access_token`, `refresh_token`, `token_type`, `user_roles`.
+- Set thêm cookie `require_password_change` để middleware ép đổi mật khẩu khi cần.
+- Trả lỗi tương ứng nếu backend lỗi hoặc response token không hợp lệ.
+*/

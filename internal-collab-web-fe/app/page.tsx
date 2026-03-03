@@ -3,8 +3,9 @@
 import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { validateLoginPayload } from "@/app/schemas/shcema.login";
-import { getHomePathForRoles } from "@/libs/auth";
+import { getChangePasswordPathForRoles, getHomePathForRoles } from "@/libs/auth";
 
 type LoginResponse = {
   require_password_change: boolean;
@@ -82,6 +83,18 @@ export default function Home() {
       const homePath = getHomePathForRoles(data.user?.roles ?? []);
       if (!homePath) {
         setError("Your account does not have a valid role.");
+        return;
+      }
+
+      if (data.require_password_change) {
+        const changePasswordPath = getChangePasswordPathForRoles(data.user?.roles ?? []);
+        if (!changePasswordPath) {
+          setError("Your account does not have a valid role.");
+          return;
+        }
+
+        sessionStorage.setItem("force_change_old_password", password);
+        router.push(`${changePasswordPath}?forced=1`);
         return;
       }
 
@@ -181,9 +194,9 @@ export default function Home() {
                 </p>
               ) : null}
 
-              <a href="#" className="text-sm text-blue-600 hover:underline">
+              <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
                 Forgot Password?
-              </a>
+              </Link>
               <button
                 type="submit"
                 disabled={loading}
