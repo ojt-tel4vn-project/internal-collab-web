@@ -35,7 +35,7 @@ export default function Manager_Navbar({
   return (
     <>
       <nav className="h-16 bg-[#050d1b] text-white px-6 flex items-center justify-between border-b border-[#0b2b52]">
-        <Link href="/manager/home" className="flex items-center gap-3">
+        <Link href="/manager" className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl ring-1 ring-white/20 shadow-[0_0_18px_rgba(47,129,247,0.35)] flex items-center justify-center">
             <Image
               src="/Logo.webp"
