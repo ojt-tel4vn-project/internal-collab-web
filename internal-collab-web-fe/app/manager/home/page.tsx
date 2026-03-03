@@ -2,6 +2,6 @@ import React from 'react'
 
 export default function page() {
     return (
-        <div>My employee Profile</div>
+        <div>Manager home page</div>
     )
 }
