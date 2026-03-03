@@ -1,22 +1,21 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { validateLoginPayload } from "@/app/schemas/shcema.login";
+import { getHomePathForRoles } from "@/libs/auth";
 
 type LoginResponse = {
-  access_token: string;
-  refresh_token: string;
   require_password_change: boolean;
-  token_type: string;
   user: {
     id: string;
     email: string;
     name: string;
     employee_code: string;
     status: string;
-  };
+    roles: string[];
+  } | null;
 };
 
 export default function Home() {
@@ -80,12 +79,13 @@ export default function Home() {
         return;
       }
 
-      localStorage.setItem("access_token", data.access_token);
-      localStorage.setItem("refresh_token", data.refresh_token);
-      localStorage.setItem("token_type", data.token_type);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      const homePath = getHomePathForRoles(data.user?.roles ?? []);
+      if (!homePath) {
+        setError("Your account does not have a valid role.");
+        return;
+      }
 
-      router.push("/employee/myprofile");
+      router.push(homePath);
     } catch {
       setError("Unable to connect to the server. Please try again later.");
     } finally {
@@ -121,8 +121,14 @@ export default function Home() {
 
         <div className="flex flex-col h-screen px-14 py-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-blue-200 text-white shadow-lg">
-              <Image src="/Logo.webp" alt="Logo" width={90} height={90} />
+            <div className="w-11 h-11 flex items-center justify-center rounded-xl ring-1 ring-blue-200 shadow-[0_0_18px_rgba(37,99,235,0.22)]">
+              <Image
+                src="/Logo.webp"
+                alt="Logo"
+                width={34}
+                height={34}
+                className="drop-shadow-[0_2px_8px_rgba(37,99,235,0.35)]"
+              />
             </div>
             <span className="text-lg font-semibold">CollabHub</span>
           </div>
@@ -143,7 +149,7 @@ export default function Home() {
                 type="email"
                 placeholder="name@company.com"
                 className={`w-full rounded-lg border px-4 py-3 ${
-                  error ? "!border-red-500 focus:!border-red-500" : ""
+                  error ? "border-red-500! focus:border-red-500!" : ""
                 }`}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -158,7 +164,7 @@ export default function Home() {
                 type="password"
                 placeholder="********"
                 className={`w-full rounded-lg border px-4 py-3 ${
-                  error ? "!border-red-500 focus:!border-red-500" : ""
+                  error ? "border-red-500! focus:border-red-500!" : ""
                 }`}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -167,7 +173,7 @@ export default function Home() {
 
               {error ? (
                 <p
-                  className="text-sm font-semibold !text-red-500"
+                  className="text-sm font-semibold text-red-500!"
                   style={{ color: "#ef4444" }}
                   aria-live="polite"
                 >
@@ -189,7 +195,7 @@ export default function Home() {
           </div>
 
           <div className="text-xs text-slate-400">
-            © 2026 CollabHub Inc. · Privacy Policy · Terms
+            (c) 2026 CollabHub Inc. · Privacy Policy · Terms
           </div>
         </div>
       </div>
