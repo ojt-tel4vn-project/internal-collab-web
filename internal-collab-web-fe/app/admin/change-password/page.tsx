@@ -1,3 +1,5 @@
+import ChangePasswordForm from "@/components/ChangePasswordForm";
+
 export default function AdminChangePasswordPage() {
-  return <div className="p-6">Change password</div>;
+  return <ChangePasswordForm roleLabel="Admin" />;
 }
