@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Manager_Navbar from "@/components/Manager_Navbar";
+import Manager_Navbar from "@/components/navbar/Manager_Navbar";
 
 export default function ManagerLayout({
   children,

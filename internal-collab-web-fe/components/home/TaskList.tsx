@@ -7,24 +7,28 @@ import type { TaskItem } from "@/types/dashboard";
 const STORAGE_KEY = "employee:quick-tasks";
 
 export function TaskList() {
-    const [items, setItems] = useState<TaskItem[]>([]);
+    const [items, setItems] = useState<TaskItem[]>(() => {
+        if (typeof window === "undefined") {
+            return [];
+        }
+
+        try {
+            const raw = window.localStorage.getItem(STORAGE_KEY);
+            if (!raw) {
+                return [];
+            }
+
+            return JSON.parse(raw) as TaskItem[];
+        } catch {
+            return [];
+        }
+    });
     const [draft, setDraft] = useState("");
 
     useEffect(() => {
         try {
-            const raw = window.localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                setItems(JSON.parse(raw));
-            }
-        } catch (err) {
-            // ignore storage errors
-        }
-    }, []);
-
-    useEffect(() => {
-        try {
             window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-        } catch (err) {
+        } catch {
             // ignore storage errors
         }
     }, [items]);
