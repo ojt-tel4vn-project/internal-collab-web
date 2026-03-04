@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { type SubmitEventHandler, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 function readApiMessage(payload: unknown): string | null {
@@ -33,7 +33,7 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
     setError("");
     setSuccess("");
