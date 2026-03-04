@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type SubmitEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 import type { EmployeeProfile, UpdateEmployeeProfilePayload } from "@/types/employee";
 import { InfoSectionCard, ProfileSummaryCard } from "@/components/employee/myprofile/ProfileSections";
@@ -120,7 +120,7 @@ export default function MyProfilePage() {
         reader.readAsDataURL(file);
     }, []);
 
-    async function handleSave(event: React.FormEvent<HTMLFormElement>) {
+    const handleSave: SubmitEventHandler<HTMLFormElement> = async (event) => {
         event.preventDefault();
         if (!profile) return;
 
@@ -222,7 +222,7 @@ export default function MyProfilePage() {
         } finally {
             setSaving(false);
         }
-    }
+    };
 
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">

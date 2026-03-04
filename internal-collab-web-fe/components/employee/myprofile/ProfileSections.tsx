@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type React from "react";
-import type { RefObject } from "react";
+import type { RefObject, SubmitEventHandler } from "react";
 import type { EmployeeProfile } from "@/types/employee";
 
 type ProfileSummaryCardProps = {
@@ -22,7 +22,7 @@ type ProfileSummaryCardProps = {
     fileInputRef: RefObject<HTMLInputElement | null>;
     onStartEdit: () => void;
     onCancelEdit: () => void;
-    onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+    onSubmit: SubmitEventHandler<HTMLFormElement>;
     onPhoneChange: (value: string) => void;
     onAddressChange: (value: string) => void;
     onAvatarChange: (value: string) => void;
@@ -179,7 +179,7 @@ function ProfileEditForm({
     formAddress: string;
     formAvatar: string;
     fileInputRef: RefObject<HTMLInputElement | null>;
-    onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+    onSubmit: SubmitEventHandler<HTMLFormElement>;
     onCancel: () => void;
     onPhoneChange: (value: string) => void;
     onAddressChange: (value: string) => void;

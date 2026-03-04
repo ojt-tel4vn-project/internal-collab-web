@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { type SubmitEventHandler, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 type ChangePasswordFormProps = {
@@ -47,7 +47,7 @@ export default function ChangePasswordForm({ roleLabel }: ChangePasswordFormProp
     }
   }, [isForcedChange]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
     setError("");
     setSuccess("");
