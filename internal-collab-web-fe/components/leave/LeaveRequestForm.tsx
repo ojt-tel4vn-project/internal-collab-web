@@ -1,0 +1,207 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import type {
+    CreateLeaveRequestPayload,
+    CreateLeaveRequestResponse,
+    GetLeaveTypesResponse,
+    LeaveType,
+} from "@/types/leave";
+
+interface LeaveRequestFormProps {
+    defaultLeaveTypeId?: string;
+}
+
+export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) {
+    const [form, setForm] = useState<CreateLeaveRequestPayload>({
+        leave_type_id: defaultLeaveTypeId || "",
+        from_date: "",
+        to_date: "",
+        reason: "",
+        contact_during_leave: "",
+    });
+    const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
+    const [loadingTypes, setLoadingTypes] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
+
+    function showToast(message: string, tone: "success" | "error") {
+        setToast({ message, tone });
+        setTimeout(() => setToast(null), 3500);
+    }
+
+    function update<K extends keyof CreateLeaveRequestPayload>(key: K, value: string) {
+        setForm((prev) => ({ ...prev, [key]: value }));
+    }
+
+    useEffect(() => {
+        let mounted = true;
+        const loadTypes = async () => {
+            setLoadingTypes(true);
+            setError(null);
+            try {
+                const res = await fetch("/api/leave-types", { cache: "no-store" });
+                if (!res.ok) {
+                    throw new Error("Unable to load leave types");
+                }
+                const data = (await res.json()) as GetLeaveTypesResponse;
+                if (!mounted) return;
+                setLeaveTypes(data?.data ?? []);
+                if (!form.leave_type_id && data?.data?.[0]?.id) {
+                    setForm((prev) => ({ ...prev, leave_type_id: data.data[0].id }));
+                }
+            } catch (err) {
+                if (!mounted) return;
+                const message = err instanceof Error ? err.message : "Unable to load leave types";
+                setError(message);
+            } finally {
+                if (mounted) setLoadingTypes(false);
+            }
+        };
+        loadTypes();
+        return () => {
+            mounted = false;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        setSubmitting(true);
+        setError(null);
+        setToast(null);
+
+        const payload: CreateLeaveRequestPayload = {
+            leave_type_id: form.leave_type_id.trim(),
+            from_date: form.from_date.trim(),
+            to_date: form.to_date.trim(),
+            reason: form.reason.trim(),
+            contact_during_leave: form.contact_during_leave.trim(),
+        };
+
+        try {
+            const res = await fetch("/api/leave-requests", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+                const raw = await res.text();
+                let body: CreateLeaveRequestResponse | null = null;
+                try {
+                    body = JSON.parse(raw);
+                } catch {
+                    body = null;
+                }
+                const message =
+                    (body?.message && typeof body.message === "string" ? body.message : "") ||
+                    (raw ? raw.slice(0, 200) : "Unable to submit leave request");
+                throw new Error(message);
+            }
+
+            showToast("Leave request submitted", "success");
+            setForm({ leave_type_id: defaultLeaveTypeId || "", from_date: "", to_date: "", reason: "", contact_during_leave: "" });
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Unable to submit leave request";
+            setError(message);
+            showToast(message, "error");
+        } finally {
+            setSubmitting(false);
+        }
+    }
+
+    return (
+        <form className="space-y-4" onSubmit={handleSubmit}>
+            {error && (
+                <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+            )}
+            {toast && toast.tone === "success" && (
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{toast.message}</div>
+            )}
+
+            <div className="space-y-1">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Leave Type</label>
+                <select
+                    required
+                    value={form.leave_type_id}
+                    onChange={(e) => update("leave_type_id", e.target.value)}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
+                >
+                    {loadingTypes && <option value="">Loading...</option>}
+                    {!loadingTypes && leaveTypes.length === 0 && <option value="">No leave types</option>}
+                    {leaveTypes.map((lt) => (
+                        <option key={lt.id} value={lt.id}>
+                            {lt.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">From Date</label>
+                    <input
+                        type="date"
+                        required
+                        value={form.from_date}
+                        onChange={(e) => update("from_date", e.target.value)}
+                        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
+                    />
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">To Date</label>
+                    <input
+                        type="date"
+                        required
+                        value={form.to_date}
+                        onChange={(e) => update("to_date", e.target.value)}
+                        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
+                    />
+                </div>
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Reason</label>
+                <textarea
+                    required
+                    value={form.reason}
+                    onChange={(e) => update("reason", e.target.value)}
+                    className="min-h-[100px] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
+                    placeholder="Briefly explain your leave request..."
+                />
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Contact During Leave</label>
+                <input
+                    required
+                    value={form.contact_during_leave}
+                    onChange={(e) => update("contact_during_leave", e.target.value)}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
+                    placeholder="Phone/email while you’re away"
+                />
+            </div>
+
+            <div className="pt-2">
+                <button
+                    type="submit"
+                    disabled={submitting}
+                    className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow ${submitting ? "bg-slate-400" : "bg-blue-600 hover:bg-blue-700"}`}
+                >
+                    <span>{submitting ? "Submitting..." : "Submit Leave Request"}</span>
+                </button>
+            </div>
+
+            {toast && (
+                <div
+                    className={`fixed bottom-6 right-6 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg ${toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+                        }`}
+                >
+                    {toast.message}
+                </div>
+            )}
+        </form>
+    );
+}
