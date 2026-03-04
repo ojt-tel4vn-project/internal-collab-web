@@ -37,12 +37,21 @@ export async function PUT(request: NextRequest) {
 
         const body = await request.json();
 
-        const upstreamResponse = await proxyToBackend({
+        let upstreamResponse = await proxyToBackend({
             method: "PUT",
             path: "/employees/me",
             request,
             body,
         });
+
+        if ([404, 405, 501].includes(upstreamResponse.status)) {
+            upstreamResponse = await proxyToBackend({
+                method: "PATCH",
+                path: "/employees/me",
+                request,
+                body,
+            });
+        }
 
         return new NextResponse(upstreamResponse.text, {
             status: upstreamResponse.status,
@@ -50,9 +59,10 @@ export async function PUT(request: NextRequest) {
                 "content-type": upstreamResponse.contentType,
             },
         });
-    } catch {
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unable to update profile.";
         return NextResponse.json(
-            { message: "Unable to update profile." },
+            { message },
             { status: 500 },
         );
     }

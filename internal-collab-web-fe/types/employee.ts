@@ -1,11 +1,12 @@
-export interface EmployeeDepartment {
+﻿export interface EmployeeDepartment {
     id: string;
     name: string;
 }
 
 export interface EmployeeManager {
-    id: string;
-    full_name: string;
+    id: string | number;
+    full_name?: string;
+    name?: string;
 }
 
 export interface EmployeeProfile {
@@ -22,7 +23,7 @@ export interface EmployeeProfile {
     status: string;
     department_id: string;
     department: EmployeeDepartment;
-    manager_id: string;
+    manager_id: string | number | null;
     manager: EmployeeManager | null;
     date_of_birth: string;
     join_date: string;
@@ -42,3 +43,6 @@ export interface UpdateEmployeeProfileResponse {
     $schema?: string;
     message: string;
 }
+
+
+
