@@ -1,9 +1,10 @@
 "use client";
 
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type SubmitEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 import type { EmployeeProfile, UpdateEmployeeProfilePayload } from "@/types/employee";
+import { InfoSectionCard, ProfileSummaryCard } from "@/components/employee/myprofile/ProfileSections";
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
@@ -15,16 +16,16 @@ const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 function formatDate(value?: string | null) {
-    if (!value) return "—";
+    if (!value) return "-";
     const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return "—";
+    if (Number.isNaN(parsed.getTime())) return "-";
     return dateFormatter.format(parsed);
 }
 
 function formatDateTime(value?: string | null) {
-    if (!value) return "—";
+    if (!value) return "-";
     const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return "—";
+    if (Number.isNaN(parsed.getTime())) return "-";
     return dateTimeFormatter.format(parsed);
 }
 
@@ -55,20 +56,21 @@ export default function MyProfilePage() {
     }, [profile?.full_name]);
 
     const displayName = profile?.full_name || "Employee";
-    const departmentName = profile?.department?.name || "—";
-    const managerName = profile?.manager?.full_name || "—";
+    const departmentName = profile?.department?.name || "-";
+    const managerName = profile?.manager?.full_name || profile?.manager?.name || "-";
+    const managerId = profile?.manager?.id ?? profile?.manager_id;
+    const managerDisplay = managerId && managerName !== "-" ? `${managerName} (#${managerId})` : managerName;
     const statusLabel = profile?.status ? profile.status.replace(/_/g, " ") : "Unknown";
 
     const personalFields = useMemo(
         () => [
-            { label: "Employee Code", value: profile?.employee_code || "—" },
-            { label: "Email", value: profile?.email || "—" },
+            { label: "Employee Code", value: profile?.employee_code || "-" },
             { label: "Department", value: departmentName },
-            { label: "Position", value: profile?.position || "—" },
+            { label: "Position", value: profile?.position || "-" },
             { label: "Joined", value: formatDate(profile?.join_date) },
             { label: "Birthday", value: formatDate(profile?.date_of_birth) },
         ],
-        [profile?.employee_code, profile?.email, departmentName, profile?.position, profile?.join_date, profile?.date_of_birth],
+        [profile?.employee_code, departmentName, profile?.position, profile?.join_date, profile?.date_of_birth],
     );
 
     const activityFields = useMemo(
@@ -107,7 +109,18 @@ export default function MyProfilePage() {
         loadProfile();
     }, [loadProfile]);
 
-    async function handleSave(event: React.FormEvent<HTMLFormElement>) {
+    const handleAvatarFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result?.toString() || "";
+            setFormAvatar(result);
+        };
+        reader.readAsDataURL(file);
+    }, []);
+
+    const handleSave: SubmitEventHandler<HTMLFormElement> = async (event) => {
         event.preventDefault();
         if (!profile) return;
 
@@ -115,10 +128,44 @@ export default function MyProfilePage() {
         setSaveMessage(null);
         setError(null);
 
+        const trimmedPhone = formPhone.trim();
+        const trimmedAddress = formAddress.trim();
+        const trimmedAvatar = formAvatar.trim();
+        const currentPhone = (profile.phone || "").trim();
+        const currentAddress = (profile.address || "").trim();
+        const currentAvatar = (profile.avatar_url || "").trim();
+
+        const noChanges =
+            trimmedPhone === currentPhone &&
+            trimmedAddress === currentAddress &&
+            trimmedAvatar === currentAvatar;
+
+        if (noChanges) {
+            setEditing(false);
+            setSaving(false);
+            return;
+        }
+
+        if (trimmedAvatar) {
+            try {
+                new URL(trimmedAvatar);
+            } catch {
+                setError("Avatar must be a valid URL.");
+                setSaving(false);
+                return;
+            }
+
+            if (trimmedAvatar.length > 500) {
+                setError("Avatar URL is too long (max 500 characters).");
+                setSaving(false);
+                return;
+            }
+        }
+
         const payload: UpdateEmployeeProfilePayload = {
-            phone: formPhone.trim() || undefined,
-            address: formAddress.trim() || undefined,
-            avatar_url: formAvatar.trim() || undefined,
+            phone: trimmedPhone,
+            address: trimmedAddress,
+            avatar_url: trimmedAvatar,
         };
 
         try {
@@ -129,21 +176,53 @@ export default function MyProfilePage() {
             });
 
             if (!res.ok) {
-                const body = await res.json().catch(() => null);
-                const message = body?.message || "Không thể lưu thay đổi";
+                const raw = await res.text().catch(() => "");
+                let message = `Could not save changes (HTTP ${res.status})`;
+
+                if (raw) {
+                    try {
+                        const parsed = JSON.parse(raw) as {
+                            message?: string;
+                            detail?: string;
+                            title?: string;
+                            error?: string;
+                            errors?: Array<{ message?: string }>;
+                        };
+                        if (Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+                            message = parsed.errors[0]?.message || parsed.message || parsed.detail || parsed.title || parsed.error || message;
+                        } else {
+                            message = parsed.message || parsed.detail || parsed.title || parsed.error || message;
+                        }
+                    } catch {
+                        message = raw.slice(0, 200);
+                    }
+                }
+
                 throw new Error(message);
             }
 
-            setSaveMessage("Đã lưu thay đổi");
+            setSaveMessage("Changes saved");
             setEditing(false);
-            await loadProfile();
+            setProfile((prev) =>
+                prev
+                    ? {
+                        ...prev,
+                        phone: trimmedPhone,
+                        address: trimmedAddress,
+                        avatar_url: trimmedAvatar || null,
+                    }
+                    : prev,
+            );
+            setFormPhone(trimmedPhone);
+            setFormAddress(trimmedAddress);
+            setFormAvatar(trimmedAvatar);
         } catch (err) {
             const message = err instanceof Error ? err.message : "Something went wrong";
             setError(message);
         } finally {
             setSaving(false);
         }
-    }
+    };
 
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
@@ -164,206 +243,49 @@ export default function MyProfilePage() {
 
                     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
                         <div className="space-y-4">
-                            <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex flex-col items-center gap-3">
-                                        <div
-                                            className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-blue-50 text-3xl font-bold text-slate-900 shadow-inner ${editing ? "cursor-pointer" : "cursor-default"}`}
-                                            onClick={() => {
-                                                if (!editing) return;
-                                                fileInputRef.current?.click();
-                                            }}
-                                            title={editing ? "Choose a photo" : undefined}
-                                        >
-                                            {formAvatar || profile?.avatar_url ? (
-                                                <img
-                                                    src={formAvatar || profile?.avatar_url || ""}
-                                                    alt="Avatar"
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            ) : (
-                                                initials
-                                            )}
-                                            <input
-                                                ref={fileInputRef}
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (!file) return;
-                                                    const reader = new FileReader();
-                                                    reader.onload = () => {
-                                                        const result = reader.result?.toString() || "";
-                                                        setFormAvatar(result);
-                                                    };
-                                                    reader.readAsDataURL(file);
-                                                }}
-                                            />
-                                            {editing && (
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white text-xs font-semibold">Change photo</div>
-                                            )}
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="text-lg font-semibold text-slate-900">{displayName}</p>
-                                            <p className="text-sm font-semibold text-blue-600">{profile?.position || "—"}</p>
-                                        </div>
-                                        <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-semibold">
-                                            <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{departmentName}</span>
-                                            <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 ${statusLabel.toLowerCase() === "active" ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-700"}`}>
-                                                <span className={`h-2 w-2 rounded-full ${statusLabel.toLowerCase() === "active" ? "bg-emerald-500" : "bg-slate-400"}`} />
-                                                {statusLabel}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col items-end gap-2 text-xs font-semibold text-slate-500">
-                                        {!editing ? (
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditing(true)}
-                                                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-blue-300 hover:text-blue-600"
-                                                disabled={loading || !profile}
-                                            >
-                                                <span>✎</span> Edit profile
-                                            </button>
-                                        ) : (
-                                            <span>Editing</span>
-                                        )}
-                                        {saveMessage && <span className="text-emerald-600">{saveMessage}</span>}
-                                    </div>
-                                </div>
-
-                                <div className="mt-5 space-y-3 text-sm text-slate-700">
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-slate-400">✶</span>
-                                        <span className="font-semibold">Email</span>
-                                        <span className="text-slate-500">{profile?.email || "—"}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-slate-400">✶</span>
-                                        <span className="font-semibold">Join date</span>
-                                        <span className="text-slate-500">{formatDate(profile?.join_date)}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-slate-400">✶</span>
-                                        <span className="font-semibold">Manager</span>
-                                        <span className="text-slate-500">{managerName}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-slate-400">✶</span>
-                                        <span className="font-semibold">Birthday</span>
-                                        <span className="text-slate-500">{formatDate(profile?.date_of_birth)}</span>
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 border-t border-slate-100 pt-4">
-                                    {editing && (
-                                        <form className="space-y-4" onSubmit={handleSave}>
-                                            <div className="space-y-2">
-                                                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Phone</p>
-                                                <input
-                                                    required
-                                                    value={formPhone}
-                                                    onChange={(e) => setFormPhone(e.target.value)}
-                                                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none focus:border-blue-500"
-                                                    placeholder="e.g. +84 912 345 678"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Address</p>
-                                                <input
-                                                    required
-                                                    value={formAddress}
-                                                    onChange={(e) => setFormAddress(e.target.value)}
-                                                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none focus:border-blue-500"
-                                                    placeholder="Current address"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Avatar (upload or URL)</p>
-                                                <input
-                                                    value={formAvatar}
-                                                    onChange={(e) => setFormAvatar(e.target.value)}
-                                                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-sm outline-none focus:border-blue-500"
-                                                    placeholder="Paste image URL"
-                                                />
-                                                <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                        className="rounded-full border border-slate-200 px-3 py-1 hover:border-blue-300 hover:text-blue-600"
-                                                    >
-                                                        Upload from device
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setEditing(false);
-                                                            setSaveMessage(null);
-                                                            setFormAddress(profile?.address || "");
-                                                            setFormPhone(profile?.phone || "");
-                                                            setFormAvatar(profile?.avatar_url || "");
-                                                        }}
-                                                        className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-slate-300"
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                    <button
-                                                        type="submit"
-                                                        disabled={saving}
-                                                        className={`rounded-xl px-5 py-3 text-sm font-semibold text-white shadow ${saving ? "bg-slate-400" : "bg-blue-600 hover:bg-blue-700"}`}
-                                                    >
-                                                        {saving ? "Saving..." : "Save"}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    )}
-                                </div>
-                            </div>
+                            <ProfileSummaryCard
+                                editing={editing}
+                                loading={loading}
+                                saving={saving}
+                                profile={profile}
+                                displayName={displayName}
+                                departmentName={departmentName}
+                                statusLabel={statusLabel}
+                                initials={initials}
+                                managerDisplay={managerDisplay}
+                                formAvatar={formAvatar}
+                                formPhone={formPhone}
+                                formAddress={formAddress}
+                                saveMessage={saveMessage}
+                                fileInputRef={fileInputRef}
+                                onStartEdit={() => setEditing(true)}
+                                onCancelEdit={() => {
+                                    setEditing(false);
+                                    setSaveMessage(null);
+                                    setFormAddress(profile?.address || "");
+                                    setFormPhone(profile?.phone || "");
+                                    setFormAvatar(profile?.avatar_url || "");
+                                }}
+                                onSubmit={handleSave}
+                                onPhoneChange={setFormPhone}
+                                onAddressChange={setFormAddress}
+                                onAvatarChange={setFormAvatar}
+                                onAvatarFileChange={handleAvatarFileChange}
+                                formatDate={formatDate}
+                            />
                         </div>
 
                         <div className="space-y-4">
+                            <InfoSectionCard title="Personal information" badge="Read-only" fields={personalFields} />
+
                             <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-lg font-semibold text-slate-900">Personal information</h2>
-                                    <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">Read-only</span>
-                                </div>
-
-                                <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                                    {personalFields.map((field) => (
-                                        <div key={field.label} className="space-y-1">
-                                            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{field.label}</p>
-                                            <p className="text-sm font-semibold text-slate-900">{field.value}</p>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="mt-6 flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                                    <span className="text-slate-500">ⓘ</span>
-                                    <p>
-                                        To change employment or contract details, please contact HR or submit a Help Desk ticket.
-                                    </p>
+                                <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                                    <span className="text-slate-500">i</span>
+                                    <p>To change employment or contract details, please contact HR.</p>
                                 </div>
                             </div>
 
-                            <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-                                <h2 className="text-lg font-semibold text-slate-900">Account activity</h2>
-                                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                                    {activityFields.map((field) => (
-                                        <div key={field.label} className="space-y-1 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                                            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{field.label}</p>
-                                            <p className="text-sm font-semibold text-slate-900">{field.value}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <InfoSectionCard title="Account activity" fields={activityFields} compact />
                         </div>
                     </div>
 
@@ -375,3 +297,5 @@ export default function MyProfilePage() {
         </main>
     );
 }
+
+

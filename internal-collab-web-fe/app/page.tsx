@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useState } from "react";
+import { type SubmitEventHandler, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { validateLoginPayload } from "@/app/schemas/shcema.login";
@@ -26,7 +26,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
+  const handleLogin: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
     setError("");
 

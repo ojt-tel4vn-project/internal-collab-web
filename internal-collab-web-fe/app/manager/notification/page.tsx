@@ -1,3 +1,13 @@
+import NotificationCenter from "@/components/notification/NotificationCenter";
+import { ManagerSideNav } from "@/components/navigation/ManagerSideNav";
+
 export default function ManagerNotificationPage() {
-  return <div className="p-6">Manager notifications</div>;
+  return (
+    <NotificationCenter
+      sideNav={<ManagerSideNav />}
+      maxWidthClassName="max-w-7xl"
+      roleLabel="Manager"
+      tone="violet"
+    />
+  );
 }

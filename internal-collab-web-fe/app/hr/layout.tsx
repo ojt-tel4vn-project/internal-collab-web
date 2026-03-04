@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import HR_Navbar from "@/components/HR_Navbar";
+import HR_Navbar from "@/components/navbar/HR_Navbar";
 
 export default function HrLayout({
   children,

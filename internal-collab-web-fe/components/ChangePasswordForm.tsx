@@ -1,7 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { type SubmitEventHandler, useEffect, useState } from "react";
 
 type ChangePasswordFormProps = {
   roleLabel: string;
@@ -27,14 +26,18 @@ function readApiMessage(payload: unknown): string | null {
 }
 
 export default function ChangePasswordForm({ roleLabel }: ChangePasswordFormProps) {
-  const searchParams = useSearchParams();
-  const isForcedChange = searchParams.get("forced") === "1";
+  const [isForcedChange, setIsForcedChange] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setIsForcedChange(new URLSearchParams(window.location.search).get("forced") === "1");
+  }, []);
 
   useEffect(() => {
     if (!isForcedChange) {
@@ -47,7 +50,7 @@ export default function ChangePasswordForm({ roleLabel }: ChangePasswordFormProp
     }
   }, [isForcedChange]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
     setError("");
     setSuccess("");

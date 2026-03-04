@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Employee_Navbar from "@/components/Employee_Navbar";
+import Employee_Navbar from "@/components/navbar/Employee_Navbar";
 
 export default function EmployeeLayout({
   children,
