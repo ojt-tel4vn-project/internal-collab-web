@@ -242,17 +242,7 @@ function buildSummary(quotas: LeaveQuota[]): LeaveSummary {
 
 async function fetchLeaveQuotas() {
     const directData = await fetchApiArray("/api/leave-quotas", "leave quotas");
-    if (directData.length > 0) return directData.map((item, index) => normalizeQuota(item, index));
-
-    const currentYear = new Date().getFullYear();
-    const fallbackYears = Array.from(new Set([currentYear, 2026, currentYear - 1, currentYear + 1]));
-    for (const year of fallbackYears) {
-        const yearData = await fetchApiArray(`/api/leave-quotas?year=${year}`, "leave quotas");
-        if (yearData.length > 0) {
-            return yearData.map((item, index) => normalizeQuota(item, index));
-        }
-    }
-    return [];
+    return directData.map((item, index) => normalizeQuota(item, index));
 }
 
 async function fetchLeaveRequests() {
@@ -265,16 +255,29 @@ export async function loadLeaveRequestPageData(): Promise<LeaveRequestPageData> 
     let leaveRequests: LeaveRequestItem[] = [];
     const errors: string[] = [];
 
-    try {
-        quotas = await fetchLeaveQuotas();
-    } catch (error) {
-        errors.push(error instanceof Error ? error.message : "Unable to load leave quotas");
+    const [quotaResult, leaveRequestsResult] = await Promise.allSettled([
+        fetchLeaveQuotas(),
+        fetchLeaveRequests(),
+    ]);
+
+    if (quotaResult.status === "fulfilled") {
+        quotas = quotaResult.value;
+    } else {
+        errors.push(
+            quotaResult.reason instanceof Error
+                ? quotaResult.reason.message
+                : "Unable to load leave quotas",
+        );
     }
 
-    try {
-        leaveRequests = await fetchLeaveRequests();
-    } catch (error) {
-        errors.push(error instanceof Error ? error.message : "Unable to load leave requests");
+    if (leaveRequestsResult.status === "fulfilled") {
+        leaveRequests = leaveRequestsResult.value;
+    } else {
+        errors.push(
+            leaveRequestsResult.reason instanceof Error
+                ? leaveRequestsResult.reason.message
+                : "Unable to load leave requests",
+        );
     }
 
     const summary = buildSummary(quotas);
