@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type React from "react";
 import type { RefObject } from "react";
 import type { EmployeeProfile } from "@/types/employee";
@@ -80,9 +81,12 @@ export function ProfileSummaryCard({
                         title={editing ? "Choose a photo" : undefined}
                     >
                         {showAvatar ? (
-                            <img
+                            <Image
                                 src={showAvatar}
                                 alt="Avatar"
+                                width={112}
+                                height={112}
+                                unoptimized
                                 className="h-full w-full object-cover"
                             />
                         ) : (

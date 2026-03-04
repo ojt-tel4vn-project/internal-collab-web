@@ -3,10 +3,9 @@ import type { NavItem } from "@/types/dashboard";
 
 interface SidebarNavProps {
     items: NavItem[];
-    role?: { label: string; value: string };
 }
 
-export function SidebarNav({ items, role }: SidebarNavProps) {
+export function SidebarNav({ items }: SidebarNavProps) {
     return (
         <aside className="w-full max-w-[230px] rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
             <nav>

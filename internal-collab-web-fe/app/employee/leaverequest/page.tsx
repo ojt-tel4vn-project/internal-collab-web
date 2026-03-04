@@ -152,7 +152,7 @@ export default function LeaveRequestPage() {
                                             </div>
                                             {idx === history.length - 1 ? (
                                                 <p className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-[11px] text-rose-600">
-                                                    "Insufficient leave balance for this period after recent updates. Please contact payroll for adjustment."
+                                                    Insufficient leave balance for this period after recent updates. Please contact payroll for adjustment.
                                                 </p>
                                             ) : null}
                                         </div>
