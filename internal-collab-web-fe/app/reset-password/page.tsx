@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { type SubmitEventHandler, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { type SubmitEventHandler, useEffect, useState } from "react";
 
 function readApiMessage(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") {
@@ -25,13 +24,17 @@ function readApiMessage(payload: unknown): string | null {
 }
 
 export default function ResetPasswordPage() {
-  const searchParams = useSearchParams();
-  const token = useMemo(() => (searchParams.get("token") ?? "").trim(), [searchParams]);
+  const [token, setToken] = useState("");
 
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setToken((new URLSearchParams(window.location.search).get("token") ?? "").trim());
+  }, []);
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
