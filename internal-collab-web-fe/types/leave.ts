@@ -30,11 +30,13 @@ export interface CreateLeaveRequestResponse {
 export interface LeaveRequestItem {
     id: string;
     leave_type_id: string;
+    leave_type_name?: string;
     from_date: string;
     to_date: string;
     status: string;
     reason?: string;
     contact_during_leave?: string;
+    approver_comment?: string;
     manager_comment?: string;
     approval_comment?: string;
     rejection_comment?: string;
@@ -68,6 +70,12 @@ export interface LeaveHistoryItem {
     title: string;
     range: string;
     duration: string;
+    leaveType: string;
+    fromDate: string;
+    toDate: string;
+    reason: string;
+    contact: string;
+    comment: string;
     managerComment?: string;
     status: LeaveStatusMeta;
 }

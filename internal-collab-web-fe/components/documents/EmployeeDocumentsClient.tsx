@@ -82,7 +82,7 @@ export function EmployeeDocumentsClient({ documents }: Props) {
         setBusyId(id);
         setError(null);
         try {
-            const res = await fetch(`/api/documents/${id}/read`, { method: "POST" });
+            const res = await fetch(`/api/employee/documents/${id}/read`, { method: "POST" });
             if (!res.ok) {
                 const raw = await res.text().catch(() => "");
                 let message = `Unable to mark document as read (HTTP ${res.status})`;
@@ -184,7 +184,7 @@ export function EmployeeDocumentsClient({ documents }: Props) {
 
                                 <div className="mt-4 flex items-center gap-3">
                                     <a
-                                        href={`/api/documents/${doc.id}/view`}
+                                        href={`/api/employee/documents/${doc.id}/view`}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="rounded-xl bg-slate-100 px-4 py-3 text-center text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-200"
@@ -192,7 +192,7 @@ export function EmployeeDocumentsClient({ documents }: Props) {
                                         View
                                     </a>
                                     <a
-                                        href={`/api/documents/${doc.id}/download`}
+                                        href={`/api/employee/documents/${doc.id}/download`}
                                         className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm hover:border-blue-200"
                                         title="Download"
                                     >

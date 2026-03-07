@@ -15,7 +15,7 @@ type Props = {
 
 function buildFilterList(items: LeaveHistoryItem[]) {
     const dynamic = new Set(items.map((item) => item.status.label).filter(Boolean));
-    const known = FILTER_PRIORITY.filter((label) => label === "All" || dynamic.has(label));
+    const known: string[] = FILTER_PRIORITY.filter((label) => label === "All" || dynamic.has(label));
     const custom = [...dynamic].filter((label) => !known.includes(label));
     return [...known, ...custom];
 }

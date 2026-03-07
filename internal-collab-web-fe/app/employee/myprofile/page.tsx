@@ -87,7 +87,7 @@ export default function MyProfilePage() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch("/api/employees/me", { cache: "no-store" });
+            const res = await fetch("/api/employee/me", { cache: "no-store" });
             if (!res.ok) {
                 throw new Error("Unable to load profile");
             }
@@ -169,7 +169,7 @@ export default function MyProfilePage() {
         };
 
         try {
-            const res = await fetch("/api/employees/me", {
+            const res = await fetch("/api/employee/me", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),

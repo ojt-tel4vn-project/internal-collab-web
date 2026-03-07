@@ -1,5 +1,6 @@
 import { AlertTriangleIcon } from "@/components/home/Icons";
 import { LeaveHistoryPanel } from "@/components/leave/LeaveHistoryPanel";
+import { PendingLeaveRequests } from "@/components/leave/PendingLeaveRequests";
 import { LeaveRequestForm } from "@/components/leave/LeaveRequestForm";
 import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
 import { loadLeaveRequestPageData } from "@/app/employee/leaverequest/_lib/leave-request-data";
@@ -55,37 +56,7 @@ export default async function LeaveRequestPage() {
                                 </p>
                             </div>
 
-                            {pendingRequests.length === 0 ? (
-                                <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-4 text-sm text-slate-500">
-                                    No pending leave requests.
-                                </div>
-                            ) : (
-                                <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-sm space-y-3">
-                                    <div className="text-sm font-semibold text-slate-900">Pending Leave Requests</div>
-                                    <div className="divide-y divide-slate-100 text-sm text-slate-700">
-                                        {pendingRequests.slice(0, 5).map((request, index) => (
-                                            <div key={request.id || `request-${index}`} className="py-3 grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <div className="text-xs uppercase text-slate-400">Leave Type</div>
-                                                    <div className="font-semibold text-slate-900">{request.leaveType}</div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-xs uppercase text-slate-400">Status</div>
-                                                    <div className={`font-semibold ${request.status.tone}`}>{request.status.label}</div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-xs uppercase text-slate-400">Date Range</div>
-                                                    <div className="font-semibold">{request.dateRange}</div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-xs uppercase text-slate-400">Days</div>
-                                                    <div className="font-semibold">{request.days}</div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                            <PendingLeaveRequests items={pendingRequests} />
 
                             {shouldShowQuotaAlert && (
                                 <div className="rounded-2xl border border-orange-100 bg-orange-50 px-5 py-4 shadow-sm">

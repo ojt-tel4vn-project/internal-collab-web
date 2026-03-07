@@ -41,7 +41,7 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
             setLoadingTypes(true);
             setError(null);
             try {
-                const res = await fetch("/api/leave-types", { cache: "no-store" });
+                const res = await fetch("/api/employee/leave-types", { cache: "no-store" });
                 if (!res.ok) {
                     throw new Error("Unable to load leave types");
                 }
@@ -81,7 +81,7 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
         };
 
         try {
-            const res = await fetch("/api/leave-requests", {
+            const res = await fetch("/api/employee/leave-requests", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
