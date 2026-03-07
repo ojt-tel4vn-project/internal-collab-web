@@ -15,10 +15,12 @@ interface ToastState {
 export function LeaveHistory({ items }: LeaveHistoryProps) {
     const [rows, setRows] = useState(items);
     const [busyId, setBusyId] = useState<string | null>(null);
+    const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
     const [toast, setToast] = useState<ToastState | null>(null);
 
     useEffect(() => {
         setRows(items);
+        setExpandedIds({});
     }, [items]);
 
     const statusClass = useMemo(() => ({
@@ -33,10 +35,14 @@ export function LeaveHistory({ items }: LeaveHistoryProps) {
         setTimeout(() => setToast(null), 3500);
     }
 
+    function toggleDetail(id: string) {
+        setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
+    }
+
     async function handleCancel(id: string) {
         setBusyId(id);
         try {
-            const res = await fetch(`/api/leave-requests/${id}`, { method: "DELETE" });
+            const res = await fetch(`/api/employee/leave-requests/${id}`, { method: "DELETE" });
             if (!res.ok) {
                 const raw = await res.text();
                 throw new Error(raw || "Unable to cancel leave request");
@@ -57,6 +63,7 @@ export function LeaveHistory({ items }: LeaveHistoryProps) {
         <div className="space-y-4 text-sm">
             {rows.map((item, idx) => {
                 const isPending = item.status.label === "Pending";
+                const isExpanded = Boolean(expandedIds[item.id]);
                 return (
                     <div key={item.id} className={idx !== rows.length - 1 ? "border-b border-slate-100 pb-4" : ""}>
                         <div className="flex items-start justify-between gap-2">
@@ -71,13 +78,44 @@ export function LeaveHistory({ items }: LeaveHistoryProps) {
                                 </p>
                             </div>
                         </div>
-                        {item.managerComment && (item.status.label === "Approved" || item.status.label === "Rejected") && (
-                            <p className="mt-2 rounded-xl bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
-                                Manager comment: {item.managerComment}
-                            </p>
+                        {isExpanded && (
+                            <div className="mt-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
+                                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Detail</p>
+                                <div className="mt-2 grid gap-2 text-[11px] sm:grid-cols-2">
+                                    <div>
+                                        <p className="uppercase text-slate-400">Leave type</p>
+                                        <p className="font-semibold text-slate-800">{item.leaveType}</p>
+                                    </div>
+                                    <div>
+                                        <p className="uppercase text-slate-400">From date to date</p>
+                                        <p className="font-semibold text-slate-800">
+                                            {item.fromDate} - {item.toDate}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="uppercase text-slate-400">Reason</p>
+                                        <p className="font-semibold text-slate-800">{item.reason || "-"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="uppercase text-slate-400">Contact</p>
+                                        <p className="font-semibold text-slate-800">{item.contact || "-"}</p>
+                                    </div>
+                                    <div className="sm:col-span-2">
+                                        <p className="uppercase text-slate-400">Comment</p>
+                                        <p className="font-semibold text-slate-800">{item.comment || "-"}</p>
+                                    </div>
+                                </div>
+                            </div>
                         )}
                         <div className="mt-2 flex items-center justify-between">
-                            <span className="text-[11px] text-slate-400">&nbsp;</span>
+                            <button
+                                type="button"
+                                onClick={() => toggleDetail(item.id)}
+                                aria-expanded={isExpanded}
+                                className="text-xs font-semibold text-blue-600 hover:underline"
+                            >
+                                {isExpanded ? "Hide Detail" : "Detail"}
+                            </button>
                             <button
                                 type="button"
                                 disabled={busyId === item.id || !isPending}

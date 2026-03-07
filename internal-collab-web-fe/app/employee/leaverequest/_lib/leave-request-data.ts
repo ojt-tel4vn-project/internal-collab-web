@@ -11,6 +11,8 @@ type ApiEnvelope = {
     body?: { data?: unknown };
 };
 
+const POLICY_TOTAL_DAYS = 12;
+
 export type LeaveSummary = {
     used: number;
     total: number;
@@ -24,6 +26,11 @@ export type PendingLeaveRequestView = {
     leaveType: string;
     status: LeaveStatusMeta;
     dateRange: string;
+    fromDate: string;
+    toDate: string;
+    reason: string;
+    contact: string;
+    comment: string;
     days: number;
 };
 
@@ -137,6 +144,7 @@ function normalizeLeaveRequest(input: unknown, index: number): LeaveRequestItem 
         return {
             id: `leave-request-${index}`,
             leave_type_id: "",
+            leave_type_name: "Leave",
             from_date: "",
             to_date: "",
             status: "pending",
@@ -144,14 +152,28 @@ function normalizeLeaveRequest(input: unknown, index: number): LeaveRequestItem 
     }
 
     const row = input as Record<string, unknown>;
+    const leaveTypeRaw =
+        row.leave_type && typeof row.leave_type === "object"
+            ? (row.leave_type as Record<string, unknown>)
+            : row.leaveType && typeof row.leaveType === "object"
+              ? (row.leaveType as Record<string, unknown>)
+              : null;
+
     const id = asText(row.id ?? row.ID, `leave-request-${index}`);
-    const leaveTypeId = asText(row.leave_type_id ?? row.leaveTypeID ?? row.leaveTypeId, "Leave");
+    const leaveTypeId = asText(row.leave_type_id ?? row.leaveTypeID ?? row.leaveTypeId ?? leaveTypeRaw?.id, "");
+    const leaveTypeName = asText(
+        row.leave_type_name ?? row.leaveTypeName ?? leaveTypeRaw?.name ?? leaveTypeId,
+        "Leave",
+    );
     const fromDate = asText(row.from_date ?? row.fromDate, "");
     const toDate = asText(row.to_date ?? row.toDate, "");
     const status = asText(row.status, "pending");
+    const approverComment = asText(row.approver_comment ?? row.approverComment, "");
     const managerComment = asText(
         row.manager_comment ??
         row.managerComment ??
+        row.approver_comment ??
+        row.approverComment ??
         row.approval_comment ??
         row.approvalComment ??
         row.rejection_comment ??
@@ -165,18 +187,20 @@ function normalizeLeaveRequest(input: unknown, index: number): LeaveRequestItem 
     return {
         id,
         leave_type_id: leaveTypeId,
+        leave_type_name: leaveTypeName,
         from_date: fromDate,
         to_date: toDate,
         status,
         reason: asText(row.reason, ""),
         contact_during_leave: asText(row.contact_during_leave ?? row.contactDuringLeave, ""),
+        approver_comment: approverComment,
         manager_comment: managerComment,
         approval_comment: asText(row.approval_comment ?? row.approvalComment, ""),
         rejection_comment: asText(
             row.rejection_comment ?? row.rejectionComment ?? row.reject_comment ?? row.rejectComment,
             "",
         ),
-        created_at: asText(row.created_at ?? row.createdAt, ""),
+        created_at: asText(row.created_at ?? row.createdAt ?? row.submitted_at ?? row.submittedAt, ""),
         updated_at: asText(row.updated_at ?? row.updatedAt, ""),
         total_days: asNumber(row.total_days ?? row.totalDays, 0),
     };
@@ -198,6 +222,7 @@ function formatDateRange(fromDate: string, toDate: string) {
 function normalizeStatusMeta(status: string): LeaveStatusMeta {
     const normalized = status.trim().toLowerCase();
     if (normalized === "approved") return { label: "Approved", tone: "text-green-600" };
+    if (normalized === "approval") return { label: "Approved", tone: "text-green-600" };
     if (normalized === "pending") return { label: "Pending", tone: "text-orange-500" };
     if (normalized === "rejected") return { label: "Rejected", tone: "text-red-500" };
     if (normalized === "cancelled" || normalized === "canceled") return { label: "Cancelled", tone: "text-slate-500" };
@@ -209,44 +234,63 @@ function isPendingStatus(status: string) {
     return normalized === "pending" || normalized.includes("pending");
 }
 
+function getRequestComment(request: LeaveRequestItem) {
+    return request.approver_comment || request.manager_comment || request.approval_comment || request.rejection_comment || "";
+}
+
 function toHistoryItems(requests: LeaveRequestItem[]): LeaveHistoryItem[] {
-    return requests.map((req, index) => ({
-        id: req.id || `request-${index}`,
-        title: req.leave_type_id || "Leave Request",
-        range: formatDateRange(req.from_date, req.to_date),
-        duration: `${asNumber(req.total_days, 0).toFixed(1)}d`,
-        status: normalizeStatusMeta(req.status),
-        managerComment: req.manager_comment || req.approval_comment || req.rejection_comment || "",
-    }));
+    return requests.map((req, index) => {
+        const leaveType = req.leave_type_name || req.leave_type_id || "Leave Request";
+        const comment = getRequestComment(req);
+        return {
+            id: req.id || `request-${index}`,
+            title: leaveType,
+            range: formatDateRange(req.from_date, req.to_date),
+            duration: `${asNumber(req.total_days, 0).toFixed(1)}d`,
+            leaveType,
+            fromDate: formatDate(req.from_date),
+            toDate: formatDate(req.to_date),
+            reason: req.reason || "-",
+            contact: req.contact_during_leave || "-",
+            comment: comment || "-",
+            status: normalizeStatusMeta(req.status),
+            managerComment: comment,
+        };
+    });
 }
 
 function toPendingView(request: LeaveRequestItem): PendingLeaveRequestView {
+    const comment = getRequestComment(request);
     return {
         id: request.id,
-        leaveType: request.leave_type_id || "-",
+        leaveType: request.leave_type_name || request.leave_type_id || "-",
         status: normalizeStatusMeta(request.status),
         dateRange: formatDateRange(request.from_date, request.to_date),
+        fromDate: formatDate(request.from_date),
+        toDate: formatDate(request.to_date),
+        reason: request.reason || "-",
+        contact: request.contact_during_leave || "-",
+        comment: comment || "-",
         days: asNumber(request.total_days, 0),
     };
 }
 
 function buildSummary(quotas: LeaveQuota[]): LeaveSummary {
     const used = quotas.reduce((sum, q) => sum + (q.used_days ?? 0), 0);
-    const total = quotas.reduce((sum, q) => sum + (q.total_days ?? 0), 0);
-    const remainingFromApi = quotas.reduce((sum, q) => sum + (q.remaining_days ?? 0), 0);
-    const remaining = remainingFromApi > 0 ? remainingFromApi : Math.max(total - used, 0);
+    const total = POLICY_TOTAL_DAYS;
+    const remaining = Math.max(total - used, 0);
     const over = Math.max(0, used - total);
     const progress = total > 0 ? Math.min((used / total) * 100, 100) : 0;
     return { used, total, remaining, over, progress };
 }
 
 async function fetchLeaveQuotas() {
-    const directData = await fetchApiArray("/api/leave-quotas", "leave quotas");
+    const directData = await fetchApiArray("/api/employee/leave-quotas", "leave quotas");
     return directData.map((item, index) => normalizeQuota(item, index));
 }
 
 async function fetchLeaveRequests() {
-    const raw = await fetchApiArray("/api/leave-requests", "leave requests");
+    const raw = await fetchApiArray("/api/employee/leave-requests", "leave requests");
     return raw.map((item, index) => normalizeLeaveRequest(item, index));
 }
 
