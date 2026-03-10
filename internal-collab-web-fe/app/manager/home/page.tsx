@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardCalendar } from "@/components/home/Calendar";
-import { ManagerSideNav } from "@/components/navigation/ManagerSideNav";
-import { MilestonesCard } from "@/components/home/Milestones";
+import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
+import { MilestonesCard } from "@/components/dashboard/home/Milestones";
+import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 import type { Milestone } from "@/types/dashboard";
 
 const stats = [

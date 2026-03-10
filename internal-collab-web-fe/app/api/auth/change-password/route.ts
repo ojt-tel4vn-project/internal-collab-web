@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAccessTokenFromRequest, proxyToBackend } from "@/libs/backend-api";
+import { createProxyResponse, hasAuthSession, proxyToBackend } from "@/lib/backend";
 
 export async function POST(request: NextRequest) {
   try {
-    const accessToken = getAccessTokenFromRequest(request);
-    if (!accessToken) {
+    if (!hasAuthSession(request)) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -20,12 +19,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const response = new NextResponse(upstreamResponse.text, {
-      status: upstreamResponse.status,
-      headers: {
-        "content-type": upstreamResponse.contentType,
-      },
-    });
+    const response = createProxyResponse(upstreamResponse);
 
     if (upstreamResponse.ok) {
       response.cookies.set({
@@ -47,13 +41,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-/*
-Tóm tắt:
-- API route đổi mật khẩu cho user đã đăng nhập.
-- Kiểm tra có `access_token` trong cookie; thiếu token thì trả 401.
-- Proxy `old_password` và `new_password` sang backend `/auth/change-password`
-  kèm Authorization lấy từ cookie.
-- Nếu backend đổi mật khẩu thành công, xóa cookie `require_password_change`
-  để mở khóa điều hướng trong middleware.
-*/

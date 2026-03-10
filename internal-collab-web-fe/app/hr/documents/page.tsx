@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { HRSideNav } from "@/components/navigation/HRSideNav";
+import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 
 const docs = [
     { name: "Employee Handbook 2024", type: "Policy", owner: "HR", uploaded: "Oct 18, 2023", status: "Approved", size: "1.2 MB" },

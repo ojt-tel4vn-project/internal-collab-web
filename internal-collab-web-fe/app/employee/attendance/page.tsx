@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
-import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "@/components/home/Icons";
-import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
+import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "@/components/dashboard/home/Icons";
+import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
 
 const stats = [
     { label: "Present Days", value: "22/31", color: "text-blue-600" },
@@ -144,7 +144,7 @@ export default function AttendancePage() {
                                     {entry.actions.viewComment ? (
                                         <button className="text-[11px] font-semibold uppercase text-blue-600 hover:underline">View Comment</button>
                                     ) : null}
-                                    {entry.actions.lock ? <span className="text-slate-300">🔒</span> : null}
+                                    {entry.actions.lock ? <span className="text-slate-300">ðŸ”’</span> : null}
                                 </div>
                             </div>
                         ))}
@@ -153,11 +153,11 @@ export default function AttendancePage() {
                     <div className="flex items-center justify-between text-xs text-slate-500">
                         <p>Showing 1 to 5 of 31 entries</p>
                         <div className="flex items-center gap-2">
-                            <button className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50">‹</button>
+                            <button className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50">â€¹</button>
                             <button className="h-8 w-8 rounded-lg border border-blue-600 bg-blue-600 text-white">1</button>
                             <button className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">2</button>
                             <button className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">3</button>
-                            <button className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50">›</button>
+                            <button className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50">â€º</button>
                         </div>
                     </div>
                 </section>
@@ -165,3 +165,4 @@ export default function AttendancePage() {
         </main>
     );
 }
+

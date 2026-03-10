@@ -1,4 +1,4 @@
-import { ManagerSideNav } from "@/components/navigation/ManagerSideNav";
+import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 
 const documents = [
     { title: "Q4 OKRs", category: "Planning", owner: "Ops", updated: "Oct 10", status: "Published" },

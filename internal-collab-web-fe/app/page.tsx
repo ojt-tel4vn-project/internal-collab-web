@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { type SubmitEventHandler, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { validateLoginPayload } from "@/app/schemas/shcema.login";
-import { getChangePasswordPathForRoles, getHomePathForRoles } from "@/libs/auth";
+import { validateLoginPayload } from "@/schemas/auth/login.schema";
+import { getChangePasswordPathForRoles, getHomePathForRoles } from "@/lib/auth";
 
 type LoginResponse = {
   require_password_change: boolean;
@@ -208,10 +208,11 @@ export default function Home() {
           </div>
 
           <div className="text-xs text-slate-400">
-            (c) 2026 CollabHub Inc. · Privacy Policy · Terms
+            (c) 2026 CollabHub Inc. Â· Privacy Policy Â· Terms
           </div>
         </div>
       </div>
     </>
   );
 }
+

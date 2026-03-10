@@ -1,6 +1,6 @@
 "use client";
 
-import { HRSideNav } from "@/components/navigation/HRSideNav";
+import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 
 const pointConfig = {
     annualAllocation: 500,

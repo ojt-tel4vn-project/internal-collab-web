@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { TaskList } from "@/components/home/TaskList";
-import { LeaderboardCard } from "@/components/home/Leaderboard";
-import { DashboardCalendar } from "@/components/home/Calendar";
-import { MilestonesCard } from "@/components/home/Milestones";
+import { TaskList } from "@/components/dashboard/home/TaskList";
+import { LeaderboardCard } from "@/components/dashboard/home/Leaderboard";
+import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
+import { MilestonesCard } from "@/components/dashboard/home/Milestones";
 import { leaderboard } from "@/app/employee/_data";
-import { CalendarIcon } from "@/components/home/Icons";
-import { HRSideNav } from "@/components/navigation/HRSideNav";
+import { CalendarIcon } from "@/components/dashboard/home/Icons";
+import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 import type { Milestone } from "@/types/dashboard";
 
 const stats = [

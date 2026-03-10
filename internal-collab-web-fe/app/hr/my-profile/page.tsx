@@ -1,3 +1,12 @@
+import SelfProfilePage from "@/components/profile/SelfProfilePage";
+import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
+
 export default function HrMyProfilePage() {
-  return <div className="p-6">HR profile</div>;
+  return (
+    <SelfProfilePage
+      sideNav={<HRSideNav />}
+      defaultName="HR User"
+      noteText="Employment, department, and role changes are managed by system administration."
+    />
+  );
 }

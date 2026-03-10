@@ -1,5 +1,5 @@
-import NotificationCenter from "@/components/notification/NotificationCenter";
-import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
+import NotificationCenter from "@/components/notifications/NotificationCenter";
+import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
 
 export default function EmployeeNotificationPage() {
   return (

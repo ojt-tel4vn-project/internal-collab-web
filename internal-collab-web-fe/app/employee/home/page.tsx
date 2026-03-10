@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
-import { DashboardCalendar } from "@/components/home/Calendar";
-import { LeaderboardCard } from "@/components/home/Leaderboard";
-import { MilestonesCard } from "@/components/home/Milestones";
-import { TaskList } from "@/components/home/TaskList";
-import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
+import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
+import { LeaderboardCard } from "@/components/dashboard/home/Leaderboard";
+import { MilestonesCard } from "@/components/dashboard/home/Milestones";
+import { TaskList } from "@/components/dashboard/home/TaskList";
+import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
 import { leaderboard, milestones } from "../_data";
 
 export default function EmployeeDashboardPage() {
@@ -47,3 +47,4 @@ export default function EmployeeDashboardPage() {
         </main>
     );
 }
+
