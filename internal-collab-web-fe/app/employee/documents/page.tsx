@@ -1,7 +1,7 @@
-import { DocumentIcon, DownloadIcon, AlertTriangleIcon } from "@/components/home/Icons";
-import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
+﻿import { DocumentIcon, DownloadIcon, AlertTriangleIcon } from "@/components/dashboard/home/Icons";
+import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
 
-const filters = ["All Documents", "Onboarding", "Quy định", "Hướng dẫn"];
+const filters = ["All Documents", "Onboarding", "Quy Ä‘á»‹nh", "HÆ°á»›ng dáº«n"];
 
 const stats = [
     { label: "Total Documents", value: 12, tone: "text-slate-900", iconBg: "bg-blue-50", iconColor: "text-blue-500", icon: DocumentIcon },
@@ -120,13 +120,13 @@ export default function DocumentsPage() {
                                             <Icon className={`h-5 w-5 ${iconColor}`} />
                                         </div>
                                         {label === "Read" ? (
-                                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">✓</span>
+                                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">âœ“</span>
                                         ) : null}
                                         {label === "Action Required" ? (
                                             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 text-amber-500">!</span>
                                         ) : null}
                                         {label === "Total Documents" ? (
-                                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-500">📄</span>
+                                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-500">ðŸ“„</span>
                                         ) : null}
                                     </div>
                                     <p className="mt-4 text-[13px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
@@ -154,11 +154,11 @@ export default function DocumentsPage() {
 
                                 <div className="mt-4 flex items-center justify-between text-xs font-semibold text-slate-500">
                                     <span className="inline-flex items-center gap-2">
-                                        <span className="text-slate-400">📁</span>
+                                        <span className="text-slate-400">ðŸ“</span>
                                         {doc.size}
                                     </span>
                                     <span className="inline-flex items-center gap-2">
-                                        <span className="text-slate-400">📅</span>
+                                        <span className="text-slate-400">ðŸ“…</span>
                                         {doc.date}
                                     </span>
                                 </div>
@@ -184,3 +184,4 @@ export default function DocumentsPage() {
         </main>
     );
 }
+

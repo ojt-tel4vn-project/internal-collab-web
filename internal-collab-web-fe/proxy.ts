@@ -5,17 +5,63 @@ import {
   getHomePathForRoles,
   getRequiredRoleFromPath,
   parseRolesCookie,
-} from "@/libs/auth";
+} from "@/lib/auth";
+import {
+  applyAuthSessionCookies,
+  clearAuthSessionCookies,
+  getAccessTokenFromRequest,
+  hasAuthSession,
+  isJwtExpired,
+  refreshAuthSession,
+} from "@/lib/backend";
 
-function hasAuthCookies(request: NextRequest) {
-  const accessToken = request.cookies.get("access_token")?.value;
-  const refreshToken = request.cookies.get("refresh_token")?.value;
-  return Boolean(accessToken || refreshToken);
+type SessionState = {
+  isAuthenticated: boolean;
+  clearAuthCookies: boolean;
+  refreshedSession: Awaited<ReturnType<typeof refreshAuthSession>>["session"];
+};
+
+async function resolveSessionState(request: NextRequest): Promise<SessionState> {
+  if (!hasAuthSession(request)) {
+    return {
+      isAuthenticated: false,
+      clearAuthCookies: false,
+      refreshedSession: null,
+    };
+  }
+
+  if (!isJwtExpired(getAccessTokenFromRequest(request))) {
+    return {
+      isAuthenticated: true,
+      clearAuthCookies: false,
+      refreshedSession: null,
+    };
+  }
+
+  const refreshResult = await refreshAuthSession(request);
+
+  return {
+    isAuthenticated: Boolean(refreshResult.session),
+    clearAuthCookies: refreshResult.clearAuthCookies,
+    refreshedSession: refreshResult.session,
+  };
 }
 
-export function proxy(request: NextRequest) {
+function finalizeResponse(response: NextResponse, sessionState: SessionState) {
+  if (sessionState.refreshedSession) {
+    applyAuthSessionCookies(response, sessionState.refreshedSession);
+  }
+
+  if (sessionState.clearAuthCookies) {
+    clearAuthSessionCookies(response);
+  }
+
+  return response;
+}
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthenticated = hasAuthCookies(request);
+  const sessionState = await resolveSessionState(request);
 
   const roles = parseRolesCookie(request.cookies.get("user_roles")?.value);
   const homePath = getHomePathForRoles(roles);
@@ -24,56 +70,50 @@ export function proxy(request: NextRequest) {
   const isPasswordChangeRequired = request.cookies.get("require_password_change")?.value === "1";
 
   if (pathname === "/") {
-    if (isAuthenticated && isPasswordChangeRequired && changePasswordPath) {
-      return NextResponse.redirect(new URL(changePasswordPath, request.url));
+    if (sessionState.isAuthenticated && isPasswordChangeRequired && changePasswordPath) {
+      return finalizeResponse(
+        NextResponse.redirect(new URL(changePasswordPath, request.url)),
+        sessionState,
+      );
     }
-    if (isAuthenticated && homePath) {
-      return NextResponse.redirect(new URL(homePath, request.url));
+
+    if (sessionState.isAuthenticated && homePath) {
+      return finalizeResponse(NextResponse.redirect(new URL(homePath, request.url)), sessionState);
     }
-    return NextResponse.next();
+
+    return finalizeResponse(NextResponse.next(), sessionState);
   }
 
   if (!requiredRole) {
-    return NextResponse.next();
+    return finalizeResponse(NextResponse.next(), sessionState);
   }
 
-  if (!isAuthenticated) {
-    return NextResponse.redirect(new URL("/", request.url));
+  if (!sessionState.isAuthenticated) {
+    return finalizeResponse(NextResponse.redirect(new URL("/", request.url)), sessionState);
   }
 
   if (!canAccessPathByRoles(roles, pathname)) {
     if (homePath) {
-      return NextResponse.redirect(new URL(homePath, request.url));
+      return finalizeResponse(NextResponse.redirect(new URL(homePath, request.url)), sessionState);
     }
-    return NextResponse.redirect(new URL("/", request.url));
-  }
 
-  if (pathname === `/${requiredRole}` && homePath) {
-    return NextResponse.redirect(new URL(homePath, request.url));
+    return finalizeResponse(NextResponse.redirect(new URL("/", request.url)), sessionState);
   }
 
   if (isPasswordChangeRequired && changePasswordPath && pathname !== changePasswordPath) {
-    return NextResponse.redirect(new URL(changePasswordPath, request.url));
+    return finalizeResponse(
+      NextResponse.redirect(new URL(changePasswordPath, request.url)),
+      sessionState,
+    );
   }
 
-  return NextResponse.next();
+  if (pathname === `/${requiredRole}` && homePath) {
+    return finalizeResponse(NextResponse.redirect(new URL(homePath, request.url)), sessionState);
+  }
+
+  return finalizeResponse(NextResponse.next(), sessionState);
 }
 
 export const config = {
   matcher: ["/", "/admin/:path*", "/manager/:path*", "/hr/:path*", "/employee/:path*"],
 };
-
-/*
-Tóm tắt:
-- Đây là lớp guard ở mức route (middleware/proxy) cho toàn bộ app theo role.
-- Kiểm tra đăng nhập qua cookie token; chưa đăng nhập thì chuyển về `/`.
-- Đọc role từ cookie `user_roles` để:
-  - xác định trang home mặc định theo ưu tiên role,
-  - kiểm tra user có quyền vào route role tương ứng hay không.
-- Nếu truy cập route không đúng role, tự động redirect về home phù hợp (hoặc `/`).
-- Nếu cookie `require_password_change=1` còn hiệu lực:
-  - ép user về đúng trang `/<role>/change-password`,
-  - chặn truy cập các trang khác cho tới khi đổi mật khẩu thành công.
-- `matcher` giới hạn phạm vi áp dụng cho `/` và các nhánh role:
-  `/admin/*`, `/manager/*`, `/hr/*`, `/employee/*`.
-*/

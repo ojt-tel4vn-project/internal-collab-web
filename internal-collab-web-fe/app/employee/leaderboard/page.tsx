@@ -1,4 +1,4 @@
-import { EmployeeSideNav } from "@/components/navigation/EmployeeSideNav";
+import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
 
 const top3 = [
     { name: "Maria G.", points: "850 pts", rank: 2, color: "bg-slate-200", badge: "🥈" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangleIcon, DocumentIcon, DownloadIcon } from "@/components/home/Icons";
+import { AlertTriangleIcon, DocumentIcon, DownloadIcon } from "@/components/dashboard/home/Icons";
 import type { DocumentRecord, MarkReadResponse } from "@/types/document";
 
 function formatDate(value: string) {

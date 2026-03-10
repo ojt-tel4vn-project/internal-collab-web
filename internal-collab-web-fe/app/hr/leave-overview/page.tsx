@@ -1,6 +1,6 @@
 "use client";
 
-import { HRSideNav } from "@/components/navigation/HRSideNav";
+import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 
 const summaryCards = [
     { label: "Total Requests", value: 18, helper: "This month", tone: "text-blue-600" },

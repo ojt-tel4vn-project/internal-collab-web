@@ -1,5 +1,5 @@
-import type { LeaderboardItem, Milestone, NavItem, TaskItem } from "@/types/dashboard";
-import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon } from "@/components/home/Icons";
+﻿import type { LeaderboardItem, Milestone, NavItem, TaskItem } from "@/types/dashboard";
+import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon } from "@/components/dashboard/home/Icons";
 
 export const navItems: NavItem[] = [
   { label: "Home", href: "/employee", active: true, icon: GridIcon },
@@ -35,4 +35,5 @@ export const milestones: Milestone[] = [
     subtitle: "Welcome our 4 new designers!",
   },
 ];
+
 

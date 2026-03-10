@@ -1,7 +1,7 @@
 "use client";
 
-import { ManagerSideNav } from "@/components/navigation/ManagerSideNav";
-import { PencilIcon } from "@/components/home/Icons";
+import { PencilIcon } from "@/components/dashboard/home/Icons";
+import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 
 const stats = [
     { label: "Total Members", value: 12, icon: "👥" },

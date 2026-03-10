@@ -1,6 +1,6 @@
 "use client";
 
-import { ManagerSideNav } from "@/components/navigation/ManagerSideNav";
+import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 
 const summary = [
     { label: "Pending Review", value: 4, tone: "text-slate-900", accent: "border-amber-100" },

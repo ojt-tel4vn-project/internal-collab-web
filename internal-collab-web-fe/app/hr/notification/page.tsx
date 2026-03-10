@@ -1,5 +1,5 @@
-import NotificationCenter from "@/components/notification/NotificationCenter";
-import { HRSideNav } from "@/components/navigation/HRSideNav";
+import NotificationCenter from "@/components/notifications/NotificationCenter";
+import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 
 export default function HrNotificationPage() {
   return (

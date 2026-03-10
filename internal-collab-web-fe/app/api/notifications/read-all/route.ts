@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAccessTokenFromRequest, proxyToBackend } from "@/libs/backend-api";
+import { createProxyResponse, hasAuthSession, proxyToBackend } from "@/lib/backend";
 
 export async function POST(request: NextRequest) {
   try {
-    const accessToken = getAccessTokenFromRequest(request);
-    if (!accessToken) {
+    if (!hasAuthSession(request)) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -15,12 +14,7 @@ export async function POST(request: NextRequest) {
       body: {},
     });
 
-    return new NextResponse(upstreamResponse.text, {
-      status: upstreamResponse.status,
-      headers: {
-        "content-type": upstreamResponse.contentType,
-      },
-    });
+    return createProxyResponse(upstreamResponse);
   } catch {
     return NextResponse.json(
       { message: "Unable to mark all notifications as read." },

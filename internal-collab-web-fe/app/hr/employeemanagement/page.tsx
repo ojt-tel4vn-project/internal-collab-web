@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { HRSideNav } from "@/components/navigation/HRSideNav";
+import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 
 const stats = [
     { label: "Total Employees", value: "48", icon: "👥" },

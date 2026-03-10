@@ -1,5 +1,5 @@
-import NotificationCenter from "@/components/notification/NotificationCenter";
-import { ManagerSideNav } from "@/components/navigation/ManagerSideNav";
+import NotificationCenter from "@/components/notifications/NotificationCenter";
+import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 
 export default function ManagerNotificationPage() {
   return (

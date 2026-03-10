@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { normalizeRoles } from "@/libs/auth";
-import { proxyToBackend } from "@/libs/backend-api";
+import { normalizeRoles } from "@/lib/auth";
+import { applyAuthSessionCookies, proxyToBackend } from "@/lib/backend";
 
 type BackendLoginResponse = {
   access_token: string;
@@ -70,34 +70,10 @@ export async function POST(request: Request) {
         : null,
     });
 
-    response.cookies.set({
-      name: "access_token",
-      value: data.access_token,
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 15,
-    });
-
-    response.cookies.set({
-      name: "refresh_token",
-      value: data.refresh_token,
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
-
-    response.cookies.set({
-      name: "token_type",
-      value: tokenType,
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+    applyAuthSessionCookies(response, {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      tokenType,
     });
 
     response.cookies.set({
@@ -128,13 +104,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
-/*
-Tóm tắt:
-- Nhận email/password từ frontend và proxy sang backend `/auth/login`.
-- Chuẩn hóa dữ liệu trả về (đặc biệt là danh sách role của user).
-- Set cookie phiên đăng nhập:
-  `access_token`, `refresh_token`, `token_type`, `user_roles`.
-- Set thêm cookie `require_password_change` để middleware ép đổi mật khẩu khi cần.
-- Trả lỗi tương ứng nếu backend lỗi hoặc response token không hợp lệ.
-*/
