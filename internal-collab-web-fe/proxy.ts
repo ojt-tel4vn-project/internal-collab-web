@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  applyAuthSessionCookies,
+  clearAuthSessionCookies,
+  getAccessTokenFromRequest,
+  isJwtExpired,
+  refreshAuthSession,
+} from "@/libs/backend-api";
+import {
   canAccessPathByRoles,
   getChangePasswordPathForRoles,
   getHomePathForRoles,
@@ -13,28 +20,51 @@ function hasAuthCookies(request: NextRequest) {
   return Boolean(accessToken || refreshToken);
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthenticated = hasAuthCookies(request);
+  const accessToken = getAccessTokenFromRequest(request);
 
   const roles = parseRolesCookie(request.cookies.get("user_roles")?.value);
   const homePath = getHomePathForRoles(roles);
   const changePasswordPath = getChangePasswordPathForRoles(roles);
   const requiredRole = getRequiredRoleFromPath(pathname);
   const isPasswordChangeRequired = request.cookies.get("require_password_change")?.value === "1";
+  let refreshedSession: Awaited<ReturnType<typeof refreshAuthSession>>["session"] = null;
+
+  const attachRefreshedSession = (response: NextResponse) => {
+    if (refreshedSession) {
+      applyAuthSessionCookies(response, refreshedSession);
+    }
+    return response;
+  };
+
+  if (isAuthenticated && isJwtExpired(accessToken)) {
+    const refreshResult = await refreshAuthSession(request);
+    if (refreshResult.session) {
+      refreshedSession = refreshResult.session;
+    } else if (refreshResult.clearAuthCookies) {
+      const response =
+        pathname === "/"
+          ? NextResponse.next()
+          : NextResponse.redirect(new URL("/", request.url));
+      clearAuthSessionCookies(response);
+      return response;
+    }
+  }
 
   if (pathname === "/") {
     if (isAuthenticated && isPasswordChangeRequired && changePasswordPath) {
-      return NextResponse.redirect(new URL(changePasswordPath, request.url));
+      return attachRefreshedSession(NextResponse.redirect(new URL(changePasswordPath, request.url)));
     }
     if (isAuthenticated && homePath) {
-      return NextResponse.redirect(new URL(homePath, request.url));
+      return attachRefreshedSession(NextResponse.redirect(new URL(homePath, request.url)));
     }
-    return NextResponse.next();
+    return attachRefreshedSession(NextResponse.next());
   }
 
   if (!requiredRole) {
-    return NextResponse.next();
+    return attachRefreshedSession(NextResponse.next());
   }
 
   if (!isAuthenticated) {
@@ -43,20 +73,20 @@ export function proxy(request: NextRequest) {
 
   if (!canAccessPathByRoles(roles, pathname)) {
     if (homePath) {
-      return NextResponse.redirect(new URL(homePath, request.url));
+      return attachRefreshedSession(NextResponse.redirect(new URL(homePath, request.url)));
     }
     return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (pathname === `/${requiredRole}` && homePath) {
-    return NextResponse.redirect(new URL(homePath, request.url));
+    return attachRefreshedSession(NextResponse.redirect(new URL(homePath, request.url)));
   }
 
   if (isPasswordChangeRequired && changePasswordPath && pathname !== changePasswordPath) {
-    return NextResponse.redirect(new URL(changePasswordPath, request.url));
+    return attachRefreshedSession(NextResponse.redirect(new URL(changePasswordPath, request.url)));
   }
 
-  return NextResponse.next();
+  return attachRefreshedSession(NextResponse.next());
 }
 
 export const config = {

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAccessTokenFromRequest, proxyToBackend } from "@/libs/backend-api";
+import { createProxyResponse, hasAuthSession, proxyToBackend } from "@/libs/backend-api";
 
 export async function GET(request: NextRequest) {
     try {
-        const accessToken = getAccessTokenFromRequest(request);
-        if (!accessToken) {
+        if (!hasAuthSession(request)) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
@@ -14,12 +13,7 @@ export async function GET(request: NextRequest) {
             request,
         });
 
-        return new NextResponse(upstreamResponse.text, {
-            status: upstreamResponse.status,
-            headers: {
-                "content-type": upstreamResponse.contentType,
-            },
-        });
+        return createProxyResponse(upstreamResponse);
     } catch {
         return NextResponse.json(
             { message: "Unable to load profile." },
@@ -30,8 +24,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
     try {
-        const accessToken = getAccessTokenFromRequest(request);
-        if (!accessToken) {
+        if (!hasAuthSession(request)) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
@@ -50,15 +43,11 @@ export async function PUT(request: NextRequest) {
                 path: "/employees/me",
                 request,
                 body,
+                authSession: upstreamResponse.authSession ?? null,
             });
         }
 
-        return new NextResponse(upstreamResponse.text, {
-            status: upstreamResponse.status,
-            headers: {
-                "content-type": upstreamResponse.contentType,
-            },
-        });
+        return createProxyResponse(upstreamResponse);
     } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to update profile.";
         return NextResponse.json(

@@ -14,6 +14,7 @@ export async function POST() {
   response.cookies.set({ name: "refresh_token", value: "", ...expired });
   response.cookies.set({ name: "token_type", value: "", ...expired });
   response.cookies.set({ name: "user_roles", value: "", ...expired });
+  response.cookies.set({ name: "require_password_change", value: "", ...expired });
 
   return response;
 }

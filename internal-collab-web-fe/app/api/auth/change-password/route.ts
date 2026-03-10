@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAccessTokenFromRequest, proxyToBackend } from "@/libs/backend-api";
+import {
+  createProxyResponse,
+  hasAuthSession,
+  proxyToBackend,
+} from "@/libs/backend-api";
 
 export async function POST(request: NextRequest) {
   try {
-    const accessToken = getAccessTokenFromRequest(request);
-    if (!accessToken) {
+    if (!hasAuthSession(request)) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -20,12 +23,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const response = new NextResponse(upstreamResponse.text, {
-      status: upstreamResponse.status,
-      headers: {
-        "content-type": upstreamResponse.contentType,
-      },
-    });
+    const response = createProxyResponse(upstreamResponse);
 
     if (upstreamResponse.ok) {
       response.cookies.set({

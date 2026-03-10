@@ -77,7 +77,7 @@ export async function POST(request: Request) {
       secure: isProduction,
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 15,
+      maxAge: 60 * 60,
     });
 
     response.cookies.set({
