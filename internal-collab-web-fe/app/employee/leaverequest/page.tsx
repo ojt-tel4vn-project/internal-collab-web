@@ -110,10 +110,6 @@ export default async function LeaveRequestPage() {
                                             <span className="text-xs font-semibold uppercase text-slate-500">Remaining</span>
                                             <span className="text-lg font-bold text-blue-600">{summary.remaining}</span>
                                         </div>
-                                        <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-                                            <span className="text-xs font-semibold uppercase text-slate-500">Over Quota</span>
-                                            <span className="text-lg font-bold text-slate-500">{summary.over}</span>
-                                        </div>
                                     </div>
                                 )}
                             </div>

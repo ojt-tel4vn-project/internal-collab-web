@@ -12,6 +12,9 @@ interface LeaveRequestFormProps {
     defaultLeaveTypeId?: string;
 }
 
+const TOAST_DURATION_MS = 1500;
+const SUCCESS_RELOAD_DELAY_MS = 800;
+
 export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) {
     const [form, setForm] = useState<CreateLeaveRequestPayload>({
         leave_type_id: defaultLeaveTypeId || "",
@@ -28,7 +31,7 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
 
     function showToast(message: string, tone: "success" | "error") {
         setToast({ message, tone });
-        setTimeout(() => setToast(null), 3500);
+        setTimeout(() => setToast(null), TOAST_DURATION_MS);
     }
 
     function update<K extends keyof CreateLeaveRequestPayload>(key: K, value: string) {
@@ -103,6 +106,9 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
 
             showToast("Leave request submitted", "success");
             setForm({ leave_type_id: defaultLeaveTypeId || "", from_date: "", to_date: "", reason: "", contact_during_leave: "" });
+            setTimeout(() => {
+                window.location.reload();
+            }, SUCCESS_RELOAD_DELAY_MS);
         } catch (err) {
             const message = err instanceof Error ? err.message : "Unable to submit leave request";
             setError(message);
@@ -155,10 +161,14 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
                     <input
                         type="date"
                         required
+                        min={form.from_date || undefined}
                         value={form.to_date}
                         onChange={(e) => update("to_date", e.target.value)}
                         className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
                     />
+                    {form.from_date && form.to_date && form.to_date < form.from_date ? (
+                        <p className="text-[11px] font-semibold text-rose-600">To Date must be after From Date.</p>
+                    ) : null}
                 </div>
             </div>
 

@@ -1,23 +1,21 @@
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type {
     LeaveHistoryItem,
     LeaveQuota,
     LeaveRequestItem,
     LeaveStatusMeta,
 } from "@/types/leave";
+import { buildApiUrl } from "@/lib/backend";
 
 type ApiEnvelope = {
     data?: unknown;
     body?: { data?: unknown };
 };
 
-const POLICY_TOTAL_DAYS = 12;
-
 export type LeaveSummary = {
     used: number;
     total: number;
     remaining: number;
-    over: number;
     progress: number;
 };
 
@@ -57,16 +55,39 @@ async function getBaseUrlAndCookie() {
     return { baseUrl, cookieHeader };
 }
 
-async function fetchApiArray(path: string, errorLabel: string) {
-    const { baseUrl, cookieHeader } = await getBaseUrlAndCookie();
-    const url = new URL(path, baseUrl).toString();
+async function getAuthHeader() {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("access_token")?.value;
+    if (!accessToken) return null;
+    const tokenType = cookieStore.get("token_type")?.value?.trim() || "Bearer";
+    return `${tokenType} ${accessToken}`;
+}
 
-    const res = await fetch(url, {
+async function fetchApiArray(backendPath: string, fallbackPath: string, errorLabel: string) {
+    const directUrl = buildApiUrl(backendPath);
+    const authHeader = await getAuthHeader();
+    const useFallback = !directUrl;
+    const targetUrl = directUrl ?? (await (async () => {
+        const { baseUrl } = await getBaseUrlAndCookie();
+        return new URL(fallbackPath, baseUrl).toString();
+    })());
+
+    const headersInit: HeadersInit = {
+        accept: "application/json, application/problem+json",
+    };
+    if (authHeader) {
+        headersInit.Authorization = authHeader;
+    }
+    if (useFallback) {
+        const { cookieHeader } = await getBaseUrlAndCookie();
+        if (cookieHeader) {
+            headersInit.cookie = cookieHeader;
+        }
+    }
+
+    const res = await fetch(targetUrl, {
         cache: "no-store",
-        headers: {
-            accept: "application/json, application/problem+json",
-            cookie: cookieHeader,
-        },
+        headers: headersInit,
     });
 
     if (!res.ok) {
@@ -276,21 +297,32 @@ function toPendingView(request: LeaveRequestItem): PendingLeaveRequestView {
 }
 
 function buildSummary(quotas: LeaveQuota[]): LeaveSummary {
-    const used = quotas.reduce((sum, q) => sum + (q.used_days ?? 0), 0);
-    const total = POLICY_TOTAL_DAYS;
-    const remaining = Math.max(total - used, 0);
-    const over = Math.max(0, used - total);
+    if (quotas.length === 0) {
+        return { used: 0, total: 0, remaining: 0, progress: 0 };
+    }
+
+    const primary = quotas.reduce((best, current) => {
+        if (!best) return current;
+        const bestTotal = best.total_days ?? 0;
+        const currentTotal = current.total_days ?? 0;
+        return currentTotal > bestTotal ? current : best;
+    }, quotas[0] as LeaveQuota);
+
+    const total = primary.total_days ?? 0;
+    const used = primary.used_days ?? 0;
+    const remaining =
+        typeof primary.remaining_days === "number" ? primary.remaining_days : Math.max(total - used, 0);
     const progress = total > 0 ? Math.min((used / total) * 100, 100) : 0;
-    return { used, total, remaining, over, progress };
+    return { used, total, remaining, progress };
 }
 
 async function fetchLeaveQuotas() {
-    const directData = await fetchApiArray("/api/employee/leave-quotas", "leave quotas");
+    const directData = await fetchApiArray("/leave-quotas", "/api/employee/leave-quotas", "leave quotas");
     return directData.map((item, index) => normalizeQuota(item, index));
 }
 
 async function fetchLeaveRequests() {
-    const raw = await fetchApiArray("/api/employee/leave-requests", "leave requests");
+    const raw = await fetchApiArray("/leave-requests", "/api/employee/leave-requests", "leave requests");
     return raw.map((item, index) => normalizeLeaveRequest(item, index));
 }
 
@@ -328,7 +360,7 @@ export async function loadLeaveRequestPageData(): Promise<LeaveRequestPageData> 
     const hasQuotaData = quotas.length > 0;
     const summaryYear = quotas[0]?.year || new Date().getFullYear();
     const quotaCount = quotas.length;
-    const remainingByPolicy = summary.total - summary.used;
+    const remainingByPolicy = summary.remaining;
     const shouldShowQuotaAlert = hasQuotaData && remainingByPolicy <= 5;
 
     const recentRequests = [...leaveRequests].sort((a, b) => {
