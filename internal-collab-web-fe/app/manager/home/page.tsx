@@ -4,20 +4,52 @@ import { useState } from "react";
 import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
 import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 
-const stats = [
-    { label: "Team Members", value: "24" },
-    { label: "Pending Approvals", value: "4" },
-    { label: "On Leave", value: "3" },
-    { label: "Attendance", value: "92%" },
-];
-
-const onLeaveToday = [
-    { name: "Harvey Specter", note: "Returning tomorrow" },
-    { name: "Donna Paulsen", note: "Sick Leave" },
-];
+type LeaveOverview = {
+    pending: number;
+    employees_on_leave_today: number;
+    upcoming_leaves: {
+        employee: string;
+        from_date: string;
+        to_date: string;
+    }[];
+};
 
 export default function ManagerHomePage() {
     const [viewMode, setViewMode] = useState<"monthly" | "weekly">("monthly");
+    const [overview, setOverview] = useState<LeaveOverview | null>(null);
+    const [teamTotal, setTeamTotal] = useState<number | null>(null);
+
+    useEffect(() => {
+        async function fetchData() {
+            const [overviewRes, teamRes] = await Promise.all([
+                fetch("/api/manager/leave-overview"),
+                fetch("/api/manager/team"),
+            ]);
+
+            if (overviewRes.ok) {
+                const json = await overviewRes.json() as { data: LeaveOverview };
+                setOverview(json.data);
+            }
+
+            if (teamRes.ok) {
+                const json = await teamRes.json() as { total: number };
+                setTeamTotal(json.total);
+            }
+        }
+
+        void fetchData();
+    }, []);
+
+    const stats = [
+        { label: "Team Members", value: teamTotal !== null ? String(teamTotal) : "—" },
+        { label: "Pending Approvals", value: overview ? String(overview.pending) : "—" },
+        { label: "On Leave", value: overview ? String(overview.employees_on_leave_today) : "—" },
+        { label: "Attendance", value: "92%" },
+    ];
+
+    const upcomingLeaves = overview?.upcoming_leaves ?? [];
+    const visibleLeaves = upcomingLeaves.slice(0, VISIBLE_LEAVE_COUNT);
+    const hiddenCount = upcomingLeaves.length - visibleLeaves.length;
 
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
@@ -69,18 +101,27 @@ export default function ManagerHomePage() {
                                     <span>On Leave Today</span>
                                 </div>
                                 <div className="mt-4 space-y-3">
-                                    {onLeaveToday.map((p) => (
-                                        <div key={p.name} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3">
+                                    {visibleLeaves.length === 0 && (
+                                        <p className="text-sm text-slate-400">No one on leave today.</p>
+                                    )}
+                                    {visibleLeaves.map((p) => (
+                                        <div key={p.employee} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3">
                                             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-700">
-                                                {p.name.split(" ").map((n) => n[0]).join("")}
+                                                {p.employee.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                                             </span>
                                             <div>
-                                                <p className="text-sm font-semibold text-slate-900">{p.name}</p>
-                                                <p className="text-xs font-semibold text-slate-500">{p.note}</p>
+                                                <p className="text-sm font-semibold text-slate-900">{p.employee}</p>
+                                                <p className="text-xs font-semibold text-slate-500">
+                                                    Until {new Date(p.to_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                                                </p>
                                             </div>
                                         </div>
                                     ))}
-                                    <button className="mt-2 w-full rounded-xl border border-dashed border-slate-200 py-3 text-sm font-semibold text-slate-500">+1</button>
+                                    {hiddenCount > 0 && (
+                                        <button className="mt-2 w-full rounded-xl border border-dashed border-slate-200 py-3 text-sm font-semibold text-slate-500">
+                                            +{hiddenCount} more
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>

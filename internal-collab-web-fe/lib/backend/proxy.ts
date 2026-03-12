@@ -367,10 +367,13 @@ export async function proxyToBackend({
     }
   }
 
+  const nullBodyStatuses = [101, 204, 205, 304];
+  const text = nullBodyStatuses.includes(response.status) ? "" : await response.text();
+
   return {
     ok: response.ok,
     status: response.status,
-    text: await response.text(),
+    text,
     contentType: response.headers.get("content-type") ?? "application/json",
     authSession: refreshedSession,
     clearAuthCookies,
@@ -453,10 +456,13 @@ export async function proxyToBackendRaw({
     }
   }
 
+  const nullBodyStatuses = [101, 204, 205, 304];
+  const text = nullBodyStatuses.includes(response.status) ? "" : await response.text();
+
   return {
     ok: response.ok,
     status: response.status,
-    text: await response.text(),
+    text,
     contentType: response.headers.get("content-type") ?? "application/json",
     authSession: refreshedSession,
     clearAuthCookies,
@@ -464,7 +470,10 @@ export async function proxyToBackendRaw({
 }
 
 export function createProxyResponse(result: ProxyResult) {
-  const response = new NextResponse(result.text, {
+  const nullBodyStatuses = [101, 204, 205, 304];
+  const body = nullBodyStatuses.includes(result.status) ? null : result.text;
+
+  const response = new NextResponse(body, {
     status: result.status,
     headers: {
       "content-type": result.contentType,
