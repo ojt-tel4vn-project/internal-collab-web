@@ -1,29 +1,75 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TaskList } from "@/components/dashboard/home/TaskList";
 import { LeaderboardCard } from "@/components/dashboard/home/Leaderboard";
 import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
-import { MilestonesCard } from "@/components/dashboard/home/Milestones";
 import { leaderboard } from "@/app/employee/_data";
 import { CalendarIcon } from "@/components/dashboard/home/Icons";
 import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
-import type { Milestone } from "@/types/dashboard";
 
-const stats = [
-    { label: "Total Employees", value: "48", change: "+2.4%", tone: "text-emerald-600" },
-    { label: "Attendance Comments", value: "5", change: "-0.5%", tone: "text-rose-500" },
-    { label: "Leave Requests", value: "4", change: "Stable", tone: "text-slate-500" },
-    { label: "Attendance Rate", value: "94%", change: "+0.8%", tone: "text-emerald-600" },
-];
-
-const upcomingEvents: Milestone[] = [
-    { day: 14, month: "Oct", title: "Town Hall Meeting", subtitle: "10:00 AM • Conference Room A" },
-    { day: 18, month: "Oct", title: "Quarterly Review", subtitle: "09:00 AM • Online" },
-];
+type HrDashboardMetrics = {
+    totalEmployees: number;
+    leaveRequests: number;
+};
 
 export default function HrDashboardPage() {
     const [viewMode, setViewMode] = useState<"monthly" | "weekly">("monthly");
+    const [metrics, setMetrics] = useState<HrDashboardMetrics | null>(null);
+    const [metricsError, setMetricsError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let isCancelled = false;
+
+        async function loadMetrics() {
+            try {
+                setMetricsError(null);
+
+                const response = await fetch("/api/employee?view=hr-dashboard", {
+                    cache: "no-store",
+                });
+
+                if (!response.ok) {
+                    const payload = (await response.json().catch(() => null)) as
+                        | { message?: string; detail?: string }
+                        | null;
+
+                    throw new Error(payload?.message ?? payload?.detail ?? "Failed to load dashboard metrics");
+                }
+
+                const payload = (await response.json()) as HrDashboardMetrics;
+                if (!isCancelled) {
+                    setMetrics(payload);
+                }
+            } catch (error) {
+                if (!isCancelled) {
+                    setMetrics(null);
+                    setMetricsError(error instanceof Error ? error.message : "Failed to load dashboard metrics");
+                }
+            }
+        }
+
+        void loadMetrics();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, []);
+
+    const stats = [
+        {
+            label: "Total Employees",
+            value: metrics?.totalEmployees?.toString() ?? "--",
+        },
+        {
+            label: "Attendance Comments",
+            value: "--",
+        },
+        {
+            label: "Leave Requests",
+            value: metrics?.leaveRequests?.toString() ?? "--",
+        },
+    ];
 
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
@@ -33,17 +79,20 @@ export default function HrDashboardPage() {
                 <section className="flex-1 space-y-6">
                     <h1 className="text-2xl font-bold">HR Dashboard Overview</h1>
 
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         {stats.map((item) => (
                             <div key={item.label} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                                <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-                                    <span>{item.label}</span>
-                                    <span className={item.tone}>{item.change}</span>
-                                </div>
+                                <div className="text-xs font-semibold text-slate-500">{item.label}</div>
                                 <div className="mt-3 text-3xl font-extrabold text-slate-900">{item.value}</div>
                             </div>
                         ))}
                     </div>
+
+                    {metricsError ? (
+                        <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                            {metricsError}
+                        </div>
+                    ) : null}
 
                     <div className="grid gap-5 lg:grid-cols-[2fr_1fr]">
                         <div className="space-y-5">
@@ -71,7 +120,6 @@ export default function HrDashboardPage() {
                                 <DashboardCalendar viewMode={viewMode} />
                             </div>
 
-                            <MilestonesCard milestones={upcomingEvents} />
                         </div>
 
                         <div className="space-y-4">

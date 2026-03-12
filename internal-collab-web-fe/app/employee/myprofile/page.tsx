@@ -5,8 +5,8 @@ export default function MyProfilePage() {
     return (
         <SelfProfilePage
             sideNav={<EmployeeSideNav />}
-            defaultName="Employee"
-            noteText="To change employment or contract details, please contact HR."
+            defaultName="Employee User"
+            fallbackPosition="Employee"
         />
     );
 }

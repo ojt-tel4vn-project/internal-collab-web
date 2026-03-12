@@ -42,7 +42,8 @@ export async function PUT(request: NextRequest) {
             body,
         });
 
-        if ([404, 405, 501].includes(upstreamResponse.status)) {
+        if ([404, 405, 422, 501].includes(upstreamResponse.status)) {
+            const originalResponse = upstreamResponse;
             const fallbackResponse = await proxyToBackend({
                 method: "PATCH",
                 path: "/employees/me",
@@ -51,12 +52,21 @@ export async function PUT(request: NextRequest) {
                 authSession: upstreamResponse.authSession ?? null,
             });
 
-            upstreamResponse = {
-                ...fallbackResponse,
-                authSession: fallbackResponse.authSession ?? upstreamResponse.authSession ?? null,
-                clearAuthCookies:
-                    fallbackResponse.clearAuthCookies || upstreamResponse.clearAuthCookies,
-            };
+            if (fallbackResponse.ok || [404, 405, 501].includes(originalResponse.status)) {
+                upstreamResponse = {
+                    ...fallbackResponse,
+                    authSession: fallbackResponse.authSession ?? originalResponse.authSession ?? null,
+                    clearAuthCookies:
+                        fallbackResponse.clearAuthCookies || originalResponse.clearAuthCookies,
+                };
+            } else {
+                upstreamResponse = {
+                    ...originalResponse,
+                    authSession: fallbackResponse.authSession ?? originalResponse.authSession ?? null,
+                    clearAuthCookies:
+                        fallbackResponse.clearAuthCookies || originalResponse.clearAuthCookies,
+                };
+            }
         }
 
         return createProxyResponse(upstreamResponse);

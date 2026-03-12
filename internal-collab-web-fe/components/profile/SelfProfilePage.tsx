@@ -17,16 +17,21 @@ const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
 type SelfProfilePageProps = {
     sideNav: ReactNode;
     defaultName: string;
-    noteText: string;
+    noteText?: string;
+    fallbackPosition?: string;
 };
 
 type ApiMessagePayload = {
     detail?: unknown;
+    details?: unknown;
+    errors?: unknown;
     message?: unknown;
     title?: unknown;
     error?: unknown;
     avatar_url?: unknown;
 };
+
+type NavbarProfileSyncPayload = Pick<EmployeeProfile, "full_name" | "first_name" | "last_name" | "email" | "avatar_url">;
 
 const ALLOWED_AVATAR_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_PROCESSED_AVATAR_SIZE = 5 * 1024 * 1024;
@@ -47,6 +52,15 @@ function formatDateTime(value?: string | null) {
     return dateTimeFormatter.format(parsed);
 }
 
+function normalizeProfileText(value?: string | null) {
+    const normalized = (value ?? "").trim();
+    if (!normalized) {
+        return "";
+    }
+
+    return normalized.toLowerCase() === "string" ? "" : normalized;
+}
+
 function extractApiMessage(payload: unknown) {
     if (!payload || typeof payload !== "object") {
         return null;
@@ -55,8 +69,34 @@ function extractApiMessage(payload: unknown) {
     const data = payload as ApiMessagePayload;
     if (typeof data.message === "string" && data.message.trim()) return data.message;
     if (typeof data.detail === "string" && data.detail.trim()) return data.detail;
+    if (typeof data.details === "string" && data.details.trim()) return data.details;
     if (typeof data.title === "string" && data.title.trim()) return data.title;
     if (typeof data.error === "string" && data.error.trim()) return data.error;
+
+    if (Array.isArray(data.errors)) {
+        for (const item of data.errors) {
+            if (!item || typeof item !== "object") {
+                continue;
+            }
+
+            const entry = item as Record<string, unknown>;
+            const message = typeof entry.message === "string" ? entry.message.trim() : "";
+            const location = typeof entry.location === "string" ? entry.location.trim() : "";
+            const value = typeof entry.value === "string" ? entry.value.trim() : "";
+
+            if (message && location) {
+                return `${location}: ${message}`;
+            }
+
+            if (message) {
+                return message;
+            }
+
+            if (location && value) {
+                return `${location}: ${value}`;
+            }
+        }
+    }
 
     return null;
 }
@@ -73,6 +113,14 @@ async function readErrorMessage(response: Response, fallback: string) {
     } catch {
         return raw.slice(0, 200);
     }
+}
+
+function broadcastNavbarProfileUpdate(payload: NavbarProfileSyncPayload) {
+    window.dispatchEvent(
+        new CustomEvent<NavbarProfileSyncPayload>("employee-profile-updated", {
+            detail: payload,
+        }),
+    );
 }
 
 function loadImageFromFile(file: File): Promise<HTMLImageElement> {
@@ -166,13 +214,14 @@ export default function SelfProfilePage({
     sideNav,
     defaultName,
     noteText,
+    fallbackPosition,
 }: SelfProfilePageProps) {
     const [profile, setProfile] = useState<EmployeeProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [saveMessage, setSaveMessage] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
     const [formPhone, setFormPhone] = useState("");
     const [formAddress, setFormAddress] = useState("");
@@ -181,6 +230,19 @@ export default function SelfProfilePage({
     const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const toastTimeoutRef = useRef<number | null>(null);
+
+    const showToast = useCallback((message: string, tone: "success" | "error") => {
+        if (toastTimeoutRef.current) {
+            window.clearTimeout(toastTimeoutRef.current);
+        }
+
+        setToast({ message, tone });
+        toastTimeoutRef.current = window.setTimeout(() => {
+            setToast(null);
+            toastTimeoutRef.current = null;
+        }, 3500);
+    }, []);
 
     const initials = useMemo(() => {
         const name = profile?.full_name?.trim();
@@ -196,6 +258,7 @@ export default function SelfProfilePage({
 
     const displayName = profile?.full_name || defaultName;
     const departmentName = profile?.department?.name || "-";
+    const positionLabel = normalizeProfileText(profile?.position) || fallbackPosition || "-";
     const managerName = profile?.manager?.full_name || profile?.manager?.name || "-";
     const managerId = profile?.manager?.id ?? profile?.manager_id;
     const managerDisplay = managerId && managerName !== "-" ? `${managerName} (#${managerId})` : managerName;
@@ -205,21 +268,20 @@ export default function SelfProfilePage({
         () => [
             { label: "Employee Code", value: profile?.employee_code || "-" },
             { label: "Department", value: departmentName },
-            { label: "Position", value: profile?.position || "-" },
+            { label: "Position", value: positionLabel },
             { label: "Joined", value: formatDate(profile?.join_date) },
             { label: "Birthday", value: formatDate(profile?.date_of_birth) },
         ],
-        [profile?.employee_code, departmentName, profile?.position, profile?.join_date, profile?.date_of_birth],
+        [profile?.employee_code, departmentName, positionLabel, profile?.join_date, profile?.date_of_birth],
     );
 
     const activityFields = useMemo(
         () => [
             { label: "Status", value: statusLabel },
-            { label: "Last Login", value: formatDateTime(profile?.last_login_at) },
             { label: "Created At", value: formatDateTime(profile?.created_at) },
             { label: "Updated At", value: formatDateTime(profile?.updated_at) },
         ],
-        [statusLabel, profile?.last_login_at, profile?.created_at, profile?.updated_at],
+        [statusLabel, profile?.created_at, profile?.updated_at],
     );
 
     const resetForm = useCallback((nextProfile: EmployeeProfile | null) => {
@@ -241,6 +303,13 @@ export default function SelfProfilePage({
 
             const data = (await res.json()) as EmployeeProfile;
             setProfile(data);
+            broadcastNavbarProfileUpdate({
+                full_name: data.full_name,
+                first_name: data.first_name,
+                last_name: data.last_name,
+                email: data.email,
+                avatar_url: data.avatar_url ?? null,
+            });
             resetForm(data);
         } catch (err) {
             const message = err instanceof Error ? err.message : "Something went wrong";
@@ -254,12 +323,20 @@ export default function SelfProfilePage({
         void loadProfile();
     }, [loadProfile]);
 
+    useEffect(() => {
+        return () => {
+            if (toastTimeoutRef.current) {
+                window.clearTimeout(toastTimeoutRef.current);
+            }
+        };
+    }, []);
+
     const handleAvatarFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
         setError(null);
-        setSaveMessage(null);
+        setToast(null);
 
         void (async () => {
             try {
@@ -284,7 +361,7 @@ export default function SelfProfilePage({
         if (!profile) return;
 
         setSaving(true);
-        setSaveMessage(null);
+        setToast(null);
         setError(null);
 
         const trimmedPhone = formPhone.trim();
@@ -360,12 +437,18 @@ export default function SelfProfilePage({
                 setPendingAvatarFile(null);
             }
 
-            const payload: UpdateEmployeeProfilePayload = {};
-            if (trimmedPhone !== currentPhone) payload.phone = trimmedPhone;
-            if (trimmedAddress !== currentAddress) payload.address = trimmedAddress;
-            if (directAvatarChanged) payload.avatar_url = trimmedAvatar;
+            const shouldUpdateProfile =
+                trimmedPhone !== currentPhone ||
+                trimmedAddress !== currentAddress ||
+                directAvatarChanged;
 
-            if (Object.keys(payload).length > 0) {
+            if (shouldUpdateProfile) {
+                const payload: UpdateEmployeeProfilePayload = {
+                    phone: trimmedPhone,
+                    address: trimmedAddress,
+                    avatar_url: directAvatarChanged ? trimmedAvatar : nextAvatarUrl,
+                };
+
                 const res = await fetch("/api/employee/me", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -386,20 +469,27 @@ export default function SelfProfilePage({
             setProfile((prev) =>
                 prev
                     ? {
-                        ...prev,
-                        phone: trimmedPhone,
-                        address: trimmedAddress,
-                        avatar_url: nextAvatarUrl || null,
-                    }
+                          ...prev,
+                          phone: trimmedPhone,
+                          address: trimmedAddress,
+                          avatar_url: nextAvatarUrl || null,
+                      }
                     : prev,
             );
+            broadcastNavbarProfileUpdate({
+                full_name: profile.full_name,
+                first_name: profile.first_name,
+                last_name: profile.last_name,
+                email: profile.email,
+                avatar_url: nextAvatarUrl || null,
+            });
             setFormPhone(trimmedPhone);
             setFormAddress(trimmedAddress);
             setFormAvatar(nextAvatarUrl);
             setAvatarPreviewSrc("");
             setPendingAvatarFile(null);
-            setSaveMessage(statusMessage);
             setEditing(false);
+            showToast(statusMessage, "success");
         } catch (err) {
             const message = err instanceof Error ? err.message : "Something went wrong";
             setError(message);
@@ -434,6 +524,7 @@ export default function SelfProfilePage({
                                 profile={profile}
                                 displayName={displayName}
                                 departmentName={departmentName}
+                                positionLabel={positionLabel}
                                 statusLabel={statusLabel}
                                 initials={initials}
                                 managerDisplay={managerDisplay}
@@ -441,12 +532,11 @@ export default function SelfProfilePage({
                                 formAvatar={formAvatar}
                                 formPhone={formPhone}
                                 formAddress={formAddress}
-                                saveMessage={saveMessage}
                                 fileInputRef={fileInputRef}
                                 onStartEdit={() => setEditing(true)}
                                 onCancelEdit={() => {
                                     setEditing(false);
-                                    setSaveMessage(null);
+                                    setToast(null);
                                     resetForm(profile);
                                 }}
                                 onSubmit={handleSave}
@@ -465,12 +555,14 @@ export default function SelfProfilePage({
                         <div className="space-y-4">
                             <InfoSectionCard title="Personal information" badge="Read-only" fields={personalFields} />
 
-                            <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-                                <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                                    <span className="text-slate-500">i</span>
-                                    <p>{noteText}</p>
+                            {noteText?.trim() ? (
+                                <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+                                    <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                                        <span className="text-slate-500">i</span>
+                                        <p>{noteText}</p>
+                                    </div>
                                 </div>
-                            </div>
+                            ) : null}
 
                             <InfoSectionCard title="Account activity" fields={activityFields} compact />
                         </div>
@@ -478,6 +570,14 @@ export default function SelfProfilePage({
 
                     {loading && (
                         <div className="text-sm text-slate-500">Loading profile...</div>
+                    )}
+
+                    {toast && (
+                        <div
+                            className={`fixed bottom-6 right-6 z-50 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg ${toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"}`}
+                        >
+                            {toast.message}
+                        </div>
                     )}
                 </section>
             </div>

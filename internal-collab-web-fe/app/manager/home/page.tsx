@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
-import { MilestonesCard } from "@/components/dashboard/home/Milestones";
 import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
-import type { Milestone } from "@/types/dashboard";
 
 const stats = [
     { label: "Team Members", value: "24" },
@@ -16,11 +14,6 @@ const stats = [
 const onLeaveToday = [
     { name: "Harvey Specter", note: "Returning tomorrow" },
     { name: "Donna Paulsen", note: "Sick Leave" },
-];
-
-const milestones: Milestone[] = [
-    { day: 24, month: "Oct", title: "5-Year Anniversary", subtitle: "Rachel Green" },
-    { day: 2, month: "Nov", title: "Product Launch", subtitle: "Engineering Team" },
 ];
 
 export default function ManagerHomePage() {
@@ -70,8 +63,6 @@ export default function ManagerHomePage() {
                         </div>
 
                         <div className="space-y-4">
-                            <MilestonesCard milestones={milestones} />
-
                             <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                                     <span className="text-blue-500">👥</span>
