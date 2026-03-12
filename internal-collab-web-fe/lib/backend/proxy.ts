@@ -20,6 +20,13 @@ type ProxyResult = {
   clearAuthCookies?: boolean;
 };
 
+type ResolvedProxySession = {
+  session?: Pick<AuthSession, "accessToken" | "tokenType">;
+  refreshedSession: AuthSession | null;
+  clearAuthCookies: boolean;
+  earlyResult?: ProxyResult;
+};
+
 function normalizeApiPath(path: string) {
   return path.startsWith("/") ? path.slice(1) : path;
 }
@@ -219,6 +226,66 @@ function buildUpstreamNetworkError(error: unknown): ProxyResult {
   };
 }
 
+async function resolveInitialProxySession(
+  request?: NextRequest,
+  authSession?: AuthSession | null,
+): Promise<ResolvedProxySession> {
+  const refreshToken = authSession?.refreshToken ?? (request ? getRefreshTokenFromRequest(request) : null);
+  const accessToken = authSession?.accessToken ?? (request ? getAccessTokenFromRequest(request) : null);
+  const tokenType = authSession?.tokenType ?? (request ? getTokenTypeFromRequest(request) : "Bearer");
+
+  if (accessToken) {
+    return {
+      session: {
+        accessToken,
+        tokenType,
+      },
+      refreshedSession: null,
+      clearAuthCookies: false,
+    };
+  }
+
+  if (!request || !refreshToken) {
+    return {
+      session: undefined,
+      refreshedSession: null,
+      clearAuthCookies: false,
+    };
+  }
+
+  const refreshResult = await refreshAuthSession(request, refreshToken);
+  if (refreshResult.session) {
+    return {
+      session: {
+        accessToken: refreshResult.session.accessToken,
+        tokenType: refreshResult.session.tokenType,
+      },
+      refreshedSession: refreshResult.session,
+      clearAuthCookies: false,
+    };
+  }
+
+  if (refreshResult.clearAuthCookies) {
+    return {
+      refreshedSession: null,
+      clearAuthCookies: true,
+      earlyResult: {
+        ok: false,
+        status: 401,
+        text: JSON.stringify({ message: "Unauthorized" }),
+        contentType: "application/json",
+        clearAuthCookies: true,
+      },
+    };
+  }
+
+  return {
+    session: undefined,
+    refreshedSession: null,
+    clearAuthCookies: false,
+  };
+}
+
 export async function proxyToBackend({
   method = "GET",
   path,
@@ -265,26 +332,19 @@ export async function proxyToBackend({
       body: serializedBody,
     });
 
-  const initialSession = authSession
-    ? {
-        accessToken: authSession.accessToken,
-        tokenType: authSession.tokenType,
-      }
-    : request
-      ? {
-          accessToken: getAccessTokenFromRequest(request) ?? "",
-          tokenType: getTokenTypeFromRequest(request),
-        }
-      : undefined;
+  const initialResolution = await resolveInitialProxySession(request, authSession);
+  if (initialResolution.earlyResult) {
+    return initialResolution.earlyResult;
+  }
 
   let response: Response;
   try {
-    response = await executeFetch(initialSession?.accessToken ? initialSession : undefined);
+    response = await executeFetch(initialResolution.session);
   } catch (error) {
     return buildUpstreamNetworkError(error);
   }
-  let refreshedSession: AuthSession | null = null;
-  let clearAuthCookies = false;
+  let refreshedSession: AuthSession | null = initialResolution.refreshedSession;
+  let clearAuthCookies = initialResolution.clearAuthCookies;
 
   if (response.status === 401 && request) {
     const refreshResult = await refreshAuthSession(request, authSession?.refreshToken);
@@ -361,26 +421,19 @@ export async function proxyToBackendRaw({
       body,
     });
 
-  const initialSession = authSession
-    ? {
-        accessToken: authSession.accessToken,
-        tokenType: authSession.tokenType,
-      }
-    : request
-      ? {
-          accessToken: getAccessTokenFromRequest(request) ?? "",
-          tokenType: getTokenTypeFromRequest(request),
-        }
-      : undefined;
+  const initialResolution = await resolveInitialProxySession(request, authSession);
+  if (initialResolution.earlyResult) {
+    return initialResolution.earlyResult;
+  }
 
   let response: Response;
   try {
-    response = await executeFetch(initialSession?.accessToken ? initialSession : undefined);
+    response = await executeFetch(initialResolution.session);
   } catch (error) {
     return buildUpstreamNetworkError(error);
   }
-  let refreshedSession: AuthSession | null = null;
-  let clearAuthCookies = false;
+  let refreshedSession: AuthSession | null = initialResolution.refreshedSession;
+  let clearAuthCookies = initialResolution.clearAuthCookies;
 
   if (response.status === 401 && request) {
     const refreshResult = await refreshAuthSession(request, authSession?.refreshToken);

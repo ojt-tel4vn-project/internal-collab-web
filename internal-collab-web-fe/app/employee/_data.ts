@@ -1,4 +1,4 @@
-﻿import type { LeaderboardItem, Milestone, NavItem, TaskItem } from "@/types/dashboard";
+import type { LeaderboardItem, NavItem, TaskItem } from "@/types/dashboard";
 import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon } from "@/components/dashboard/home/Icons";
 
 export const navItems: NavItem[] = [
@@ -20,20 +20,3 @@ export const tasks: TaskItem[] = [
   { title: "Update design system components" },
   { title: "Sync with marketing team on Q4 roadmap" },
 ];
-
-export const milestones: Milestone[] = [
-  {
-    day: 14,
-    month: "OCT",
-    title: "David's 3rd Work Anniversary",
-    subtitle: "Celebrate with a 'Veteran' sticker!",
-  },
-  {
-    day: 16,
-    month: "OCT",
-    title: "New Team Lunch",
-    subtitle: "Welcome our 4 new designers!",
-  },
-];
-
-

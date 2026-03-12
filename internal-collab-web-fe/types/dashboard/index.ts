@@ -14,6 +14,13 @@ export interface DayCell {
     day?: number;
     isFocus?: boolean;
     hasEvent?: boolean;
+    events?: CalendarEvent[];
+}
+
+export interface CalendarEvent {
+    id: string;
+    name: string;
+    date: string;
 }
 
 export interface TaskItem {
@@ -27,13 +34,6 @@ export interface LeaderboardItem {
     points: number;
     rank: number;
     highlight?: boolean;
-}
-
-export interface Milestone {
-    day: number;
-    month: string;
-    title: string;
-    subtitle: string;
 }
 
 export interface SectionCardProps {

@@ -43,3 +43,89 @@ export interface UpdateEmployeeProfileResponse {
     $schema?: string;
     message: string;
 }
+
+export interface HrEmployeeSummary {
+    id: string;
+    email: string;
+    full_name: string;
+    employee_code: string;
+    position: string;
+    department: string | EmployeeDepartment | null;
+    role?: {
+        id: string;
+        name: string;
+    } | null;
+    avatar_url?: string | null;
+    status: string;
+}
+
+export interface HrEmployeeListResponse {
+    employees: HrEmployeeSummary[];
+    total: number;
+}
+
+export interface HrEmployeeDetail {
+    id: string;
+    email: string;
+    employee_code: string;
+    first_name: string;
+    last_name: string;
+    full_name: string;
+    date_of_birth: string;
+    phone: string;
+    address: string;
+    avatar_url?: string | null;
+    department_id: string | null;
+    department?: {
+        id: string;
+        name: string;
+    } | null;
+    position: string;
+    manager_id: string | null;
+    manager?: {
+        id: string;
+        full_name: string;
+    } | null;
+    role_id?: string | null;
+    role?: {
+        id: string;
+        name: string;
+    } | null;
+    join_date: string;
+    leave_date: string | null;
+    status: string;
+    last_login_at: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface HrCreateEmployeePayload {
+    email: string;
+    first_name: string;
+    last_name: string;
+    date_of_birth: string;
+    phone?: string;
+    address?: string;
+    department_id?: string;
+    position: string;
+    manager_id?: string;
+    join_date?: string;
+}
+
+export interface HrUpdateEmployeePayload {
+    first_name?: string;
+    last_name?: string;
+    date_of_birth?: string;
+    phone?: string;
+    address?: string;
+    department_id?: string;
+    position?: string;
+    manager_id?: string | null;
+    role_id?: string;
+    status?: string;
+}
+
+export interface DepartmentOption {
+    id: string;
+    name: string;
+}

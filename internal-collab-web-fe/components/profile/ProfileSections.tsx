@@ -12,6 +12,7 @@ type ProfileSummaryCardProps = {
     profile: EmployeeProfile | null;
     displayName: string;
     departmentName: string;
+    positionLabel: string;
     statusLabel: string;
     initials: string;
     managerDisplay: string;
@@ -19,7 +20,6 @@ type ProfileSummaryCardProps = {
     formAvatar: string;
     formPhone: string;
     formAddress: string;
-    saveMessage: string | null;
     fileInputRef: RefObject<HTMLInputElement | null>;
     onStartEdit: () => void;
     onCancelEdit: () => void;
@@ -50,6 +50,7 @@ export function ProfileSummaryCard({
     profile,
     displayName,
     departmentName,
+    positionLabel,
     statusLabel,
     initials,
     managerDisplay,
@@ -57,7 +58,6 @@ export function ProfileSummaryCard({
     formAvatar,
     formPhone,
     formAddress,
-    saveMessage,
     fileInputRef,
     onStartEdit,
     onCancelEdit,
@@ -107,7 +107,7 @@ export function ProfileSummaryCard({
                     </div>
                     <div className="text-center">
                         <p className="text-lg font-semibold text-slate-900">{displayName}</p>
-                        <p className="text-sm font-semibold text-blue-600">{profile?.position || "-"}</p>
+                        <p className="text-sm font-semibold text-blue-600">{positionLabel}</p>
                     </div>
                     <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-semibold">
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{departmentName}</span>
@@ -131,7 +131,6 @@ export function ProfileSummaryCard({
                     ) : (
                         <span>Editing</span>
                     )}
-                    {saveMessage && <span className="text-emerald-600">{saveMessage}</span>}
                 </div>
             </div>
 

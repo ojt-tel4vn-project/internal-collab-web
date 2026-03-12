@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
 import { LeaderboardCard } from "@/components/dashboard/home/Leaderboard";
-import { MilestonesCard } from "@/components/dashboard/home/Milestones";
 import { TaskList } from "@/components/dashboard/home/TaskList";
 import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
-import { leaderboard, milestones } from "../_data";
+import { leaderboard } from "../_data";
 
 export default function EmployeeDashboardPage() {
     const [viewMode, setViewMode] = useState<"monthly" | "weekly">("monthly");
@@ -41,7 +40,6 @@ export default function EmployeeDashboardPage() {
 
                 <aside className="flex w-full max-w-sm flex-col gap-6">
                     <LeaderboardCard entries={leaderboard} />
-                    <MilestonesCard milestones={milestones} />
                 </aside>
             </div>
         </main>

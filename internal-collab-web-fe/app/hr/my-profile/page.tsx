@@ -6,7 +6,7 @@ export default function HrMyProfilePage() {
     <SelfProfilePage
       sideNav={<HRSideNav />}
       defaultName="HR User"
-      noteText="Employment, department, and role changes are managed by system administration."
+      fallbackPosition="HR"
     />
   );
 }
