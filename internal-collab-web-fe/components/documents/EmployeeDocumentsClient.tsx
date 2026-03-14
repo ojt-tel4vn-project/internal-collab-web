@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { AlertTriangleIcon, DocumentIcon, DownloadIcon } from "@/components/dashboard/home/Icons";
 import type { DocumentRecord, MarkReadResponse } from "@/types/document";
 
 function formatDate(value: string) {
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return "-";
-    return parsed.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    return parsed.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 function summarizePath(path: string) {
@@ -16,39 +16,121 @@ function summarizePath(path: string) {
     return `${path.slice(0, 77)}...`;
 }
 
+function toTrimmed(value?: string | null) {
+    return typeof value === "string" ? value.trim() : "";
+}
+
+function formatIdLabel(value: string) {
+    const cleaned = toTrimmed(value);
+    if (!cleaned) return "-";
+    if (cleaned.length <= 12) return cleaned;
+    return `${cleaned.slice(0, 8)}...${cleaned.slice(-4)}`;
+}
+
+function formatRolesLabel(value: string) {
+    const roles = value
+        .split(",")
+        .map((role) => role.trim())
+        .filter(Boolean);
+    if (roles.length === 0) return "employee";
+    return roles.join(", ");
+}
+
+function getDocumentSummary(doc: DocumentRecord) {
+    const description = toTrimmed(doc.description);
+    if (description) return description;
+    const mimeType = toTrimmed(doc.mime_type);
+    if (mimeType) return `File type: ${mimeType}`;
+    const filePath = toTrimmed(doc.file_path);
+    if (filePath) return summarizePath(filePath);
+    return "No description available";
+}
+
+function formatFileSize(size?: number) {
+    if (typeof size !== "number" || Number.isNaN(size) || size <= 0) return "-";
+    if (size < 1024) return `${size} B`;
+    const kb = size / 1024;
+    if (kb < 1024) return `${kb.toFixed(1)} KB`;
+    const mb = kb / 1024;
+    if (mb < 1024) return `${mb.toFixed(1)} MB`;
+    const gb = mb / 1024;
+    return `${gb.toFixed(1)} GB`;
+}
+
 type Props = {
     documents: DocumentRecord[];
+    categoryMap?: Record<string, string>;
 };
 
 type IndexedDocument = DocumentRecord & {
     searchText: string;
 };
 
-export function EmployeeDocumentsClient({ documents }: Props) {
+export function EmployeeDocumentsClient({ documents, categoryMap }: Props) {
     const [query, setQuery] = useState("");
+    const deferredQuery = useDeferredValue(query);
+    const [statusFilter, setStatusFilter] = useState<"all" | "read" | "unread">("all");
+    const [categoryFilter, setCategoryFilter] = useState("all");
     const [readIds, setReadIds] = useState<Set<string>>(new Set());
     const [busyId, setBusyId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [expandedTitles, setExpandedTitles] = useState<Set<string>>(new Set());
+
+    const isDocumentRead = useCallback(
+        (doc: DocumentRecord) => Boolean(doc.is_read) || (doc.id ? readIds.has(doc.id) : false),
+        [readIds],
+    );
 
     const indexedDocuments = useMemo<IndexedDocument[]>(
         () =>
             documents.map((doc) => ({
                 ...doc,
-                searchText: `${doc.title} ${doc.file_path} ${doc.category_id} ${doc.roles}`.toLowerCase(),
+                searchText: `${doc.title} ${doc.description ?? ""} ${doc.file_name ?? ""} ${doc.file_path ?? ""} ${doc.mime_type ?? ""} ${categoryMap?.[doc.category_id] ?? ""} ${doc.category_id} ${doc.roles} ${doc.uploaded_by ?? ""}`.toLowerCase(),
             })),
-        [documents],
+        [documents, categoryMap],
     );
 
     const filteredDocuments = useMemo(() => {
-        const q = query.trim().toLowerCase();
-        if (!q) return indexedDocuments;
-        return indexedDocuments.filter((doc) => doc.searchText.includes(q));
-    }, [indexedDocuments, query]);
+        const q = deferredQuery.trim().toLowerCase();
+        let next = indexedDocuments;
+        if (q) {
+            next = next.filter((doc) => doc.searchText.includes(q));
+        }
+        if (categoryFilter !== "all") {
+            next = next.filter((doc) => doc.category_id === categoryFilter);
+        }
+        if (statusFilter !== "all") {
+            next = next.filter((doc) => {
+                const isRead = isDocumentRead(doc);
+                return statusFilter === "read" ? isRead : !isRead;
+            });
+        }
+        return next;
+    }, [indexedDocuments, deferredQuery, categoryFilter, statusFilter, isDocumentRead]);
+
+    const categories = useMemo(() => {
+        if (categoryMap && Object.keys(categoryMap).length > 0) {
+            return Object.entries(categoryMap)
+                .map(([id, name]) => ({
+                    id,
+                    label: name || formatIdLabel(id),
+                    title: name && name !== id ? `${name} (${id})` : id,
+                }))
+                .sort((a, b) => a.label.localeCompare(b.label));
+        }
+
+        const unique = new Set(documents.map((doc) => doc.category_id).filter(Boolean));
+        return Array.from(unique).map((id) => ({
+            id,
+            label: formatIdLabel(id),
+            title: id,
+        }));
+    }, [documents, categoryMap]);
 
     const stats = useMemo(() => {
         const totalDocuments = documents.length;
-        const employeeAccessible = documents.filter((doc) => (doc.roles || "").toLowerCase().includes("employee")).length;
-        const uniqueCategories = new Set(documents.map((doc) => doc.category_id).filter(Boolean)).size;
+        const readCount = documents.filter((doc) => isDocumentRead(doc)).length;
+        const unreadCount = Math.max(totalDocuments - readCount, 0);
 
         return [
             {
@@ -60,25 +142,29 @@ export function EmployeeDocumentsClient({ documents }: Props) {
                 icon: DocumentIcon,
             },
             {
-                label: "Employee Access",
-                value: employeeAccessible,
+                label: "Read",
+                value: readCount,
                 tone: "text-emerald-600",
                 iconBg: "bg-emerald-50",
                 iconColor: "text-emerald-500",
                 icon: DocumentIcon,
             },
             {
-                label: "Categories",
-                value: uniqueCategories,
+                label: "Unread",
+                value: unreadCount,
                 tone: "text-amber-500",
                 iconBg: "bg-amber-50",
                 iconColor: "text-amber-500",
                 icon: AlertTriangleIcon,
             },
         ];
-    }, [documents]);
+    }, [documents, isDocumentRead]);
 
     async function handleMarkRead(id: string) {
+        if (!id) {
+            setError("Document id is missing.");
+            return;
+        }
         setBusyId(id);
         setError(null);
         try {
@@ -108,6 +194,30 @@ export function EmployeeDocumentsClient({ documents }: Props) {
         }
     }
 
+    function handleReadAndView(doc: DocumentRecord) {
+        if (!doc.id) {
+            setError("Document id is missing.");
+            return;
+        }
+        if (!isDocumentRead(doc)) {
+            void handleMarkRead(doc.id);
+        }
+
+        window.open(`/api/employee/documents/${doc.id}/view`, "_blank", "noopener,noreferrer");
+    }
+
+    function toggleTitle(id: string) {
+        setExpandedTitles((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    }
+
     return (
         <>
             {error && (
@@ -125,6 +235,29 @@ export function EmployeeDocumentsClient({ documents }: Props) {
                             onChange={(e) => setQuery(e.target.value)}
                             className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm outline-none focus:border-blue-500"
                         />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-sm font-semibold text-slate-600">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value as "all" | "read" | "unread")}
+                            className="h-11 rounded-2xl border border-slate-200 bg-white px-3 shadow-sm outline-none focus:border-blue-500"
+                        >
+                            <option value="all">All status</option>
+                            <option value="read">Read</option>
+                            <option value="unread">Unread</option>
+                        </select>
+                        <select
+                            value={categoryFilter}
+                            onChange={(e) => setCategoryFilter(e.target.value)}
+                            className="h-11 rounded-2xl border border-slate-200 bg-white px-3 shadow-sm outline-none focus:border-blue-500"
+                        >
+                            <option value="all">All categories</option>
+                            {categories.map((category) => (
+                                <option key={category.id} value={category.id} title={category.title}>
+                                    {category.label}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 
@@ -150,47 +283,98 @@ export function EmployeeDocumentsClient({ documents }: Props) {
             ) : (
                 <div className="grid gap-4 md:grid-cols-2">
                     {filteredDocuments.map((doc) => {
-                        const isRead = readIds.has(doc.id);
+                        const isRead = isDocumentRead(doc);
+                        const roleLabel = formatRolesLabel(doc.roles);
+                        const categoryName = categoryMap?.[doc.category_id];
+                        const categoryLabel = categoryName || formatIdLabel(doc.category_id);
+                        const categoryTitle =
+                            categoryName && categoryName !== doc.category_id
+                                ? `${categoryName} (${doc.category_id})`
+                                : doc.category_id || "-";
+                        const summary = getDocumentSummary(doc);
+                        const titleText = doc.title || "Untitled document";
+                        const isTitleLong = titleText.length > 60;
+                        const isTitleExpanded = Boolean(doc.id && expandedTitles.has(doc.id));
                         return (
-                            <article key={doc.id} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                            <article key={doc.id} className="flex h-full flex-col rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
                                 <div className="flex items-start justify-between gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 shrink-0">
                                         <DocumentIcon className="h-5 w-5 text-blue-500" />
                                     </div>
-                                    <div className="flex-1 space-y-1">
+                                    <div className="min-w-0 flex-1 space-y-1">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <h3 className="text-lg font-semibold text-slate-900">{doc.title || "Untitled document"}</h3>
-                                            <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                                                {doc.roles || "employee"}
+                                            <div className="flex min-w-0 items-center gap-2">
+                                                <h3
+                                                    className={`min-w-0 text-lg font-semibold text-slate-900 ${
+                                                        isTitleExpanded ? "break-words" : "truncate whitespace-nowrap"
+                                                    }`}
+                                                    title={titleText}
+                                                >
+                                                    {titleText}
+                                                </h3>
+                                                {isTitleLong && doc.id ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleTitle(doc.id)}
+                                                        className="rounded-full px-2 text-sm font-bold text-slate-500 hover:text-blue-600"
+                                                        aria-expanded={isTitleExpanded}
+                                                        aria-label={isTitleExpanded ? "See less" : "See more"}
+                                                        title={isTitleExpanded ? "See less" : "See more"}
+                                                    >
+                                                        ...
+                                                    </button>
+                                                ) : null}
+                                            </div>
+                                            <span
+                                                className="inline-flex max-w-[16rem] items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 truncate"
+                                                title={roleLabel}
+                                            >
+                                                {roleLabel}
                                             </span>
                                             <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${isRead ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}>
                                                 {isRead ? "Read" : "Unread"}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-slate-600">{summarizePath(doc.file_path)}</p>
                                     </div>
                                 </div>
 
-                                <div className="mt-4 flex items-center justify-between text-xs font-semibold text-slate-500">
-                                    <span className="inline-flex items-center gap-2">
-                                        <span className="text-slate-400">Category</span>
-                                        {doc.category_id || "-"}
-                                    </span>
-                                    <span className="inline-flex items-center gap-2">
-                                        <span className="text-slate-400">Created</span>
-                                        {formatDate(doc.created_at)}
-                                    </span>
+                                <div className="mt-auto space-y-3 pt-2">
+                                    <p className="text-sm text-slate-600 break-words">{summary}</p>
+                                    <div className="grid gap-3 text-xs font-semibold text-slate-500 sm:grid-cols-3">
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-slate-400">Category</span>
+                                                <span className="truncate" title={categoryTitle}>
+                                                    {categoryLabel}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-slate-400">Created</span>
+                                                <span className="truncate" title={doc.created_at || "-"}>
+                                                    {formatDate(doc.created_at)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-slate-400">Size</span>
+                                                <span className="truncate">{formatFileSize(doc.file_size)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="mt-4 flex items-center gap-3">
-                                    <a
-                                        href={`/api/employee/documents/${doc.id}/view`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="rounded-xl bg-slate-100 px-4 py-3 text-center text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-200"
+                                <div className="mt-3 flex items-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleReadAndView(doc)}
+                                        disabled={busyId === doc.id}
+                                        className="flex-1 rounded-xl bg-blue-600 px-5 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
                                     >
-                                        View
-                                    </a>
+                                        {busyId === doc.id ? "Opening..." : "Read"}
+                                    </button>
                                     <a
                                         href={`/api/employee/documents/${doc.id}/download`}
                                         className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm hover:border-blue-200"
@@ -198,14 +382,6 @@ export function EmployeeDocumentsClient({ documents }: Props) {
                                     >
                                         <DownloadIcon className="h-5 w-5" />
                                     </a>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleMarkRead(doc.id)}
-                                        disabled={isRead || busyId === doc.id}
-                                        className={`ml-auto rounded-xl px-4 py-3 text-sm font-semibold shadow-sm ${isRead ? "bg-emerald-100 text-emerald-700" : "bg-blue-600 text-white hover:bg-blue-700"} disabled:cursor-not-allowed`}
-                                    >
-                                        {busyId === doc.id ? "Saving..." : isRead ? "Read" : "Mark as Read"}
-                                    </button>
                                 </div>
                             </article>
                         );

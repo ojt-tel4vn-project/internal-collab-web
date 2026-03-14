@@ -1,187 +1,155 @@
-﻿import { DocumentIcon, DownloadIcon, AlertTriangleIcon } from "@/components/dashboard/home/Icons";
+import { headers } from "next/headers";
+import { EmployeeDocumentsClient } from "@/components/documents/EmployeeDocumentsClient";
 import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
+import type { DocumentApiItem, DocumentsApiResponse } from "@/types/document";
+import { normalizeDocument } from "@/types/document";
 
-const filters = ["All Documents", "Onboarding", "Quy Ä‘á»‹nh", "HÆ°á»›ng dáº«n"];
+type LoadResult = {
+    documents: ReturnType<typeof normalizeDocument>[];
+    error: string | null;
+};
 
-const stats = [
-    { label: "Total Documents", value: 12, tone: "text-slate-900", iconBg: "bg-blue-50", iconColor: "text-blue-500", icon: DocumentIcon },
-    { label: "Read", value: 8, tone: "text-emerald-600", iconBg: "bg-emerald-50", iconColor: "text-emerald-500", icon: DocumentIcon },
-    { label: "Action Required", value: 4, tone: "text-amber-500", iconBg: "bg-amber-50", iconColor: "text-amber-500", icon: AlertTriangleIcon },
-];
+type CategoryApiItem = {
+    id?: string;
+    name?: string;
+    ID?: string;
+    Name?: string;
+};
 
-const documents = [
-    {
-        title: "Employee Handbook 2024",
-        status: "Unread",
-        summary: "Updated policies regarding remote work, benefits, and code of conduct for...",
-        size: "2.4 MB",
-        date: "Oct 24, 2023",
-        accent: "bg-blue-50",
-        iconTone: "text-blue-500",
-        action: "Mark as Read",
-    },
-    {
-        title: "IT Security Policy v3.0",
-        status: "Unread",
-        summary: "Mandatory security protocols for accessing internal servers and handling...",
-        size: "845 KB",
-        date: "Nov 01, 2023",
-        accent: "bg-purple-50",
-        iconTone: "text-purple-500",
-        action: "Mark as Read",
-    },
-    {
-        title: "Q3 Financial Report",
-        status: "Read",
-        summary: "Quarterly financial breakdown including revenue streams,...",
-        size: "5.1 MB",
-        date: "Sep 30, 2023",
-        accent: "bg-slate-100",
-        iconTone: "text-slate-500",
-        action: "View",
-    },
-    {
-        title: "Brand Assets Kit",
-        status: "Read",
-        summary: "Official logos, color palettes, typography guidelines, and...",
-        size: "128 MB",
-        date: "Aug 15, 2023",
-        accent: "bg-slate-100",
-        iconTone: "text-slate-500",
-        action: "View",
-    },
-    {
-        title: "Innovation Workshop",
-        status: "Read",
-        summary: "Summary notes and action items from the Q3 innovation brainstorming...",
-        size: "1.2 MB",
-        date: "Jul 20, 2023",
-        accent: "bg-slate-100",
-        iconTone: "text-slate-500",
-        action: "View",
-    },
-    {
-        title: "Remote Work Guide",
-        status: "Read",
-        summary: "Best practices for setting up your home office and maintaining...",
-        size: "3.5 MB",
-        date: "Jun 10, 2023",
-        accent: "bg-slate-100",
-        iconTone: "text-slate-500",
-        action: "View",
-    },
-];
+type CategoriesApiResponse =
+    | CategoryApiItem[]
+    | {
+        data?: CategoryApiItem[];
+        body?: CategoryApiItem[] | { data?: CategoryApiItem[] };
+    };
 
-function StatusPill({ status }: { status: string }) {
-    const isUnread = status === "Unread";
-    return (
-        <span
-            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${isUnread ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
-                }`}
-        >
-            {status}
-        </span>
-    );
+type CategoryMap = Record<string, string>;
+
+function asText(value: unknown) {
+    return typeof value === "string" ? value : "";
 }
 
-export default function DocumentsPage() {
+function normalizeCategory(item: CategoryApiItem) {
+    const id = asText(item.id ?? item.ID);
+    const name = asText(item.name ?? item.Name);
+    return { id, name };
+}
+
+async function fetchDocuments(): Promise<LoadResult> {
+    const headerStore = await headers();
+    const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+    const protocol = headerStore.get("x-forwarded-proto") ?? "http";
+    const baseUrl = host
+        ? `${protocol}://${host}`
+        : process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000";
+    const cookieHeader = headerStore.get("cookie") ?? "";
+
+    const url = new URL("/api/employee/documents", baseUrl).toString();
+    const res = await fetch(url, {
+        next: { revalidate: 3600 },
+        headers: {
+            accept: "application/json, application/problem+json",
+            cookie: cookieHeader,
+        },
+    });
+
+    if (!res.ok) {
+        const raw = await res.text().catch(() => "");
+        let message = `Unable to load documents (HTTP ${res.status})`;
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string; error?: string };
+                message = parsed.message || parsed.detail || parsed.title || parsed.error || message;
+            } catch {
+                message = raw.slice(0, 200);
+            }
+        }
+        return { documents: [], error: message };
+    }
+
+    const payload = (await res.json()) as DocumentsApiResponse;
+    let items: DocumentApiItem[] = [];
+    if (Array.isArray(payload)) {
+        items = payload;
+    } else if (Array.isArray(payload?.data)) {
+        items = payload.data;
+    } else if (Array.isArray(payload?.body)) {
+        items = payload.body as DocumentApiItem[];
+    } else if (Array.isArray(payload?.body?.data)) {
+        items = payload.body.data as DocumentApiItem[];
+    }
+
+    return { documents: items.map(normalizeDocument), error: null };
+}
+
+async function fetchCategories(): Promise<CategoryMap> {
+    const headerStore = await headers();
+    const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+    const protocol = headerStore.get("x-forwarded-proto") ?? "http";
+    const baseUrl = host
+        ? `${protocol}://${host}`
+        : process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000";
+    const cookieHeader = headerStore.get("cookie") ?? "";
+
+    const url = new URL("/api/employee/documents/categories", baseUrl).toString();
+    const res = await fetch(url, {
+        cache: "no-store",
+        headers: {
+            accept: "application/json, application/problem+json",
+            cookie: cookieHeader,
+        },
+    });
+
+    if (!res.ok) {
+        return {};
+    }
+
+    const payload = (await res.json()) as CategoriesApiResponse;
+    let items: CategoryApiItem[] = [];
+    if (Array.isArray(payload)) {
+        items = payload;
+    } else if (Array.isArray(payload?.data)) {
+        items = payload.data;
+    } else if (Array.isArray(payload?.body)) {
+        items = payload.body as CategoryApiItem[];
+    } else if (Array.isArray(payload?.body?.data)) {
+        items = payload.body.data as CategoryApiItem[];
+    }
+
+    const categoryMap: CategoryMap = {};
+    for (const item of items) {
+        const { id, name } = normalizeCategory(item);
+        if (id) {
+            categoryMap[id] = name || id;
+        }
+    }
+
+    return categoryMap;
+}
+
+export default async function DocumentsPage() {
+    const [{ documents, error }, categoryMap] = await Promise.all([fetchDocuments(), fetchCategories()]);
+
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
             <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
                 <EmployeeSideNav />
 
                 <section className="flex-1 space-y-6">
-                    <div className="flex flex-col gap-4">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="relative w-full max-w-xl">
-                                <input
-                                    placeholder="Search by title, author, or tag..."
-                                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm outline-none focus:border-blue-500"
-                                />
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-                                {filters.map((label, idx) => (
-                                    <button
-                                        key={label}
-                                        className={`rounded-full px-4 py-2 shadow-sm ${idx === 0 ? "bg-blue-600 text-white" : "bg-white text-slate-600 border border-slate-200"
-                                            }`}
-                                    >
-                                        {label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {stats.map(({ label, value, iconBg, iconColor, icon: Icon, tone }) => (
-                                <div key={label} className="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-sm">
-                                    <div className="flex items-center justify-between">
-                                        <div className={`flex h-9 w-9 items-center justify-center rounded-2xl ${iconBg}`}>
-                                            <Icon className={`h-5 w-5 ${iconColor}`} />
-                                        </div>
-                                        {label === "Read" ? (
-                                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">âœ“</span>
-                                        ) : null}
-                                        {label === "Action Required" ? (
-                                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 text-amber-500">!</span>
-                                        ) : null}
-                                        {label === "Total Documents" ? (
-                                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-500">ðŸ“„</span>
-                                        ) : null}
-                                    </div>
-                                    <p className="mt-4 text-[13px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-                                    <p className={`text-3xl font-extrabold leading-tight ${tone}`}>{value}</p>
-                                </div>
-                            ))}
-                        </div>
+                    <div>
+                        <h1 className="text-2xl font-bold">Documents</h1>
+                        <p className="text-sm text-slate-500">Quick access to company policies and shared files.</p>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {documents.map((doc) => (
-                            <article key={doc.title} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${doc.accent}`}>
-                                        <DocumentIcon className={`h-5 w-5 ${doc.iconTone}`} />
-                                    </div>
-                                    <div className="flex-1 space-y-1">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <h3 className="text-lg font-semibold text-slate-900">{doc.title}</h3>
-                                            <StatusPill status={doc.status} />
-                                        </div>
-                                        <p className="text-sm text-slate-600">{doc.summary}</p>
-                                    </div>
-                                </div>
+                    {error ? (
+                        <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                            {error}
+                        </div>
+                    ) : null}
 
-                                <div className="mt-4 flex items-center justify-between text-xs font-semibold text-slate-500">
-                                    <span className="inline-flex items-center gap-2">
-                                        <span className="text-slate-400">ðŸ“</span>
-                                        {doc.size}
-                                    </span>
-                                    <span className="inline-flex items-center gap-2">
-                                        <span className="text-slate-400">ðŸ“…</span>
-                                        {doc.date}
-                                    </span>
-                                </div>
-
-                                <div className="mt-4 flex items-center gap-3">
-                                    <button
-                                        className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold shadow-sm ${doc.action === "Mark as Read"
-                                            ? "bg-blue-600 text-white hover:bg-blue-700"
-                                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                            }`}
-                                    >
-                                        {doc.action}
-                                    </button>
-                                    <button className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm hover:border-blue-200">
-                                        <DownloadIcon className="h-5 w-5" />
-                                    </button>
-                                </div>
-                            </article>
-                        ))}
-                    </div>
+                    <EmployeeDocumentsClient documents={documents} categoryMap={categoryMap} />
                 </section>
             </div>
         </main>
     );
 }
-

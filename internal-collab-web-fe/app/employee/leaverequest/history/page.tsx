@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LeaveHistoryPanel } from "@/components/leave/LeaveHistoryPanel";
 import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
-import { loadLeaveRequestPageData } from "@/app/employee/leaverequest/_lib/leave-request-data";
+import { loadLeaveRequestPageData } from "@/app/employee/leave-request-data";
 
 export default async function LeaveHistoryPage() {
     const { historyItems, loadError } = await loadLeaveRequestPageData();
