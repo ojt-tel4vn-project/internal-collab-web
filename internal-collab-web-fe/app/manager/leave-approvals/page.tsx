@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 
 type LeaveEmployee = {
@@ -83,11 +83,7 @@ export default function ManagerLeaveApprovalsPage() {
     const [rejectError, setRejectError] = useState<string | null>(null);
     const [rejectLoading, setRejectLoading] = useState(false);
 
-    useEffect(() => {
-        void fetchData();
-    }, [page]);
-
-    async function fetchData() {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -113,7 +109,11 @@ export default function ManagerLeaveApprovalsPage() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [page]);
+
+    useEffect(() => {
+        void fetchData();
+    }, [fetchData]);
 
     const filteredRequests = requests.filter((r) => {
         if (activeFilter === "All") return true;
@@ -296,7 +296,7 @@ export default function ManagerLeaveApprovalsPage() {
 
                                             <div className="flex-1 text-sm font-semibold text-slate-600">
                                                 <p className="text-[11px] uppercase tracking-wide text-slate-400">Notes</p>
-                                                <p className="text-sm text-slate-700">"{req.reason}"</p>
+                                                <p className="text-sm text-slate-700">&quot;{req.reason}&quot;</p>
                                             </div>
 
                                             <div className="flex items-center gap-2">
@@ -324,7 +324,7 @@ export default function ManagerLeaveApprovalsPage() {
 
                                         {req.approver_comment && (
                                             <div className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-600">
-                                                Rejection reason: "{req.approver_comment}"
+                                                Rejection reason: &quot;{req.approver_comment}&quot;
                                             </div>
                                         )}
                                     </article>

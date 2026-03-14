@@ -3,7 +3,7 @@ import { LeaveHistoryPanel } from "@/components/leave/LeaveHistoryPanel";
 import { PendingLeaveRequests } from "@/components/leave/PendingLeaveRequests";
 import { LeaveRequestForm } from "@/components/leave/LeaveRequestForm";
 import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
-import { loadLeaveRequestPageData } from "@/app/employee/leaverequest/_lib/leave-request-data";
+import { loadLeaveRequestPageData } from "@/app/employee/leave-request-data";
 
 export default async function LeaveRequestPage() {
     const {
