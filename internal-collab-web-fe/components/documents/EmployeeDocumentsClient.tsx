@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useDeferredValue, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { AlertTriangleIcon, DocumentIcon, DownloadIcon } from "@/components/dashboard/home/Icons";
 import type { DocumentRecord, MarkReadResponse } from "@/types/document";
 
@@ -60,13 +60,17 @@ function formatFileSize(size?: number) {
 type Props = {
     documents: DocumentRecord[];
     categoryMap?: Record<string, string>;
+    roleLabel?: string;
+    userId?: string | null;
 };
 
 type IndexedDocument = DocumentRecord & {
     searchText: string;
 };
 
-export function EmployeeDocumentsClient({ documents, categoryMap }: Props) {
+const READ_IDS_STORAGE_KEY = "employee_documents_read_ids";
+
+export function EmployeeDocumentsClient({ documents, categoryMap, roleLabel, userId }: Props) {
     const [query, setQuery] = useState("");
     const deferredQuery = useDeferredValue(query);
     const [statusFilter, setStatusFilter] = useState<"all" | "read" | "unread">("all");
@@ -75,11 +79,48 @@ export function EmployeeDocumentsClient({ documents, categoryMap }: Props) {
     const [busyId, setBusyId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [expandedTitles, setExpandedTitles] = useState<Set<string>>(new Set());
+    const [hasHydrated, setHasHydrated] = useState(false);
+
+    const storageKey = useMemo(
+        () => (userId ? `${READ_IDS_STORAGE_KEY}__${userId}` : READ_IDS_STORAGE_KEY),
+        [userId],
+    );
 
     const isDocumentRead = useCallback(
         (doc: DocumentRecord) => Boolean(doc.is_read) || (doc.id ? readIds.has(doc.id) : false),
         [readIds],
     );
+
+    useEffect(() => {
+        setHasHydrated(false);
+        try {
+            const raw = window.localStorage.getItem(storageKey);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    const ids = parsed.filter((value) => typeof value === "string" && value.trim() !== "");
+                    setReadIds(new Set(ids));
+                } else {
+                    setReadIds(new Set());
+                }
+            } else {
+                setReadIds(new Set());
+            }
+        } catch {
+            setReadIds(new Set());
+        } finally {
+            setHasHydrated(true);
+        }
+    }, [storageKey]);
+
+    useEffect(() => {
+        if (!hasHydrated) return;
+        try {
+            window.localStorage.setItem(storageKey, JSON.stringify(Array.from(readIds)));
+        } catch {
+            // Ignore storage errors
+        }
+    }, [readIds, hasHydrated, storageKey]);
 
     const indexedDocuments = useMemo<IndexedDocument[]>(
         () =>
@@ -284,7 +325,7 @@ export function EmployeeDocumentsClient({ documents, categoryMap }: Props) {
                 <div className="grid gap-4 md:grid-cols-2">
                     {filteredDocuments.map((doc) => {
                         const isRead = isDocumentRead(doc);
-                        const roleLabel = formatRolesLabel(doc.roles);
+                        const docRoleLabel = formatRolesLabel(doc.roles);
                         const categoryName = categoryMap?.[doc.category_id];
                         const categoryLabel = categoryName || formatIdLabel(doc.category_id);
                         const categoryTitle =
@@ -295,6 +336,7 @@ export function EmployeeDocumentsClient({ documents, categoryMap }: Props) {
                         const titleText = doc.title || "Untitled document";
                         const isTitleLong = titleText.length > 60;
                         const isTitleExpanded = Boolean(doc.id && expandedTitles.has(doc.id));
+                        const displayRoleLabel = roleLabel ?? docRoleLabel;
                         return (
                             <article key={doc.id} className="flex h-full flex-col rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
                                 <div className="flex items-start justify-between gap-3">
@@ -327,9 +369,9 @@ export function EmployeeDocumentsClient({ documents, categoryMap }: Props) {
                                             </div>
                                             <span
                                                 className="inline-flex max-w-[16rem] items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 truncate"
-                                                title={roleLabel}
+                                                title={displayRoleLabel}
                                             >
-                                                {roleLabel}
+                                                {displayRoleLabel}
                                             </span>
                                             <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${isRead ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}>
                                                 {isRead ? "Read" : "Unread"}
