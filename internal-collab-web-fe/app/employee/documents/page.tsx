@@ -25,6 +25,10 @@ type CategoriesApiResponse =
 
 type CategoryMap = Record<string, string>;
 
+type EmployeeProfileSummary = {
+    id?: string;
+};
+
 function asText(value: unknown) {
     return typeof value === "string" ? value : "";
 }
@@ -127,8 +131,38 @@ async function fetchCategories(): Promise<CategoryMap> {
     return categoryMap;
 }
 
+async function fetchUserId(): Promise<string | null> {
+    const headerStore = await headers();
+    const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+    const protocol = headerStore.get("x-forwarded-proto") ?? "http";
+    const baseUrl = host
+        ? `${protocol}://${host}`
+        : process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000";
+    const cookieHeader = headerStore.get("cookie") ?? "";
+
+    const url = new URL("/api/employee/me", baseUrl).toString();
+    const res = await fetch(url, {
+        cache: "no-store",
+        headers: {
+            accept: "application/json, application/problem+json",
+            cookie: cookieHeader,
+        },
+    });
+
+    if (!res.ok) {
+        return null;
+    }
+
+    const payload = (await res.json()) as EmployeeProfileSummary;
+    return typeof payload?.id === "string" && payload.id.trim() ? payload.id.trim() : null;
+}
+
 export default async function DocumentsPage() {
-    const [{ documents, error }, categoryMap] = await Promise.all([fetchDocuments(), fetchCategories()]);
+    const [{ documents, error }, categoryMap, userId] = await Promise.all([
+        fetchDocuments(),
+        fetchCategories(),
+        fetchUserId(),
+    ]);
 
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
@@ -147,7 +181,12 @@ export default async function DocumentsPage() {
                         </div>
                     ) : null}
 
-                    <EmployeeDocumentsClient documents={documents} categoryMap={categoryMap} />
+                    <EmployeeDocumentsClient
+                        documents={documents}
+                        categoryMap={categoryMap}
+                        roleLabel="Employee"
+                        userId={userId}
+                    />
                 </section>
             </div>
         </main>
