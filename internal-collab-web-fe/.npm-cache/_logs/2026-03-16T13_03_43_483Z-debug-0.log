@@ -1,0 +1,1491 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.6.0
+2 info using node@v22.19.0
+3 silly config load:file:C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\.npmrc
+5 silly config load:file:C:\Users\GIAP TRONG NGHIA\.npmrc
+6 silly config load:file:C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm i wrangler@4.35.0
+8 verbose argv "i" "--save-dev" "wrangler@4.35.0"
+9 verbose logfile logs-max:10 dir:D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\.npm-cache\_logs\2026-03-16T13_03_43_483Z-
+10 verbose logfile D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\.npm-cache\_logs\2026-03-16T13_03_43_483Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly idealTree buildDeps
+14 silly fetch manifest wrangler@4.35.0
+15 silly packumentCache full:https://registry.npmjs.org/wrangler cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/npm 653ms
+17 http fetch GET 200 https://registry.npmjs.org/wrangler 765ms (cache miss)
+18 silly packumentCache full:https://registry.npmjs.org/wrangler set size:undefined disposed:false
+19 silly fetch manifest @cloudflare/workers-types@^4.20250906.0
+20 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkers-types cache-miss
+21 http fetch GET 200 https://registry.npmjs.org/@cloudflare%2fworkers-types 125ms (cache miss)
+22 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkers-types set size:undefined disposed:false
+23 silly placeDep ROOT wrangler@4.35.0 REPLACE for: internal-collab-web-fe@0.1.0 want: 4.35.0
+24 silly fetch manifest unenv@2.0.0-rc.21
+25 silly packumentCache full:https://registry.npmjs.org/unenv cache-miss
+26 silly fetch manifest esbuild@0.25.4
+27 silly packumentCache full:https://registry.npmjs.org/esbuild cache-miss
+28 silly fetch manifest workerd@1.20250906.0
+29 silly packumentCache full:https://registry.npmjs.org/workerd cache-miss
+30 silly fetch manifest miniflare@4.20250906.0
+31 silly packumentCache full:https://registry.npmjs.org/miniflare cache-miss
+32 silly fetch manifest @cloudflare/unenv-preset@2.7.3
+33 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2funenv-preset cache-miss
+34 silly fetch manifest @cloudflare/kv-asset-handler@0.4.0
+35 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fkv-asset-handler cache-miss
+36 http fetch GET 200 https://registry.npmjs.org/unenv 103ms (cache miss)
+37 silly packumentCache full:https://registry.npmjs.org/unenv set size:undefined disposed:false
+38 http fetch GET 200 https://registry.npmjs.org/esbuild 176ms (cache miss)
+39 silly packumentCache full:https://registry.npmjs.org/esbuild set size:undefined disposed:false
+40 http fetch GET 200 https://registry.npmjs.org/workerd 359ms (cache miss)
+41 silly packumentCache full:https://registry.npmjs.org/workerd set size:undefined disposed:false
+42 http fetch GET 200 https://registry.npmjs.org/miniflare 525ms (cache miss)
+43 silly packumentCache full:https://registry.npmjs.org/miniflare set size:undefined disposed:false
+44 http fetch GET 200 https://registry.npmjs.org/@cloudflare%2fkv-asset-handler 652ms (cache miss)
+45 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fkv-asset-handler set size:undefined disposed:false
+46 http fetch GET 200 https://registry.npmjs.org/@cloudflare%2funenv-preset 1219ms (cache miss)
+47 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2funenv-preset set size:undefined disposed:false
+48 silly placeDep ROOT @cloudflare/kv-asset-handler@0.4.0 OK for: wrangler@4.35.0 want: 0.4.0
+49 silly placeDep ROOT @cloudflare/unenv-preset@2.7.3 OK for: wrangler@4.35.0 want: 2.7.3
+50 silly placeDep ROOT unenv@2.0.0-rc.21 OK for: @cloudflare/unenv-preset@2.7.3 want: 2.0.0-rc.21
+51 silly placeDep ROOT esbuild@0.25.4 OK for: wrangler@4.35.0 want: 0.25.4
+52 silly placeDep ROOT miniflare@4.20250906.0 OK for: wrangler@4.35.0 want: 4.20250906.0
+53 silly placeDep ROOT workerd@1.20250906.0 OK for: wrangler@4.35.0 want: 1.20250906.0
+54 silly fetch manifest mime@^3.0.0
+55 silly packumentCache full:https://registry.npmjs.org/mime cache-miss
+56 silly fetch manifest ufo@^1.6.1
+57 silly packumentCache full:https://registry.npmjs.org/ufo cache-miss
+58 silly fetch manifest defu@^6.1.4
+59 silly packumentCache full:https://registry.npmjs.org/defu cache-miss
+60 silly fetch manifest ohash@^2.0.11
+61 silly packumentCache full:https://registry.npmjs.org/ohash cache-miss
+62 silly fetch manifest pathe@^2.0.3
+63 silly packumentCache full:https://registry.npmjs.org/pathe cache-miss
+64 silly fetch manifest exsolve@^1.0.7
+65 silly packumentCache full:https://registry.npmjs.org/exsolve cache-miss
+66 silly fetch manifest @esbuild/aix-ppc64@0.25.4
+67 silly packumentCache full:https://registry.npmjs.org/@esbuild%2faix-ppc64 cache-miss
+68 silly fetch manifest @esbuild/linux-arm@0.25.4
+69 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-arm cache-miss
+70 silly fetch manifest @esbuild/linux-x64@0.25.4
+71 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-x64 cache-miss
+72 silly fetch manifest @esbuild/sunos-x64@0.25.4
+73 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fsunos-x64 cache-miss
+74 silly fetch manifest @esbuild/win32-x64@0.25.4
+75 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-x64 cache-miss
+76 http fetch GET 200 https://registry.npmjs.org/exsolve 133ms (cache miss)
+77 silly packumentCache full:https://registry.npmjs.org/exsolve set size:undefined disposed:false
+78 silly fetch manifest @esbuild/darwin-x64@0.25.4
+79 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fdarwin-x64 cache-miss
+80 http fetch GET 200 https://registry.npmjs.org/mime 172ms (cache miss)
+81 silly packumentCache full:https://registry.npmjs.org/mime set size:undefined disposed:false
+82 silly fetch manifest @esbuild/linux-ia32@0.25.4
+83 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-ia32 cache-miss
+84 http fetch GET 200 https://registry.npmjs.org/defu 178ms (cache miss)
+85 silly packumentCache full:https://registry.npmjs.org/defu set size:undefined disposed:false
+86 silly fetch manifest @esbuild/netbsd-x64@0.25.4
+87 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fnetbsd-x64 cache-miss
+88 http fetch GET 200 https://registry.npmjs.org/ohash 182ms (cache miss)
+89 silly packumentCache full:https://registry.npmjs.org/ohash set size:undefined disposed:false
+90 silly fetch manifest @esbuild/win32-ia32@0.25.4
+91 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-ia32 cache-miss
+92 http fetch GET 200 https://registry.npmjs.org/ufo 189ms (cache miss)
+93 silly packumentCache full:https://registry.npmjs.org/ufo set size:undefined disposed:false
+94 silly fetch manifest @esbuild/android-arm@0.25.4
+95 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-arm cache-miss
+96 http fetch GET 200 https://registry.npmjs.org/pathe 205ms (cache miss)
+97 silly packumentCache full:https://registry.npmjs.org/pathe set size:undefined disposed:false
+98 silly fetch manifest @esbuild/android-x64@0.25.4
+99 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-x64 cache-miss
+100 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-ia32 110ms (cache miss)
+101 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-ia32 set size:undefined disposed:false
+102 silly fetch manifest @esbuild/freebsd-x64@0.25.4
+103 silly packumentCache full:https://registry.npmjs.org/@esbuild%2ffreebsd-x64 cache-miss
+104 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fdarwin-x64 160ms (cache miss)
+105 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fdarwin-x64 set size:undefined disposed:false
+106 silly fetch manifest @esbuild/linux-arm64@0.25.4
+107 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-arm64 cache-miss
+108 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fnetbsd-x64 181ms (cache miss)
+109 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fnetbsd-x64 set size:undefined disposed:false
+110 silly fetch manifest @esbuild/linux-ppc64@0.25.4
+111 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-ppc64 cache-miss
+112 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fwin32-ia32 189ms (cache miss)
+113 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-ia32 set size:undefined disposed:false
+114 silly fetch manifest @esbuild/linux-s390x@0.25.4
+115 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-s390x cache-miss
+116 http fetch GET 200 https://registry.npmjs.org/@esbuild%2faix-ppc64 387ms (cache miss)
+117 silly packumentCache full:https://registry.npmjs.org/@esbuild%2faix-ppc64 set size:undefined disposed:false
+118 silly fetch manifest @esbuild/openbsd-x64@0.25.4
+119 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fopenbsd-x64 cache-miss
+120 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fandroid-arm 204ms (cache miss)
+121 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-arm set size:undefined disposed:false
+122 silly fetch manifest @esbuild/win32-arm64@0.25.4
+123 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-arm64 cache-miss
+124 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fandroid-x64 194ms (cache miss)
+125 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-x64 set size:undefined disposed:false
+126 silly fetch manifest @esbuild/darwin-arm64@0.25.4
+127 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fdarwin-arm64 cache-miss
+128 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fsunos-x64 413ms (cache miss)
+129 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fsunos-x64 set size:undefined disposed:false
+130 silly fetch manifest @esbuild/netbsd-arm64@0.25.4
+131 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fnetbsd-arm64 cache-miss
+132 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-arm 420ms (cache miss)
+133 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-arm set size:undefined disposed:false
+134 silly fetch manifest @esbuild/android-arm64@0.25.4
+135 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-arm64 cache-miss
+136 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-x64 425ms (cache miss)
+137 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-x64 set size:undefined disposed:false
+138 silly fetch manifest @esbuild/freebsd-arm64@0.25.4
+139 silly packumentCache full:https://registry.npmjs.org/@esbuild%2ffreebsd-arm64 cache-miss
+140 http fetch GET 200 https://registry.npmjs.org/@esbuild%2ffreebsd-x64 198ms (cache miss)
+141 silly packumentCache full:https://registry.npmjs.org/@esbuild%2ffreebsd-x64 set size:undefined disposed:false
+142 silly fetch manifest @esbuild/linux-loong64@0.25.4
+143 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-loong64 cache-miss
+144 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-ppc64 170ms (cache miss)
+145 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-ppc64 set size:undefined disposed:false
+146 silly fetch manifest @esbuild/linux-riscv64@0.25.4
+147 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-riscv64 cache-miss
+148 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fwin32-x64 560ms (cache miss)
+149 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-x64 set size:undefined disposed:false
+150 silly fetch manifest @esbuild/openbsd-arm64@0.25.4
+151 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fopenbsd-arm64 cache-miss
+152 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fnetbsd-arm64 163ms (cache miss)
+153 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fnetbsd-arm64 set size:undefined disposed:false
+154 silly fetch manifest @esbuild/linux-mips64el@0.25.4
+155 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-mips64el cache-miss
+156 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-s390x 224ms (cache miss)
+157 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-s390x set size:undefined disposed:false
+158 silly fetch manifest ws@8.18.0
+159 silly packumentCache full:https://registry.npmjs.org/ws cache-miss
+160 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fopenbsd-x64 223ms (cache miss)
+161 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fopenbsd-x64 set size:undefined disposed:false
+162 silly fetch manifest zod@3.22.3
+163 silly packumentCache full:https://registry.npmjs.org/zod cache-miss
+164 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fdarwin-arm64 219ms (cache miss)
+165 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fdarwin-arm64 set size:undefined disposed:false
+166 silly fetch manifest acorn@8.14.0
+167 silly packumentCache full:https://registry.npmjs.org/acorn cache-miss
+168 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fandroid-arm64 211ms (cache miss)
+169 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fandroid-arm64 set size:undefined disposed:false
+170 silly fetch manifest sharp@^0.33.5
+171 silly packumentCache full:https://registry.npmjs.org/sharp cache-miss
+172 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-arm64 340ms (cache miss)
+173 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-arm64 set size:undefined disposed:false
+174 silly fetch manifest youch@4.1.0-beta.10
+175 silly packumentCache full:https://registry.npmjs.org/youch cache-miss
+176 http fetch GET 200 https://registry.npmjs.org/@esbuild%2ffreebsd-arm64 224ms (cache miss)
+177 silly packumentCache full:https://registry.npmjs.org/@esbuild%2ffreebsd-arm64 set size:undefined disposed:false
+178 silly fetch manifest undici@^7.10.0
+179 silly packumentCache full:https://registry.npmjs.org/undici cache-miss
+180 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fwin32-arm64 265ms (cache miss)
+181 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fwin32-arm64 set size:undefined disposed:false
+182 silly fetch manifest exit-hook@2.2.1
+183 silly packumentCache full:https://registry.npmjs.org/exit-hook cache-miss
+184 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-loong64 181ms (cache miss)
+185 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-loong64 set size:undefined disposed:false
+186 silly fetch manifest stoppable@1.1.0
+187 silly packumentCache full:https://registry.npmjs.org/stoppable cache-miss
+188 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-riscv64 147ms (cache miss)
+189 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-riscv64 set size:undefined disposed:false
+190 silly fetch manifest acorn-walk@8.3.2
+191 silly packumentCache full:https://registry.npmjs.org/acorn-walk cache-miss
+192 http fetch GET 200 https://registry.npmjs.org/@esbuild%2fopenbsd-arm64 124ms (cache miss)
+193 silly packumentCache full:https://registry.npmjs.org/@esbuild%2fopenbsd-arm64 set size:undefined disposed:false
+194 silly fetch manifest glob-to-regexp@0.4.1
+195 silly packumentCache full:https://registry.npmjs.org/glob-to-regexp cache-miss
+196 http fetch GET 200 https://registry.npmjs.org/@esbuild%2flinux-mips64el 123ms (cache miss)
+197 silly packumentCache full:https://registry.npmjs.org/@esbuild%2flinux-mips64el set size:undefined disposed:false
+198 silly fetch manifest @cspotcode/source-map-support@0.8.1
+199 silly packumentCache full:https://registry.npmjs.org/@cspotcode%2fsource-map-support cache-miss
+200 http fetch GET 200 https://registry.npmjs.org/exit-hook 125ms (cache miss)
+201 silly packumentCache full:https://registry.npmjs.org/exit-hook set size:undefined disposed:false
+202 silly fetch manifest @cloudflare/workerd-linux-64@1.20250906.0
+203 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkerd-linux-64 cache-miss
+204 http fetch GET 200 https://registry.npmjs.org/youch 154ms (cache miss)
+205 silly packumentCache full:https://registry.npmjs.org/youch set size:undefined disposed:false
+206 silly fetch manifest @cloudflare/workerd-darwin-64@1.20250906.0
+207 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkerd-darwin-64 cache-miss
+208 http fetch GET 200 https://registry.npmjs.org/glob-to-regexp 120ms (cache miss)
+209 silly packumentCache full:https://registry.npmjs.org/glob-to-regexp set size:undefined disposed:false
+210 silly fetch manifest @cloudflare/workerd-windows-64@1.20250906.0
+211 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkerd-windows-64 cache-miss
+212 http fetch GET 200 https://registry.npmjs.org/ws 213ms (cache miss)
+213 silly packumentCache full:https://registry.npmjs.org/ws set size:undefined disposed:false
+214 silly fetch manifest @cloudflare/workerd-linux-arm64@1.20250906.0
+215 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkerd-linux-arm64 cache-miss
+216 http fetch GET 200 https://registry.npmjs.org/acorn 211ms (cache miss)
+217 silly packumentCache full:https://registry.npmjs.org/acorn set size:undefined disposed:false
+218 silly fetch manifest @cloudflare/workerd-darwin-arm64@1.20250906.0
+219 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkerd-darwin-arm64 cache-miss
+220 http fetch GET 200 https://registry.npmjs.org/acorn-walk 161ms (cache miss)
+221 silly packumentCache full:https://registry.npmjs.org/acorn-walk set size:undefined disposed:false
+222 http fetch GET 200 https://registry.npmjs.org/@cspotcode%2fsource-map-support 159ms (cache miss)
+223 silly packumentCache full:https://registry.npmjs.org/@cspotcode%2fsource-map-support set size:undefined disposed:false
+224 http fetch GET 200 https://registry.npmjs.org/sharp 252ms (cache miss)
+225 silly packumentCache full:https://registry.npmjs.org/sharp set size:undefined disposed:false
+226 http fetch GET 200 https://registry.npmjs.org/undici 265ms (cache miss)
+227 silly packumentCache full:https://registry.npmjs.org/undici set size:undefined disposed:false
+228 http fetch GET 200 https://registry.npmjs.org/stoppable 269ms (cache miss)
+229 silly packumentCache full:https://registry.npmjs.org/stoppable set size:undefined disposed:false
+230 http fetch GET 200 https://registry.npmjs.org/zod 358ms (cache miss)
+231 silly packumentCache full:https://registry.npmjs.org/zod set size:undefined disposed:false
+232 http fetch GET 200 https://registry.npmjs.org/@cloudflare%2fworkerd-darwin-64 380ms (cache miss)
+233 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkerd-darwin-64 set size:undefined disposed:false
+234 http fetch GET 200 https://registry.npmjs.org/@cloudflare%2fworkerd-windows-64 528ms (cache miss)
+235 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkerd-windows-64 set size:undefined disposed:false
+236 http fetch GET 200 https://registry.npmjs.org/@cloudflare%2fworkerd-darwin-arm64 553ms (cache miss)
+237 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkerd-darwin-arm64 set size:undefined disposed:false
+238 http fetch GET 200 https://registry.npmjs.org/@cloudflare%2fworkerd-linux-arm64 607ms (cache miss)
+239 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkerd-linux-arm64 set size:undefined disposed:false
+240 http fetch GET 200 https://registry.npmjs.org/@cloudflare%2fworkerd-linux-64 696ms (cache miss)
+241 silly packumentCache full:https://registry.npmjs.org/@cloudflare%2fworkerd-linux-64 set size:undefined disposed:false
+242 silly placeDep ROOT mime@3.0.0 OK for: @cloudflare/kv-asset-handler@0.4.0 want: ^3.0.0
+243 silly placeDep ROOT @esbuild/aix-ppc64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+244 silly placeDep ROOT @esbuild/android-arm@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+245 silly placeDep ROOT @esbuild/android-arm64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+246 silly placeDep ROOT @esbuild/android-x64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+247 silly placeDep ROOT @esbuild/darwin-arm64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+248 silly placeDep ROOT @esbuild/darwin-x64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+249 silly placeDep ROOT @esbuild/freebsd-arm64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+250 silly placeDep ROOT @esbuild/freebsd-x64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+251 silly placeDep ROOT @esbuild/linux-arm@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+252 silly placeDep ROOT @esbuild/linux-arm64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+253 silly placeDep ROOT @esbuild/linux-ia32@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+254 silly placeDep ROOT @esbuild/linux-loong64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+255 silly placeDep ROOT @esbuild/linux-mips64el@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+256 silly placeDep ROOT @esbuild/linux-ppc64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+257 silly placeDep ROOT @esbuild/linux-riscv64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+258 silly placeDep ROOT @esbuild/linux-s390x@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+259 silly placeDep ROOT @esbuild/linux-x64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+260 silly placeDep ROOT @esbuild/netbsd-arm64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+261 silly placeDep ROOT @esbuild/netbsd-x64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+262 silly placeDep ROOT @esbuild/openbsd-arm64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+263 silly placeDep ROOT @esbuild/openbsd-x64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+264 silly placeDep ROOT @esbuild/sunos-x64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+265 silly placeDep ROOT @esbuild/win32-arm64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+266 silly placeDep ROOT @esbuild/win32-ia32@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+267 silly placeDep ROOT @esbuild/win32-x64@0.25.4 OK for: esbuild@0.25.4 want: 0.25.4
+268 silly fetch manifest bufferutil@^4.0.1
+269 silly packumentCache full:https://registry.npmjs.org/bufferutil cache-miss
+270 http fetch GET 200 https://registry.npmjs.org/bufferutil 127ms (cache miss)
+271 silly packumentCache full:https://registry.npmjs.org/bufferutil set size:undefined disposed:false
+272 silly fetch manifest utf-8-validate@>=5.0.2
+273 silly packumentCache full:https://registry.npmjs.org/utf-8-validate cache-miss
+274 http fetch GET 200 https://registry.npmjs.org/utf-8-validate 95ms (cache miss)
+275 silly packumentCache full:https://registry.npmjs.org/utf-8-validate set size:undefined disposed:false
+276 silly placeDep ROOT @cspotcode/source-map-support@0.8.1 OK for: miniflare@4.20250906.0 want: 0.8.1
+277 silly placeDep node_modules/miniflare acorn@8.14.0 OK for: miniflare@4.20250906.0 want: 8.14.0
+278 silly placeDep ROOT acorn-walk@8.3.2 OK for: miniflare@4.20250906.0 want: 8.3.2
+279 silly placeDep ROOT exit-hook@2.2.1 OK for: miniflare@4.20250906.0 want: 2.2.1
+280 silly placeDep ROOT glob-to-regexp@0.4.1 OK for: miniflare@4.20250906.0 want: 0.4.1
+281 silly placeDep node_modules/miniflare sharp@0.33.5 OK for: miniflare@4.20250906.0 want: ^0.33.5
+282 silly placeDep ROOT stoppable@1.1.0 OK for: miniflare@4.20250906.0 want: 1.1.0
+283 silly placeDep ROOT undici@7.24.4 OK for: miniflare@4.20250906.0 want: ^7.10.0
+284 silly placeDep ROOT ws@8.18.0 OK for: miniflare@4.20250906.0 want: 8.18.0
+285 silly placeDep ROOT youch@4.1.0-beta.10 OK for: miniflare@4.20250906.0 want: 4.1.0-beta.10
+286 silly placeDep node_modules/miniflare zod@3.22.3 OK for: miniflare@4.20250906.0 want: 3.22.3
+287 silly fetch manifest @jridgewell/trace-mapping@0.3.9
+288 silly packumentCache full:https://registry.npmjs.org/@jridgewell%2ftrace-mapping cache-miss
+289 silly fetch manifest color@^4.2.3
+290 silly packumentCache full:https://registry.npmjs.org/color cache-miss
+291 silly fetch manifest semver@^7.6.3
+292 silly packumentCache full:https://registry.npmjs.org/semver cache-miss
+293 silly fetch manifest @img/sharp-wasm32@0.33.5
+294 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-wasm32 cache-miss
+295 silly fetch manifest @img/sharp-linux-arm@0.33.5
+296 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linux-arm cache-miss
+297 silly fetch manifest @img/sharp-linux-x64@0.33.5
+298 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linux-x64 cache-miss
+299 silly fetch manifest @img/sharp-win32-x64@0.33.5
+300 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-win32-x64 cache-miss
+301 silly fetch manifest @img/sharp-darwin-x64@0.33.5
+302 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-darwin-x64 cache-miss
+303 silly fetch manifest @img/sharp-win32-ia32@0.33.5
+304 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-win32-ia32 cache-miss
+305 silly fetch manifest @img/sharp-linux-arm64@0.33.5
+306 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linux-arm64 cache-miss
+307 silly fetch manifest @img/sharp-linux-s390x@0.33.5
+308 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linux-s390x cache-miss
+309 http fetch GET 200 https://registry.npmjs.org/semver 157ms (cache miss)
+310 silly packumentCache full:https://registry.npmjs.org/semver set size:undefined disposed:false
+311 silly fetch manifest @img/sharp-darwin-arm64@0.33.5
+312 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-darwin-arm64 cache-miss
+313 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-darwin-x64 189ms (cache miss)
+314 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-darwin-x64 set size:undefined disposed:false
+315 silly fetch manifest @img/sharp-linuxmusl-x64@0.33.5
+316 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linuxmusl-x64 cache-miss
+317 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-linux-x64 195ms (cache miss)
+318 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linux-x64 set size:undefined disposed:false
+319 silly fetch manifest @img/sharp-linuxmusl-arm64@0.33.5
+320 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linuxmusl-arm64 cache-miss
+321 http fetch GET 200 https://registry.npmjs.org/color 205ms (cache miss)
+322 silly packumentCache full:https://registry.npmjs.org/color set size:undefined disposed:false
+323 silly fetch manifest @img/sharp-libvips-linux-arm@1.0.5
+324 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linux-arm cache-miss
+325 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-win32-ia32 210ms (cache miss)
+326 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-win32-ia32 set size:undefined disposed:false
+327 silly fetch manifest @img/sharp-libvips-linux-x64@1.0.4
+328 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linux-x64 cache-miss
+329 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-linux-arm64 212ms (cache miss)
+330 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linux-arm64 set size:undefined disposed:false
+331 silly fetch manifest @img/sharp-libvips-darwin-x64@1.0.4
+332 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-darwin-x64 cache-miss
+333 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-linux-arm 218ms (cache miss)
+334 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linux-arm set size:undefined disposed:false
+335 silly fetch manifest @img/sharp-libvips-linux-arm64@1.0.4
+336 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linux-arm64 cache-miss
+337 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-wasm32 222ms (cache miss)
+338 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-wasm32 set size:undefined disposed:false
+339 silly fetch manifest @img/sharp-libvips-linux-s390x@1.0.4
+340 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linux-s390x cache-miss
+341 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-win32-x64 223ms (cache miss)
+342 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-win32-x64 set size:undefined disposed:false
+343 silly fetch manifest @img/sharp-libvips-darwin-arm64@1.0.4
+344 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-darwin-arm64 cache-miss
+345 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-linux-s390x 227ms (cache miss)
+346 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linux-s390x set size:undefined disposed:false
+347 silly fetch manifest @img/sharp-libvips-linuxmusl-x64@1.0.4
+348 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linuxmusl-x64 cache-miss
+349 http fetch GET 200 https://registry.npmjs.org/@jridgewell%2ftrace-mapping 247ms (cache miss)
+350 silly packumentCache full:https://registry.npmjs.org/@jridgewell%2ftrace-mapping set size:undefined disposed:false
+351 silly fetch manifest @img/sharp-libvips-linuxmusl-arm64@1.0.4
+352 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linuxmusl-arm64 cache-miss
+353 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-darwin-arm64 121ms (cache miss)
+354 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-darwin-arm64 set size:undefined disposed:false
+355 silly fetch manifest cookie@^1.0.2
+356 silly packumentCache full:https://registry.npmjs.org/cookie cache-miss
+357 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-linuxmusl-arm64 113ms (cache miss)
+358 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linuxmusl-arm64 set size:undefined disposed:false
+359 silly fetch manifest youch-core@^0.3.3
+360 silly packumentCache full:https://registry.npmjs.org/youch-core cache-miss
+361 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-linuxmusl-x64 151ms (cache miss)
+362 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-linuxmusl-x64 set size:undefined disposed:false
+363 silly fetch manifest @poppinss/colors@^4.1.5
+364 silly packumentCache full:https://registry.npmjs.org/@poppinss%2fcolors cache-miss
+365 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-libvips-linux-arm 150ms (cache miss)
+366 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linux-arm set size:undefined disposed:false
+367 silly fetch manifest @poppinss/dumper@^0.6.4
+368 silly packumentCache full:https://registry.npmjs.org/@poppinss%2fdumper cache-miss
+369 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-libvips-linux-x64 164ms (cache miss)
+370 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linux-x64 set size:undefined disposed:false
+371 silly fetch manifest @speed-highlight/core@^1.2.7
+372 silly packumentCache full:https://registry.npmjs.org/@speed-highlight%2fcore cache-miss
+373 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-libvips-linux-arm64 164ms (cache miss)
+374 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linux-arm64 set size:undefined disposed:false
+375 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-libvips-darwin-x64 172ms (cache miss)
+376 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-darwin-x64 set size:undefined disposed:false
+377 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-libvips-linux-s390x 167ms (cache miss)
+378 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linux-s390x set size:undefined disposed:false
+379 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-libvips-linuxmusl-x64 159ms (cache miss)
+380 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linuxmusl-x64 set size:undefined disposed:false
+381 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-libvips-darwin-arm64 168ms (cache miss)
+382 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-darwin-arm64 set size:undefined disposed:false
+383 http fetch GET 200 https://registry.npmjs.org/@img%2fsharp-libvips-linuxmusl-arm64 152ms (cache miss)
+384 silly packumentCache full:https://registry.npmjs.org/@img%2fsharp-libvips-linuxmusl-arm64 set size:undefined disposed:false
+385 http fetch GET 200 https://registry.npmjs.org/cookie 109ms (cache miss)
+386 silly packumentCache full:https://registry.npmjs.org/cookie set size:undefined disposed:false
+387 http fetch GET 200 https://registry.npmjs.org/@speed-highlight%2fcore 109ms (cache miss)
+388 silly packumentCache full:https://registry.npmjs.org/@speed-highlight%2fcore set size:undefined disposed:false
+389 http fetch GET 200 https://registry.npmjs.org/@poppinss%2fcolors 148ms (cache miss)
+390 silly packumentCache full:https://registry.npmjs.org/@poppinss%2fcolors set size:undefined disposed:false
+391 http fetch GET 200 https://registry.npmjs.org/youch-core 232ms (cache miss)
+392 silly packumentCache full:https://registry.npmjs.org/youch-core set size:undefined disposed:false
+393 http fetch GET 200 https://registry.npmjs.org/@poppinss%2fdumper 249ms (cache miss)
+394 silly packumentCache full:https://registry.npmjs.org/@poppinss%2fdumper set size:undefined disposed:false
+395 silly placeDep node_modules/@cspotcode/source-map-support @jridgewell/trace-mapping@0.3.9 OK for: @cspotcode/source-map-support@0.8.1 want: 0.3.9
+396 silly placeDep ROOT defu@6.1.4 OK for: unenv@2.0.0-rc.21 want: ^6.1.4
+397 silly placeDep ROOT exsolve@1.0.8 OK for: unenv@2.0.0-rc.21 want: ^1.0.7
+398 silly placeDep ROOT ohash@2.0.11 OK for: unenv@2.0.0-rc.21 want: ^2.0.11
+399 silly placeDep ROOT pathe@2.0.3 OK for: unenv@2.0.0-rc.21 want: ^2.0.3
+400 silly placeDep ROOT ufo@1.6.3 OK for: unenv@2.0.0-rc.21 want: ^1.6.1
+401 silly placeDep ROOT @cloudflare/workerd-darwin-64@1.20250906.0 OK for: workerd@1.20250906.0 want: 1.20250906.0
+402 silly placeDep ROOT @cloudflare/workerd-darwin-arm64@1.20250906.0 OK for: workerd@1.20250906.0 want: 1.20250906.0
+403 silly placeDep ROOT @cloudflare/workerd-linux-64@1.20250906.0 OK for: workerd@1.20250906.0 want: 1.20250906.0
+404 silly placeDep ROOT @cloudflare/workerd-linux-arm64@1.20250906.0 OK for: workerd@1.20250906.0 want: 1.20250906.0
+405 silly placeDep ROOT @cloudflare/workerd-windows-64@1.20250906.0 OK for: workerd@1.20250906.0 want: 1.20250906.0
+406 silly placeDep ROOT @poppinss/colors@4.1.6 OK for: youch@4.1.0-beta.10 want: ^4.1.5
+407 silly placeDep ROOT @poppinss/dumper@0.6.5 OK for: youch@4.1.0-beta.10 want: ^0.6.4
+408 silly placeDep ROOT @speed-highlight/core@1.2.14 OK for: youch@4.1.0-beta.10 want: ^1.2.7
+409 silly placeDep ROOT cookie@1.1.1 OK for: youch@4.1.0-beta.10 want: ^1.0.2
+410 silly placeDep ROOT youch-core@0.3.3 OK for: youch@4.1.0-beta.10 want: ^0.3.3
+411 silly fetch manifest kleur@^4.1.5
+412 silly packumentCache full:https://registry.npmjs.org/kleur cache-miss
+413 silly fetch manifest supports-color@^10.0.0
+414 silly packumentCache full:https://registry.npmjs.org/supports-color cache-miss
+415 silly fetch manifest @sindresorhus/is@^7.0.2
+416 silly packumentCache full:https://registry.npmjs.org/@sindresorhus%2fis cache-miss
+417 silly fetch manifest @poppinss/exception@^1.2.2
+418 silly packumentCache full:https://registry.npmjs.org/@poppinss%2fexception cache-miss
+419 silly fetch manifest error-stack-parser-es@^1.0.5
+420 silly packumentCache full:https://registry.npmjs.org/error-stack-parser-es cache-miss
+421 http fetch GET 200 https://registry.npmjs.org/error-stack-parser-es 209ms (cache miss)
+422 silly packumentCache full:https://registry.npmjs.org/error-stack-parser-es set size:undefined disposed:false
+423 http fetch GET 200 https://registry.npmjs.org/supports-color 217ms (cache miss)
+424 silly packumentCache full:https://registry.npmjs.org/supports-color set size:undefined disposed:false
+425 http fetch GET 200 https://registry.npmjs.org/@poppinss%2fexception 217ms (cache miss)
+426 silly packumentCache full:https://registry.npmjs.org/@poppinss%2fexception set size:undefined disposed:false
+427 http fetch GET 200 https://registry.npmjs.org/kleur 223ms (cache miss)
+428 silly packumentCache full:https://registry.npmjs.org/kleur set size:undefined disposed:false
+429 http fetch GET 200 https://registry.npmjs.org/@sindresorhus%2fis 224ms (cache miss)
+430 silly packumentCache full:https://registry.npmjs.org/@sindresorhus%2fis set size:undefined disposed:false
+431 silly placeDep ROOT kleur@4.1.5 OK for: @poppinss/colors@4.1.6 want: ^4.1.5
+432 silly placeDep ROOT @sindresorhus/is@7.2.0 OK for: @poppinss/dumper@0.6.5 want: ^7.0.2
+433 silly placeDep node_modules/@poppinss/dumper supports-color@10.2.2 OK for: @poppinss/dumper@0.6.5 want: ^10.0.0
+434 silly placeDep ROOT @poppinss/exception@1.2.3 OK for: youch-core@0.3.3 want: ^1.2.2
+435 silly placeDep ROOT error-stack-parser-es@1.0.5 OK for: youch-core@0.3.3 want: ^1.0.5
+436 silly placeDep node_modules/miniflare @img/sharp-darwin-arm64@0.33.5 OK for: sharp@0.33.5 want: 0.33.5
+437 silly placeDep node_modules/miniflare @img/sharp-darwin-x64@0.33.5 OK for: sharp@0.33.5 want: 0.33.5
+438 silly placeDep node_modules/miniflare @img/sharp-libvips-darwin-arm64@1.0.4 OK for: sharp@0.33.5 want: 1.0.4
+439 silly placeDep node_modules/miniflare @img/sharp-libvips-darwin-x64@1.0.4 OK for: sharp@0.33.5 want: 1.0.4
+440 silly placeDep node_modules/miniflare @img/sharp-libvips-linux-arm@1.0.5 OK for: sharp@0.33.5 want: 1.0.5
+441 silly placeDep node_modules/miniflare @img/sharp-libvips-linux-arm64@1.0.4 OK for: sharp@0.33.5 want: 1.0.4
+442 silly placeDep node_modules/miniflare @img/sharp-libvips-linux-s390x@1.0.4 OK for: sharp@0.33.5 want: 1.0.4
+443 silly placeDep node_modules/miniflare @img/sharp-libvips-linux-x64@1.0.4 OK for: sharp@0.33.5 want: 1.0.4
+444 silly placeDep node_modules/miniflare @img/sharp-libvips-linuxmusl-arm64@1.0.4 OK for: sharp@0.33.5 want: 1.0.4
+445 silly placeDep node_modules/miniflare @img/sharp-libvips-linuxmusl-x64@1.0.4 OK for: sharp@0.33.5 want: 1.0.4
+446 silly placeDep node_modules/miniflare @img/sharp-linux-arm@0.33.5 OK for: sharp@0.33.5 want: 0.33.5
+447 silly placeDep node_modules/miniflare @img/sharp-linux-arm64@0.33.5 OK for: sharp@0.33.5 want: 0.33.5
+448 silly placeDep node_modules/miniflare @img/sharp-linux-s390x@0.33.5 OK for: sharp@0.33.5 want: 0.33.5
+449 silly placeDep node_modules/miniflare @img/sharp-linux-x64@0.33.5 OK for: sharp@0.33.5 want: 0.33.5
+450 silly placeDep node_modules/miniflare @img/sharp-linuxmusl-arm64@0.33.5 OK for: sharp@0.33.5 want: 0.33.5
+451 silly placeDep node_modules/miniflare @img/sharp-linuxmusl-x64@0.33.5 OK for: sharp@0.33.5 want: 0.33.5
+452 silly placeDep node_modules/miniflare @img/sharp-wasm32@0.33.5 OK for: sharp@0.33.5 want: 0.33.5
+453 silly placeDep node_modules/miniflare @img/sharp-win32-ia32@0.33.5 OK for: sharp@0.33.5 want: 0.33.5
+454 silly placeDep node_modules/miniflare @img/sharp-win32-x64@0.33.5 OK for: sharp@0.33.5 want: 0.33.5
+455 silly placeDep ROOT color@4.2.3 OK for: sharp@0.33.5 want: ^4.2.3
+456 silly placeDep node_modules/miniflare semver@7.7.4 OK for: sharp@0.33.5 want: ^7.6.3
+457 silly fetch manifest color-string@^1.9.0
+458 silly packumentCache full:https://registry.npmjs.org/color-string cache-miss
+459 http fetch GET 200 https://registry.npmjs.org/color-string 99ms (cache miss)
+460 silly packumentCache full:https://registry.npmjs.org/color-string set size:undefined disposed:false
+461 silly placeDep ROOT color-string@1.9.1 OK for: color@4.2.3 want: ^1.9.0
+462 silly fetch manifest simple-swizzle@^0.2.2
+463 silly packumentCache full:https://registry.npmjs.org/simple-swizzle cache-miss
+464 http fetch GET 200 https://registry.npmjs.org/simple-swizzle 106ms (cache miss)
+465 silly packumentCache full:https://registry.npmjs.org/simple-swizzle set size:undefined disposed:false
+466 silly placeDep ROOT simple-swizzle@0.2.4 OK for: color-string@1.9.1 want: ^0.2.2
+467 silly fetch manifest is-arrayish@^0.3.1
+468 silly packumentCache full:https://registry.npmjs.org/is-arrayish cache-miss
+469 http fetch GET 200 https://registry.npmjs.org/is-arrayish 158ms (cache miss)
+470 silly packumentCache full:https://registry.npmjs.org/is-arrayish set size:undefined disposed:false
+471 silly placeDep ROOT is-arrayish@0.3.4 OK for: simple-swizzle@0.2.4 want: ^0.3.1
+472 silly reify mark retired [
+472 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\kv-asset-handler'
+472 silly reify ]
+473 silly reify mark retired [
+473 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\unenv-preset'
+473 silly reify ]
+474 silly reify mark retired [
+474 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-darwin-64'
+474 silly reify ]
+475 silly reify mark retired [
+475 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-darwin-arm64'
+475 silly reify ]
+476 silly reify mark retired [
+476 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-linux-64'
+476 silly reify ]
+477 silly reify mark retired [
+477 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-linux-arm64'
+477 silly reify ]
+478 silly reify mark retired [
+478 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-windows-64'
+478 silly reify ]
+479 silly reify mark retired [
+479 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\aix-ppc64'
+479 silly reify ]
+480 silly reify mark retired [
+480 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\android-arm'
+480 silly reify ]
+481 silly reify mark retired [
+481 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\android-arm64'
+481 silly reify ]
+482 silly reify mark retired [
+482 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\android-x64'
+482 silly reify ]
+483 silly reify mark retired [
+483 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\darwin-arm64'
+483 silly reify ]
+484 silly reify mark retired [
+484 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\darwin-x64'
+484 silly reify ]
+485 silly reify mark retired [
+485 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\freebsd-arm64'
+485 silly reify ]
+486 silly reify mark retired [
+486 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\freebsd-x64'
+486 silly reify ]
+487 silly reify mark retired [
+487 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-arm'
+487 silly reify ]
+488 silly reify mark retired [
+488 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-arm64'
+488 silly reify ]
+489 silly reify mark retired [
+489 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-ia32'
+489 silly reify ]
+490 silly reify mark retired [
+490 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-loong64'
+490 silly reify ]
+491 silly reify mark retired [
+491 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-mips64el'
+491 silly reify ]
+492 silly reify mark retired [
+492 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-ppc64'
+492 silly reify ]
+493 silly reify mark retired [
+493 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-riscv64'
+493 silly reify ]
+494 silly reify mark retired [
+494 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-s390x'
+494 silly reify ]
+495 silly reify mark retired [
+495 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-x64'
+495 silly reify ]
+496 silly reify mark retired [
+496 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\netbsd-arm64'
+496 silly reify ]
+497 silly reify mark retired [
+497 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\netbsd-x64'
+497 silly reify ]
+498 silly reify mark retired [
+498 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\openbsd-arm64'
+498 silly reify ]
+499 silly reify mark retired [
+499 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\openbsd-x64'
+499 silly reify ]
+500 silly reify mark retired [
+500 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\openharmony-arm64'
+500 silly reify ]
+501 silly reify mark retired [
+501 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\sunos-x64'
+501 silly reify ]
+502 silly reify mark retired [
+502 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\win32-arm64'
+502 silly reify ]
+503 silly reify mark retired [
+503 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\win32-ia32'
+503 silly reify ]
+504 silly reify mark retired [
+504 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\win32-x64'
+504 silly reify ]
+505 silly reify mark retired [
+505 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\esbuild',
+505 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\esbuild',
+505 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\esbuild.cmd',
+505 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\esbuild.ps1'
+505 silly reify ]
+506 silly reify mark retired [
+506 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare',
+506 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\miniflare',
+506 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\miniflare.cmd',
+506 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\miniflare.ps1'
+506 silly reify ]
+507 silly reify mark retired [
+507 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\undici'
+507 silly reify ]
+508 silly reify mark retired [
+508 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\unenv'
+508 silly reify ]
+509 silly reify mark retired [
+509 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\workerd',
+509 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\workerd',
+509 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\workerd.cmd',
+509 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\workerd.ps1'
+509 silly reify ]
+510 silly reify mark retired [
+510 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\wrangler',
+510 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler',
+510 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler.cmd',
+510 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler.ps1',
+510 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler2',
+510 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler2.cmd',
+510 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler2.ps1'
+510 silly reify ]
+511 silly reify moves {
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\kv-asset-handler': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\.kv-asset-handler-irclIadY',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\unenv-preset': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\.unenv-preset-4wB19iK3',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-darwin-64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\.workerd-darwin-64-s6Abozhf',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-darwin-arm64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\.workerd-darwin-arm64-vk0Yh9Vv',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-linux-64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\.workerd-linux-64-ymxdNRlb',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-linux-arm64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\.workerd-linux-arm64-jafrymvn',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-windows-64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\.workerd-windows-64-0LGFo3fv',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\aix-ppc64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.aix-ppc64-7vzlS1Yf',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\android-arm': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.android-arm-3oSp97CZ',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\android-arm64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.android-arm64-gONUUrYb',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\android-x64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.android-x64-3hk1nVl3',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\darwin-arm64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.darwin-arm64-ZA5CuAjj',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\darwin-x64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.darwin-x64-kcBdFItc',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\freebsd-arm64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.freebsd-arm64-FJYmdnWZ',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\freebsd-x64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.freebsd-x64-dnCjsz5z',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-arm': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.linux-arm-qv0fiLSl',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-arm64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.linux-arm64-keQVmClI',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-ia32': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.linux-ia32-derzXKYw',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-loong64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.linux-loong64-FsNGbt0r',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-mips64el': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.linux-mips64el-3izBgkuH',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-ppc64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.linux-ppc64-qsZakoZf',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-riscv64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.linux-riscv64-HKmptkBO',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-s390x': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.linux-s390x-s1yxXxVY',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-x64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.linux-x64-dryTnXKF',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\netbsd-arm64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.netbsd-arm64-AoCWq0SO',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\netbsd-x64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.netbsd-x64-nCHGZWJD',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\openbsd-arm64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.openbsd-arm64-NjUVcOkX',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\openbsd-x64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.openbsd-x64-kY8lff2v',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\openharmony-arm64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.openharmony-arm64-2EKP3S0T',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\sunos-x64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.sunos-x64-J0QrRUBF',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\win32-arm64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.win32-arm64-DfRQ63Zm',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\win32-ia32': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.win32-ia32-bWlgheLy',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\win32-x64': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\.win32-x64-JYGdF7td',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\esbuild': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.esbuild-aAQjlaUs',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\esbuild': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.esbuild-3Vf36z06',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\esbuild.cmd': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.esbuild.cmd-ELiliIrh',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\esbuild.ps1': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.esbuild.ps1-BTKwm6E7',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.miniflare-6wqhcMWt',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\miniflare': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.miniflare-5Oiq9hvl',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\miniflare.cmd': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.miniflare.cmd-lzkpxOh6',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\miniflare.ps1': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.miniflare.ps1-HQeq254a',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\undici': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.undici-eVG9zXnB',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\unenv': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.unenv-jeVxbsMl',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\workerd': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.workerd-Ju6LlEsm',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\workerd': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.workerd-9zcyPbVS',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\workerd.cmd': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.workerd.cmd-VOIhu8ol',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\workerd.ps1': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.workerd.ps1-BiV6cgYD',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\wrangler': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.wrangler-zD4PyIYH',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.wrangler-Kku9UKXU',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler.cmd': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.wrangler.cmd-qXlGGgbR',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler.ps1': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.wrangler.ps1-FnKw0w6h',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler2': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.wrangler2-nyytQZWx',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler2.cmd': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.wrangler2.cmd-xznUlzlQ',
+511 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\wrangler2.ps1': 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\.bin\\.wrangler2.ps1-S2auqq2L'
+511 silly reify }
+512 silly audit bulk request {
+512 silly audit   '@alloc/quick-lru': [ '5.2.0' ],
+512 silly audit   '@babel/code-frame': [ '7.28.6' ],
+512 silly audit   '@babel/compat-data': [ '7.28.6' ],
+512 silly audit   '@babel/core': [ '7.28.6' ],
+512 silly audit   '@babel/generator': [ '7.28.6' ],
+512 silly audit   '@babel/helper-compilation-targets': [ '7.28.6' ],
+512 silly audit   '@babel/helper-globals': [ '7.28.0' ],
+512 silly audit   '@babel/helper-module-imports': [ '7.28.6' ],
+512 silly audit   '@babel/helper-module-transforms': [ '7.28.6' ],
+512 silly audit   '@babel/helper-string-parser': [ '7.27.1' ],
+512 silly audit   '@babel/helper-validator-identifier': [ '7.28.5' ],
+512 silly audit   '@babel/helper-validator-option': [ '7.27.1' ],
+512 silly audit   '@babel/helpers': [ '7.28.6' ],
+512 silly audit   '@babel/parser': [ '7.28.6' ],
+512 silly audit   '@babel/template': [ '7.28.6' ],
+512 silly audit   '@babel/traverse': [ '7.28.6' ],
+512 silly audit   '@babel/types': [ '7.28.6' ],
+512 silly audit   '@jridgewell/trace-mapping': [ '0.3.31', '0.3.9' ],
+512 silly audit   '@emnapi/core': [ '1.8.1' ],
+512 silly audit   '@emnapi/runtime': [ '1.8.1' ],
+512 silly audit   '@emnapi/wasi-threads': [ '1.1.0' ],
+512 silly audit   '@eslint-community/eslint-utils': [ '4.9.1' ],
+512 silly audit   'eslint-visitor-keys': [ '3.4.3', '4.2.1' ],
+512 silly audit   '@eslint-community/regexpp': [ '4.12.2' ],
+512 silly audit   '@eslint/config-array': [ '0.21.1' ],
+512 silly audit   '@eslint/config-helpers': [ '0.4.2' ],
+512 silly audit   '@eslint/core': [ '0.17.0' ],
+512 silly audit   '@eslint/eslintrc': [ '3.3.3' ],
+512 silly audit   '@eslint/js': [ '9.39.2' ],
+512 silly audit   '@eslint/object-schema': [ '2.1.7' ],
+512 silly audit   '@eslint/plugin-kit': [ '0.4.1' ],
+512 silly audit   '@humanfs/core': [ '0.19.1' ],
+512 silly audit   '@humanfs/node': [ '0.16.7' ],
+512 silly audit   '@humanwhocodes/module-importer': [ '1.0.1' ],
+512 silly audit   '@humanwhocodes/retry': [ '0.4.3' ],
+512 silly audit   '@img/colour': [ '1.0.0' ],
+512 silly audit   '@img/sharp-darwin-arm64': [ '0.34.5', '0.33.5' ],
+512 silly audit   '@img/sharp-darwin-x64': [ '0.34.5', '0.33.5' ],
+512 silly audit   '@img/sharp-libvips-darwin-arm64': [ '1.2.4', '1.0.4' ],
+512 silly audit   '@img/sharp-libvips-darwin-x64': [ '1.2.4', '1.0.4' ],
+512 silly audit   '@img/sharp-libvips-linux-arm': [ '1.2.4', '1.0.5' ],
+512 silly audit   '@img/sharp-libvips-linux-arm64': [ '1.2.4', '1.0.4' ],
+512 silly audit   '@img/sharp-libvips-linux-ppc64': [ '1.2.4' ],
+512 silly audit   '@img/sharp-libvips-linux-riscv64': [ '1.2.4' ],
+512 silly audit   '@img/sharp-libvips-linux-s390x': [ '1.2.4', '1.0.4' ],
+512 silly audit   '@img/sharp-libvips-linux-x64': [ '1.2.4', '1.0.4' ],
+512 silly audit   '@img/sharp-libvips-linuxmusl-arm64': [ '1.2.4', '1.0.4' ],
+512 silly audit   '@img/sharp-libvips-linuxmusl-x64': [ '1.2.4', '1.0.4' ],
+512 silly audit   '@img/sharp-linux-arm': [ '0.34.5', '0.33.5' ],
+512 silly audit   '@img/sharp-linux-arm64': [ '0.34.5', '0.33.5' ],
+512 silly audit   '@img/sharp-linux-ppc64': [ '0.34.5' ],
+512 silly audit   '@img/sharp-linux-riscv64': [ '0.34.5' ],
+512 silly audit   '@img/sharp-linux-s390x': [ '0.34.5', '0.33.5' ],
+512 silly audit   '@img/sharp-linux-x64': [ '0.34.5', '0.33.5' ],
+512 silly audit   '@img/sharp-linuxmusl-arm64': [ '0.34.5', '0.33.5' ],
+512 silly audit   '@img/sharp-linuxmusl-x64': [ '0.34.5', '0.33.5' ],
+512 silly audit   '@img/sharp-wasm32': [ '0.34.5', '0.33.5' ],
+512 silly audit   '@img/sharp-win32-arm64': [ '0.34.5' ],
+512 silly audit   '@img/sharp-win32-ia32': [ '0.34.5', '0.33.5' ],
+512 silly audit   '@img/sharp-win32-x64': [ '0.34.5', '0.33.5' ],
+512 silly audit   '@jridgewell/gen-mapping': [ '0.3.13' ],
+512 silly audit   '@jridgewell/remapping': [ '2.3.5' ],
+512 silly audit   '@jridgewell/resolve-uri': [ '3.1.2' ],
+512 silly audit   '@jridgewell/sourcemap-codec': [ '1.5.5' ],
+512 silly audit   '@napi-rs/wasm-runtime': [ '0.2.12' ],
+512 silly audit   '@next/env': [ '16.1.6' ],
+512 silly audit   '@next/eslint-plugin-next': [ '16.1.6' ],
+512 silly audit   '@next/swc-darwin-arm64': [ '16.1.6' ],
+512 silly audit   '@next/swc-darwin-x64': [ '16.1.6' ],
+512 silly audit   '@next/swc-linux-arm64-gnu': [ '16.1.6' ],
+512 silly audit   '@next/swc-linux-arm64-musl': [ '16.1.6' ],
+512 silly audit   '@next/swc-linux-x64-gnu': [ '16.1.6' ],
+512 silly audit   '@next/swc-linux-x64-musl': [ '16.1.6' ],
+512 silly audit   '@next/swc-win32-arm64-msvc': [ '16.1.6' ],
+512 silly audit   '@next/swc-win32-x64-msvc': [ '16.1.6' ],
+512 silly audit   '@nodelib/fs.scandir': [ '2.1.5' ],
+512 silly audit   '@nodelib/fs.stat': [ '2.0.5' ],
+512 silly audit   '@nodelib/fs.walk': [ '1.2.8' ],
+512 silly audit   '@nolyfill/is-core-module': [ '1.0.39' ],
+512 silly audit   'supports-color': [ '7.2.0', '10.2.2' ],
+512 silly audit   '@rtsao/scc': [ '1.1.0' ],
+512 silly audit   '@swc/helpers': [ '0.5.15' ],
+512 silly audit   '@tailwindcss/node': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-android-arm64': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-darwin-arm64': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-darwin-x64': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-freebsd-x64': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-linux-arm-gnueabihf': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-linux-arm64-gnu': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-linux-arm64-musl': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-linux-x64-gnu': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-linux-x64-musl': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-wasm32-wasi': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-win32-arm64-msvc': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/oxide-win32-x64-msvc': [ '4.1.18' ],
+512 silly audit   '@tailwindcss/postcss': [ '4.1.18' ],
+512 silly audit   '@tybys/wasm-util': [ '0.10.1' ],
+512 silly audit   '@types/estree': [ '1.0.8' ],
+512 silly audit   '@types/json-schema': [ '7.0.15' ],
+512 silly audit   '@types/json5': [ '0.0.29' ],
+512 silly audit   '@types/node': [ '20.19.30' ],
+512 silly audit   '@types/react': [ '19.2.10' ],
+512 silly audit   '@types/react-dom': [ '19.2.3' ],
+512 silly audit   '@typescript-eslint/eslint-plugin': [ '8.54.0' ],
+512 silly audit   ignore: [ '7.0.5', '5.3.2' ],
+512 silly audit   '@typescript-eslint/parser': [ '8.54.0' ],
+512 silly audit   '@typescript-eslint/project-service': [ '8.54.0' ],
+512 silly audit   '@typescript-eslint/scope-manager': [ '8.54.0' ],
+512 silly audit   '@typescript-eslint/tsconfig-utils': [ '8.54.0' ],
+512 silly audit   '@typescript-eslint/type-utils': [ '8.54.0' ],
+512 silly audit   '@typescript-eslint/types': [ '8.54.0' ],
+512 silly audit   '@typescript-eslint/typescript-estree': [ '8.54.0' ],
+512 silly audit   'brace-expansion': [ '2.0.2', '1.1.12' ],
+512 silly audit   minimatch: [ '9.0.9', '3.1.5' ],
+512 silly audit   semver: [ '7.7.3', '6.3.1', '7.7.4' ],
+512 silly audit   '@typescript-eslint/utils': [ '8.54.0' ],
+512 silly audit   '@typescript-eslint/visitor-keys': [ '8.54.0' ],
+512 silly audit   '@unrs/resolver-binding-android-arm-eabi': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-android-arm64': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-darwin-arm64': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-darwin-x64': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-freebsd-x64': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-linux-arm-gnueabihf': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-linux-arm-musleabihf': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-linux-arm64-gnu': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-linux-arm64-musl': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-linux-ppc64-gnu': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-linux-riscv64-gnu': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-linux-riscv64-musl': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-linux-s390x-gnu': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-linux-x64-gnu': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-linux-x64-musl': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-wasm32-wasi': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-win32-arm64-msvc': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-win32-ia32-msvc': [ '1.11.1' ],
+512 silly audit   '@unrs/resolver-binding-win32-x64-msvc': [ '1.11.1' ],
+512 silly audit   acorn: [ '8.15.0', '8.14.0' ],
+512 silly audit   'acorn-jsx': [ '5.3.2' ],
+512 silly audit   ajv: [ '6.14.0' ],
+512 silly audit   'ansi-styles': [ '4.3.0' ],
+512 silly audit   argparse: [ '2.0.1' ],
+512 silly audit   'aria-query': [ '5.3.2' ],
+512 silly audit   'array-buffer-byte-length': [ '1.0.2' ],
+512 silly audit   'array-includes': [ '3.1.9' ],
+512 silly audit   'array.prototype.findlast': [ '1.2.5' ],
+512 silly audit   'array.prototype.findlastindex': [ '1.2.6' ],
+512 silly audit   'array.prototype.flat': [ '1.3.3' ],
+512 silly audit   'array.prototype.flatmap': [ '1.3.3' ],
+512 silly audit   'array.prototype.tosorted': [ '1.1.4' ],
+512 silly audit   'arraybuffer.prototype.slice': [ '1.0.4' ],
+512 silly audit   'ast-types-flow': [ '0.0.8' ],
+512 silly audit   'async-function': [ '1.0.0' ],
+512 silly audit   'available-typed-arrays': [ '1.0.7' ],
+512 silly audit   'axe-core': [ '4.11.1' ],
+512 silly audit   'axobject-query': [ '4.1.0' ],
+512 silly audit   'balanced-match': [ '1.0.2' ],
+512 silly audit   'baseline-browser-mapping': [ '2.9.19' ],
+512 silly audit   'blake3-wasm': [ '2.1.5' ],
+512 silly audit   braces: [ '3.0.3' ],
+512 silly audit   browserslist: [ '4.28.1' ],
+512 silly audit   'call-bind': [ '1.0.8' ],
+512 silly audit   'call-bind-apply-helpers': [ '1.0.2' ],
+512 silly audit   'call-bound': [ '1.0.4' ],
+512 silly audit   callsites: [ '3.1.0' ],
+512 silly audit   'caniuse-lite': [ '1.0.30001766' ],
+512 silly audit   chalk: [ '4.1.2' ],
+512 silly audit   'client-only': [ '0.0.1' ],
+512 silly audit   'color-convert': [ '2.0.1' ],
+512 silly audit   'color-name': [ '1.1.4' ],
+512 silly audit   'concat-map': [ '0.0.1' ],
+512 silly audit   'convert-source-map': [ '2.0.0' ],
+512 silly audit   'cross-spawn': [ '7.0.6' ],
+512 silly audit   csstype: [ '3.2.3' ],
+512 silly audit   'damerau-levenshtein': [ '1.0.8' ],
+512 silly audit   'data-view-buffer': [ '1.0.2' ],
+512 silly audit   'data-view-byte-length': [ '1.0.2' ],
+512 silly audit   'data-view-byte-offset': [ '1.0.1' ],
+512 silly audit   debug: [ '4.4.3', '3.2.7' ],
+512 silly audit   'deep-is': [ '0.1.4' ],
+512 silly audit   'define-data-property': [ '1.1.4' ],
+512 silly audit   'define-properties': [ '1.2.1' ],
+512 silly audit   'detect-libc': [ '2.1.2' ],
+512 silly audit   doctrine: [ '2.1.0' ],
+512 silly audit   'dunder-proto': [ '1.0.1' ],
+512 silly audit   'electron-to-chromium': [ '1.5.279' ],
+512 silly audit   'emoji-regex': [ '9.2.2' ],
+512 silly audit   'enhanced-resolve': [ '5.18.4' ],
+512 silly audit   'es-abstract': [ '1.24.1' ],
+512 silly audit   'es-define-property': [ '1.0.1' ],
+512 silly audit   'es-errors': [ '1.3.0' ],
+512 silly audit   'es-iterator-helpers': [ '1.2.2' ],
+512 silly audit   'es-object-atoms': [ '1.1.1' ],
+512 silly audit   'es-set-tostringtag': [ '2.1.0' ],
+512 silly audit   'es-shim-unscopables': [ '1.1.0' ],
+512 silly audit   'es-to-primitive': [ '1.3.0' ],
+512 silly audit   escalade: [ '3.2.0' ],
+512 silly audit   'escape-string-regexp': [ '4.0.0' ],
+512 silly audit   eslint: [ '9.39.2' ],
+512 silly audit   'eslint-config-next': [ '16.1.6' ],
+512 silly audit   globals: [ '16.4.0', '14.0.0' ],
+512 silly audit   'eslint-import-resolver-node': [ '0.3.9' ],
+512 silly audit   'eslint-import-resolver-typescript': [ '3.10.1' ],
+512 silly audit   'eslint-module-utils': [ '2.12.1' ],
+512 silly audit   'eslint-plugin-import': [ '2.32.0' ],
+512 silly audit   'eslint-plugin-jsx-a11y': [ '6.10.2' ],
+512 silly audit   'eslint-plugin-react': [ '7.37.5' ],
+512 silly audit   'eslint-plugin-react-hooks': [ '7.0.1' ],
+512 silly audit   resolve: [ '2.0.0-next.5', '1.22.11' ],
+512 silly audit   'eslint-scope': [ '8.4.0' ],
+512 silly audit   espree: [ '10.4.0' ],
+512 silly audit   esquery: [ '1.7.0' ],
+512 silly audit   esrecurse: [ '4.3.0' ],
+512 silly audit   estraverse: [ '5.3.0' ],
+512 silly audit   esutils: [ '2.0.3' ],
+512 silly audit   'fast-deep-equal': [ '3.1.3' ],
+512 silly audit   'fast-glob': [ '3.3.1' ],
+512 silly audit   'glob-parent': [ '5.1.2', '6.0.2' ],
+512 silly audit   'fast-json-stable-stringify': [ '2.1.0' ],
+512 silly audit   'fast-levenshtein': [ '2.0.6' ],
+512 silly audit   fastq: [ '1.20.1' ],
+512 silly audit   'file-entry-cache': [ '8.0.0' ],
+512 silly audit   'fill-range': [ '7.1.1' ],
+512 silly audit   'find-up': [ '5.0.0' ],
+512 silly audit   'flat-cache': [ '4.0.1' ],
+512 silly audit   flatted: [ '3.4.1' ],
+512 silly audit   'for-each': [ '0.3.5' ],
+512 silly audit   fsevents: [ '2.3.3' ],
+512 silly audit   'function-bind': [ '1.1.2' ],
+512 silly audit   'function.prototype.name': [ '1.1.8' ],
+512 silly audit   'functions-have-names': [ '1.2.3' ],
+512 silly audit   'generator-function': [ '2.0.1' ],
+512 silly audit   gensync: [ '1.0.0-beta.2' ],
+512 silly audit   'get-intrinsic': [ '1.3.0' ],
+512 silly audit   'get-proto': [ '1.0.1' ],
+512 silly audit   'get-symbol-description': [ '1.1.0' ],
+512 silly audit   'get-tsconfig': [ '4.13.0' ],
+512 silly audit   globalthis: [ '1.0.4' ],
+512 silly audit   gopd: [ '1.2.0' ],
+512 silly audit   'graceful-fs': [ '4.2.11' ],
+512 silly audit   'has-bigints': [ '1.1.0' ],
+512 silly audit   'has-flag': [ '4.0.0' ],
+512 silly audit   'has-property-descriptors': [ '1.0.2' ],
+512 silly audit   'has-proto': [ '1.2.0' ],
+512 silly audit   'has-symbols': [ '1.1.0' ],
+512 silly audit   'has-tostringtag': [ '1.0.2' ],
+512 silly audit   hasown: [ '2.0.2' ],
+512 silly audit   'hermes-estree': [ '0.25.1' ],
+512 silly audit   'hermes-parser': [ '0.25.1' ],
+512 silly audit   'import-fresh': [ '3.3.1' ],
+512 silly audit   imurmurhash: [ '0.1.4' ],
+512 silly audit   'internal-slot': [ '1.1.0' ],
+512 silly audit   'is-array-buffer': [ '3.0.5' ],
+512 silly audit   'is-async-function': [ '2.1.1' ],
+512 silly audit   'is-bigint': [ '1.1.0' ],
+512 silly audit   'is-boolean-object': [ '1.2.2' ],
+512 silly audit   'is-bun-module': [ '2.0.0' ],
+512 silly audit   'is-callable': [ '1.2.7' ],
+512 silly audit   'is-core-module': [ '2.16.1' ],
+512 silly audit   'is-data-view': [ '1.0.2' ],
+512 silly audit   'is-date-object': [ '1.1.0' ],
+512 silly audit   'is-extglob': [ '2.1.1' ],
+512 silly audit   'is-finalizationregistry': [ '1.1.1' ],
+512 silly audit   'is-generator-function': [ '1.1.2' ],
+512 silly audit   'is-glob': [ '4.0.3' ],
+512 silly audit   'is-map': [ '2.0.3' ],
+512 silly audit   'is-negative-zero': [ '2.0.3' ],
+512 silly audit   'is-number': [ '7.0.0' ],
+512 silly audit   'is-number-object': [ '1.1.1' ],
+512 silly audit   'is-regex': [ '1.2.1' ],
+512 silly audit   'is-set': [ '2.0.3' ],
+512 silly audit   'is-shared-array-buffer': [ '1.0.4' ],
+512 silly audit   'is-string': [ '1.1.1' ],
+512 silly audit   'is-symbol': [ '1.1.1' ],
+512 silly audit   'is-typed-array': [ '1.1.15' ],
+512 silly audit   'is-weakmap': [ '2.0.2' ],
+512 silly audit   'is-weakref': [ '1.1.1' ],
+512 silly audit   'is-weakset': [ '2.0.4' ],
+512 silly audit   isarray: [ '2.0.5' ],
+512 silly audit   isexe: [ '2.0.0' ],
+512 silly audit   'iterator.prototype': [ '1.1.5' ],
+512 silly audit   jiti: [ '2.6.1' ],
+512 silly audit   'js-tokens': [ '4.0.0' ],
+512 silly audit   'js-yaml': [ '4.1.1' ],
+512 silly audit   jsesc: [ '3.1.0' ],
+512 silly audit   'json-buffer': [ '3.0.1' ],
+512 silly audit   'json-schema-traverse': [ '0.4.1' ],
+512 silly audit   'json-stable-stringify-without-jsonify': [ '1.0.1' ],
+512 silly audit   json5: [ '2.2.3', '1.0.2' ],
+512 silly audit   'jsx-ast-utils': [ '3.3.5' ],
+512 silly audit   keyv: [ '4.5.4' ],
+512 silly audit   'language-subtag-registry': [ '0.3.23' ],
+512 silly audit   'language-tags': [ '1.0.9' ],
+512 silly audit   levn: [ '0.4.1' ],
+512 silly audit   lightningcss: [ '1.30.2' ],
+512 silly audit   'lightningcss-android-arm64': [ '1.30.2' ],
+512 silly audit   'lightningcss-darwin-arm64': [ '1.30.2' ],
+512 silly audit   'lightningcss-darwin-x64': [ '1.30.2' ],
+512 silly audit   'lightningcss-freebsd-x64': [ '1.30.2' ],
+512 silly audit   'lightningcss-linux-arm-gnueabihf': [ '1.30.2' ],
+512 silly audit   'lightningcss-linux-arm64-gnu': [ '1.30.2' ],
+512 silly audit   'lightningcss-linux-arm64-musl': [ '1.30.2' ],
+512 silly audit   'lightningcss-linux-x64-gnu': [ '1.30.2' ],
+512 silly audit   'lightningcss-linux-x64-musl': [ '1.30.2' ],
+512 silly audit   'lightningcss-win32-arm64-msvc': [ '1.30.2' ],
+512 silly audit   'lightningcss-win32-x64-msvc': [ '1.30.2' ],
+512 silly audit   'locate-path': [ '6.0.0' ],
+512 silly audit   'lodash.merge': [ '4.6.2' ],
+512 silly audit   'loose-envify': [ '1.4.0' ],
+512 silly audit   'lru-cache': [ '5.1.1' ],
+512 silly audit   'magic-string': [ '0.30.21' ],
+512 silly audit   'math-intrinsics': [ '1.1.0' ],
+512 silly audit   merge2: [ '1.4.1' ],
+512 silly audit   micromatch: [ '4.0.8' ],
+512 silly audit   minimist: [ '1.2.8' ],
+512 silly audit   ms: [ '2.1.3' ],
+512 silly audit   nanoid: [ '3.3.11' ],
+512 silly audit   'napi-postinstall': [ '0.3.4' ],
+512 silly audit   'natural-compare': [ '1.4.0' ],
+512 silly audit   next: [ '16.1.6' ],
+512 silly audit   postcss: [ '8.4.31', '8.5.6' ],
+512 silly audit   'node-releases': [ '2.0.27' ],
+512 silly audit   'object-assign': [ '4.1.1' ],
+512 silly audit   'object-inspect': [ '1.13.4' ],
+512 silly audit   'object-keys': [ '1.1.1' ],
+512 silly audit   'object.assign': [ '4.1.7' ],
+512 silly audit   'object.entries': [ '1.1.9' ],
+512 silly audit   'object.fromentries': [ '2.0.8' ],
+512 silly audit   'object.groupby': [ '1.0.3' ],
+512 silly audit   'object.values': [ '1.2.1' ],
+512 silly audit   optionator: [ '0.9.4' ],
+512 silly audit   'own-keys': [ '1.0.1' ],
+512 silly audit   'p-limit': [ '3.1.0' ],
+512 silly audit   'p-locate': [ '5.0.0' ],
+512 silly audit   'parent-module': [ '1.0.1' ],
+512 silly audit   'path-exists': [ '4.0.0' ],
+512 silly audit   'path-key': [ '3.1.1' ],
+512 silly audit   'path-parse': [ '1.0.7' ],
+512 silly audit   'path-to-regexp': [ '6.3.0' ],
+512 silly audit   picocolors: [ '1.1.1' ],
+512 silly audit   picomatch: [ '2.3.1', '4.0.3' ],
+512 silly audit   'possible-typed-array-names': [ '1.1.0' ],
+512 silly audit   'prelude-ls': [ '1.2.1' ],
+512 silly audit   'prop-types': [ '15.8.1' ],
+512 silly audit   punycode: [ '2.3.1' ],
+512 silly audit   'queue-microtask': [ '1.2.3' ],
+512 silly audit   react: [ '19.2.3' ],
+512 silly audit   'react-dom': [ '19.2.3' ],
+512 silly audit   'react-is': [ '16.13.1' ],
+512 silly audit   'reflect.getprototypeof': [ '1.0.10' ],
+512 silly audit   'regexp.prototype.flags': [ '1.5.4' ],
+512 silly audit   'resolve-from': [ '4.0.0' ],
+512 silly audit   'resolve-pkg-maps': [ '1.0.0' ],
+512 silly audit   reusify: [ '1.1.0' ],
+512 silly audit   'run-parallel': [ '1.2.0' ],
+512 silly audit   'safe-array-concat': [ '1.1.3' ],
+512 silly audit   'safe-push-apply': [ '1.0.0' ],
+512 silly audit   'safe-regex-test': [ '1.1.0' ],
+512 silly audit   scheduler: [ '0.27.0' ],
+512 silly audit   'set-function-length': [ '1.2.2' ],
+512 silly audit   'set-function-name': [ '2.0.2' ],
+512 silly audit   'set-proto': [ '1.0.0' ],
+512 silly audit   sharp: [ '0.34.5', '0.33.5' ],
+512 silly audit   'shebang-command': [ '2.0.0' ],
+512 silly audit   'shebang-regex': [ '3.0.0' ],
+512 silly audit   'side-channel': [ '1.1.0' ],
+512 silly audit   'side-channel-list': [ '1.0.0' ],
+512 silly audit   'side-channel-map': [ '1.0.1' ],
+512 silly audit   'side-channel-weakmap': [ '1.0.2' ],
+512 silly audit   'source-map-js': [ '1.2.1' ],
+512 silly audit   'stable-hash': [ '0.0.5' ],
+512 silly audit   'stop-iteration-iterator': [ '1.1.0' ],
+512 silly audit   'string.prototype.includes': [ '2.0.1' ],
+512 silly audit   'string.prototype.matchall': [ '4.0.12' ],
+512 silly audit   'string.prototype.repeat': [ '1.0.0' ],
+512 silly audit   'string.prototype.trim': [ '1.2.10' ],
+512 silly audit   'string.prototype.trimend': [ '1.0.9' ],
+512 silly audit   'string.prototype.trimstart': [ '1.0.8' ],
+512 silly audit   'strip-bom': [ '3.0.0' ],
+512 silly audit   'strip-json-comments': [ '3.1.1' ],
+512 silly audit   'styled-jsx': [ '5.1.6' ],
+512 silly audit   'supports-preserve-symlinks-flag': [ '1.0.0' ],
+512 silly audit   tailwindcss: [ '4.1.18' ],
+512 silly audit   tapable: [ '2.3.0' ],
+512 silly audit   tinyglobby: [ '0.2.15' ],
+512 silly audit   fdir: [ '6.5.0' ],
+512 silly audit   'to-regex-range': [ '5.0.1' ],
+512 silly audit   'ts-api-utils': [ '2.4.0' ],
+512 silly audit   'tsconfig-paths': [ '3.15.0' ],
+512 silly audit   tslib: [ '2.8.1' ],
+512 silly audit   'type-check': [ '0.4.0' ],
+512 silly audit   'typed-array-buffer': [ '1.0.3' ],
+512 silly audit   'typed-array-byte-length': [ '1.0.3' ],
+512 silly audit   'typed-array-byte-offset': [ '1.0.4' ],
+512 silly audit   'typed-array-length': [ '1.0.7' ],
+512 silly audit   typescript: [ '5.9.3' ],
+512 silly audit   'typescript-eslint': [ '8.54.0' ],
+512 silly audit   'unbox-primitive': [ '1.1.0' ],
+512 silly audit   'undici-types': [ '6.21.0' ],
+512 silly audit   'unrs-resolver': [ '1.11.1' ],
+512 silly audit   'update-browserslist-db': [ '1.2.3' ],
+512 silly audit   'uri-js': [ '4.4.1' ],
+512 silly audit   which: [ '2.0.2' ],
+512 silly audit   'which-boxed-primitive': [ '1.1.1' ],
+512 silly audit   'which-builtin-type': [ '1.2.1' ],
+512 silly audit   'which-collection': [ '1.0.2' ],
+512 silly audit   'which-typed-array': [ '1.1.20' ],
+512 silly audit   'word-wrap': [ '1.2.5' ],
+512 silly audit   yallist: [ '3.1.1' ],
+512 silly audit   'yocto-queue': [ '0.1.0' ],
+512 silly audit   zod: [ '4.3.6', '3.22.3' ],
+512 silly audit   'zod-validation-error': [ '4.0.2' ],
+512 silly audit   wrangler: [ '4.35.0' ],
+512 silly audit   '@cloudflare/kv-asset-handler': [ '0.4.0' ],
+512 silly audit   '@cloudflare/unenv-preset': [ '2.7.3' ],
+512 silly audit   unenv: [ '2.0.0-rc.21' ],
+512 silly audit   esbuild: [ '0.25.4' ],
+512 silly audit   miniflare: [ '4.20250906.0' ],
+512 silly audit   workerd: [ '1.20250906.0' ],
+512 silly audit   mime: [ '3.0.0' ],
+512 silly audit   '@esbuild/aix-ppc64': [ '0.25.4' ],
+512 silly audit   '@esbuild/android-arm': [ '0.25.4' ],
+512 silly audit   '@esbuild/android-arm64': [ '0.25.4' ],
+512 silly audit   '@esbuild/android-x64': [ '0.25.4' ],
+512 silly audit   '@esbuild/darwin-arm64': [ '0.25.4' ],
+512 silly audit   '@esbuild/darwin-x64': [ '0.25.4' ],
+512 silly audit   '@esbuild/freebsd-arm64': [ '0.25.4' ],
+512 silly audit   '@esbuild/freebsd-x64': [ '0.25.4' ],
+512 silly audit   '@esbuild/linux-arm': [ '0.25.4' ],
+512 silly audit   '@esbuild/linux-arm64': [ '0.25.4' ],
+512 silly audit   '@esbuild/linux-ia32': [ '0.25.4' ],
+512 silly audit   '@esbuild/linux-loong64': [ '0.25.4' ],
+512 silly audit   '@esbuild/linux-mips64el': [ '0.25.4' ],
+512 silly audit   '@esbuild/linux-ppc64': [ '0.25.4' ],
+512 silly audit   '@esbuild/linux-riscv64': [ '0.25.4' ],
+512 silly audit   '@esbuild/linux-s390x': [ '0.25.4' ],
+512 silly audit   '@esbuild/linux-x64': [ '0.25.4' ],
+512 silly audit   '@esbuild/netbsd-arm64': [ '0.25.4' ],
+512 silly audit   '@esbuild/netbsd-x64': [ '0.25.4' ],
+512 silly audit   '@esbuild/openbsd-arm64': [ '0.25.4' ],
+512 silly audit   '@esbuild/openbsd-x64': [ '0.25.4' ],
+512 silly audit   '@esbuild/sunos-x64': [ '0.25.4' ],
+512 silly audit   '@esbuild/win32-arm64': [ '0.25.4' ],
+512 silly audit   '@esbuild/win32-ia32': [ '0.25.4' ],
+512 silly audit   '@esbuild/win32-x64': [ '0.25.4' ],
+512 silly audit   '@cspotcode/source-map-support': [ '0.8.1' ],
+512 silly audit   'acorn-walk': [ '8.3.2' ],
+512 silly audit   'exit-hook': [ '2.2.1' ],
+512 silly audit   'glob-to-regexp': [ '0.4.1' ],
+512 silly audit   stoppable: [ '1.1.0' ],
+512 silly audit   undici: [ '7.24.4' ],
+512 silly audit   ws: [ '8.18.0' ],
+512 silly audit   youch: [ '4.1.0-beta.10' ],
+512 silly audit   defu: [ '6.1.4' ],
+512 silly audit   exsolve: [ '1.0.8' ],
+512 silly audit   ohash: [ '2.0.11' ],
+512 silly audit   pathe: [ '2.0.3' ],
+512 silly audit   ufo: [ '1.6.3' ],
+512 silly audit   '@cloudflare/workerd-darwin-64': [ '1.20250906.0' ],
+512 silly audit   '@cloudflare/workerd-darwin-arm64': [ '1.20250906.0' ],
+512 silly audit   '@cloudflare/workerd-linux-64': [ '1.20250906.0' ],
+512 silly audit   '@cloudflare/workerd-linux-arm64': [ '1.20250906.0' ],
+512 silly audit   '@cloudflare/workerd-windows-64': [ '1.20250906.0' ],
+512 silly audit   '@poppinss/colors': [ '4.1.6' ],
+512 silly audit   '@poppinss/dumper': [ '0.6.5' ],
+512 silly audit   '@speed-highlight/core': [ '1.2.14' ],
+512 silly audit   cookie: [ '1.1.1' ],
+512 silly audit   'youch-core': [ '0.3.3' ],
+512 silly audit   kleur: [ '4.1.5' ],
+512 silly audit   '@sindresorhus/is': [ '7.2.0' ],
+512 silly audit   '@poppinss/exception': [ '1.2.3' ],
+512 silly audit   'error-stack-parser-es': [ '1.0.5' ],
+512 silly audit   color: [ '4.2.3' ],
+512 silly audit   'color-string': [ '1.9.1' ],
+512 silly audit   'simple-swizzle': [ '0.2.4' ],
+512 silly audit   'is-arrayish': [ '0.3.4' ]
+512 silly audit }
+513 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-win32-ia32
+514 silly reify mark deleted [
+514 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-win32-ia32'
+514 silly reify ]
+515 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-wasm32
+516 silly reify mark deleted [
+516 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-wasm32'
+516 silly reify ]
+517 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-linuxmusl-x64
+518 silly reify mark deleted [
+518 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-linuxmusl-x64'
+518 silly reify ]
+519 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-linuxmusl-arm64
+520 silly reify mark deleted [
+520 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-linuxmusl-arm64'
+520 silly reify ]
+521 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-linux-x64
+522 silly reify mark deleted [
+522 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-linux-x64'
+522 silly reify ]
+523 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-linux-s390x
+524 silly reify mark deleted [
+524 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-linux-s390x'
+524 silly reify ]
+525 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-linux-arm64
+526 silly reify mark deleted [
+526 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-linux-arm64'
+526 silly reify ]
+527 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-linux-arm
+528 silly reify mark deleted [
+528 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-linux-arm'
+528 silly reify ]
+529 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-libvips-linuxmusl-x64
+530 silly reify mark deleted [
+530 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-libvips-linuxmusl-x64'
+530 silly reify ]
+531 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-libvips-linuxmusl-arm64
+532 silly reify mark deleted [
+532 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-libvips-linuxmusl-arm64'
+532 silly reify ]
+533 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-libvips-linux-x64
+534 silly reify mark deleted [
+534 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-libvips-linux-x64'
+534 silly reify ]
+535 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-libvips-linux-s390x
+536 silly reify mark deleted [
+536 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-libvips-linux-s390x'
+536 silly reify ]
+537 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-libvips-linux-arm64
+538 silly reify mark deleted [
+538 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-libvips-linux-arm64'
+538 silly reify ]
+539 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-libvips-linux-arm
+540 silly reify mark deleted [
+540 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-libvips-linux-arm'
+540 silly reify ]
+541 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-libvips-darwin-x64
+542 silly reify mark deleted [
+542 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-libvips-darwin-x64'
+542 silly reify ]
+543 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-libvips-darwin-arm64
+544 silly reify mark deleted [
+544 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-libvips-darwin-arm64'
+544 silly reify ]
+545 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-darwin-x64
+546 silly reify mark deleted [
+546 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-darwin-x64'
+546 silly reify ]
+547 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\miniflare\node_modules\@img\sharp-darwin-arm64
+548 silly reify mark deleted [
+548 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\miniflare\\node_modules\\@img\\sharp-darwin-arm64'
+548 silly reify ]
+549 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\win32-ia32
+550 silly reify mark deleted [
+550 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\win32-ia32'
+550 silly reify ]
+551 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\win32-arm64
+552 silly reify mark deleted [
+552 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\win32-arm64'
+552 silly reify ]
+553 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\sunos-x64
+554 silly reify mark deleted [
+554 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\sunos-x64'
+554 silly reify ]
+555 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\openbsd-x64
+556 silly reify mark deleted [
+556 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\openbsd-x64'
+556 silly reify ]
+557 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\openbsd-arm64
+558 silly reify mark deleted [
+558 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\openbsd-arm64'
+558 silly reify ]
+559 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\netbsd-x64
+560 silly reify mark deleted [
+560 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\netbsd-x64'
+560 silly reify ]
+561 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\netbsd-arm64
+562 silly reify mark deleted [
+562 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\netbsd-arm64'
+562 silly reify ]
+563 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\linux-x64
+564 silly reify mark deleted [
+564 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-x64'
+564 silly reify ]
+565 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\linux-s390x
+566 silly reify mark deleted [
+566 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-s390x'
+566 silly reify ]
+567 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\linux-riscv64
+568 silly reify mark deleted [
+568 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-riscv64'
+568 silly reify ]
+569 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\linux-ppc64
+570 silly reify mark deleted [
+570 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-ppc64'
+570 silly reify ]
+571 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\linux-mips64el
+572 silly reify mark deleted [
+572 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-mips64el'
+572 silly reify ]
+573 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\linux-loong64
+574 silly reify mark deleted [
+574 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-loong64'
+574 silly reify ]
+575 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\linux-ia32
+576 silly reify mark deleted [
+576 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-ia32'
+576 silly reify ]
+577 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\linux-arm64
+578 silly reify mark deleted [
+578 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-arm64'
+578 silly reify ]
+579 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\linux-arm
+580 silly reify mark deleted [
+580 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\linux-arm'
+580 silly reify ]
+581 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\freebsd-x64
+582 silly reify mark deleted [
+582 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\freebsd-x64'
+582 silly reify ]
+583 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\freebsd-arm64
+584 silly reify mark deleted [
+584 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\freebsd-arm64'
+584 silly reify ]
+585 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\darwin-x64
+586 silly reify mark deleted [
+586 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\darwin-x64'
+586 silly reify ]
+587 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\darwin-arm64
+588 silly reify mark deleted [
+588 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\darwin-arm64'
+588 silly reify ]
+589 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\android-x64
+590 silly reify mark deleted [
+590 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\android-x64'
+590 silly reify ]
+591 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\android-arm64
+592 silly reify mark deleted [
+592 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\android-arm64'
+592 silly reify ]
+593 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\android-arm
+594 silly reify mark deleted [
+594 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\android-arm'
+594 silly reify ]
+595 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@esbuild\aix-ppc64
+596 silly reify mark deleted [
+596 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@esbuild\\aix-ppc64'
+596 silly reify ]
+597 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@cloudflare\workerd-linux-arm64
+598 silly reify mark deleted [
+598 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-linux-arm64'
+598 silly reify ]
+599 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@cloudflare\workerd-linux-64
+600 silly reify mark deleted [
+600 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-linux-64'
+600 silly reify ]
+601 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@cloudflare\workerd-darwin-arm64
+602 silly reify mark deleted [
+602 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-darwin-arm64'
+602 silly reify ]
+603 verbose reify failed optional dependency D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@cloudflare\workerd-darwin-64
+604 silly reify mark deleted [
+604 silly reify   'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-darwin-64'
+604 silly reify ]
+605 http cache is-arrayish@https://registry.npmjs.org/is-arrayish/-/is-arrayish-0.3.4.tgz 0ms (cache hit)
+606 http cache simple-swizzle@https://registry.npmjs.org/simple-swizzle/-/simple-swizzle-0.2.4.tgz 0ms (cache hit)
+607 http cache color-string@https://registry.npmjs.org/color-string/-/color-string-1.9.1.tgz 0ms (cache hit)
+608 http cache ufo@https://registry.npmjs.org/ufo/-/ufo-1.6.3.tgz 0ms (cache hit)
+609 http cache ohash@https://registry.npmjs.org/ohash/-/ohash-2.0.11.tgz 0ms (cache hit)
+610 http cache exsolve@https://registry.npmjs.org/exsolve/-/exsolve-1.0.8.tgz 0ms (cache hit)
+611 http cache defu@https://registry.npmjs.org/defu/-/defu-6.1.4.tgz 0ms (cache hit)
+612 http cache acorn-walk@https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.3.2.tgz 0ms (cache hit)
+613 http cache wrangler@https://registry.npmjs.org/wrangler/-/wrangler-4.35.0.tgz 0ms (cache hit)
+614 http cache mime@https://registry.npmjs.org/mime/-/mime-3.0.0.tgz 1ms (cache hit)
+615 http cache exit-hook@https://registry.npmjs.org/exit-hook/-/exit-hook-2.2.1.tgz 1ms (cache hit)
+616 http cache workerd@https://registry.npmjs.org/workerd/-/workerd-1.20250906.0.tgz 0ms (cache hit)
+617 http cache unenv@https://registry.npmjs.org/unenv/-/unenv-2.0.0-rc.21.tgz 0ms (cache hit)
+618 http cache glob-to-regexp@https://registry.npmjs.org/glob-to-regexp/-/glob-to-regexp-0.4.1.tgz 0ms (cache hit)
+619 http cache stoppable@https://registry.npmjs.org/stoppable/-/stoppable-1.1.0.tgz 0ms (cache hit)
+620 http cache undici@https://registry.npmjs.org/undici/-/undici-7.24.4.tgz 0ms (cache hit)
+621 http cache miniflare@https://registry.npmjs.org/miniflare/-/miniflare-4.20250906.0.tgz 0ms (cache hit)
+622 http cache esbuild@https://registry.npmjs.org/esbuild/-/esbuild-0.25.4.tgz 0ms (cache hit)
+623 http cache @cloudflare/workerd-windows-64@https://registry.npmjs.org/@cloudflare/workerd-windows-64/-/workerd-windows-64-1.20250906.0.tgz 0ms (cache hit)
+624 http cache @cloudflare/unenv-preset@https://registry.npmjs.org/@cloudflare/unenv-preset/-/unenv-preset-2.7.3.tgz 0ms (cache hit)
+625 http cache @img/sharp-win32-x64@https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.33.5.tgz 0ms (cache hit)
+626 http cache @cloudflare/kv-asset-handler@https://registry.npmjs.org/@cloudflare/kv-asset-handler/-/kv-asset-handler-0.4.0.tgz 0ms (cache hit)
+627 http cache semver@https://registry.npmjs.org/semver/-/semver-7.7.4.tgz 0ms (cache hit)
+628 http cache color@https://registry.npmjs.org/color/-/color-4.2.3.tgz 0ms (cache hit)
+629 http cache @esbuild/win32-x64@https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.25.4.tgz 0ms (cache hit)
+630 http cache sharp@https://registry.npmjs.org/sharp/-/sharp-0.33.5.tgz 0ms (cache hit)
+631 silly tarball no local data for is-arrayish@https://registry.npmjs.org/is-arrayish/-/is-arrayish-0.3.4.tgz. Extracting by manifest.
+632 silly tarball no local data for simple-swizzle@https://registry.npmjs.org/simple-swizzle/-/simple-swizzle-0.2.4.tgz. Extracting by manifest.
+633 silly tarball no local data for color-string@https://registry.npmjs.org/color-string/-/color-string-1.9.1.tgz. Extracting by manifest.
+634 http cache zod@https://registry.npmjs.org/zod/-/zod-3.22.3.tgz 0ms (cache hit)
+635 silly tarball no local data for ufo@https://registry.npmjs.org/ufo/-/ufo-1.6.3.tgz. Extracting by manifest.
+636 http cache acorn@https://registry.npmjs.org/acorn/-/acorn-8.14.0.tgz 0ms (cache hit)
+637 silly tarball no local data for ohash@https://registry.npmjs.org/ohash/-/ohash-2.0.11.tgz. Extracting by manifest.
+638 silly tarball no local data for exsolve@https://registry.npmjs.org/exsolve/-/exsolve-1.0.8.tgz. Extracting by manifest.
+639 silly tarball no local data for defu@https://registry.npmjs.org/defu/-/defu-6.1.4.tgz. Extracting by manifest.
+640 silly tarball no local data for acorn-walk@https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.3.2.tgz. Extracting by manifest.
+641 silly tarball no local data for wrangler@https://registry.npmjs.org/wrangler/-/wrangler-4.35.0.tgz. Extracting by manifest.
+642 silly tarball no local data for mime@https://registry.npmjs.org/mime/-/mime-3.0.0.tgz. Extracting by manifest.
+643 silly tarball no local data for exit-hook@https://registry.npmjs.org/exit-hook/-/exit-hook-2.2.1.tgz. Extracting by manifest.
+644 silly tarball no local data for workerd@https://registry.npmjs.org/workerd/-/workerd-1.20250906.0.tgz. Extracting by manifest.
+645 silly tarball no local data for unenv@https://registry.npmjs.org/unenv/-/unenv-2.0.0-rc.21.tgz. Extracting by manifest.
+646 silly tarball no local data for glob-to-regexp@https://registry.npmjs.org/glob-to-regexp/-/glob-to-regexp-0.4.1.tgz. Extracting by manifest.
+647 silly tarball no local data for stoppable@https://registry.npmjs.org/stoppable/-/stoppable-1.1.0.tgz. Extracting by manifest.
+648 silly tarball no local data for undici@https://registry.npmjs.org/undici/-/undici-7.24.4.tgz. Extracting by manifest.
+649 silly tarball no local data for miniflare@https://registry.npmjs.org/miniflare/-/miniflare-4.20250906.0.tgz. Extracting by manifest.
+650 silly tarball no local data for esbuild@https://registry.npmjs.org/esbuild/-/esbuild-0.25.4.tgz. Extracting by manifest.
+651 silly tarball no local data for @cloudflare/workerd-windows-64@https://registry.npmjs.org/@cloudflare/workerd-windows-64/-/workerd-windows-64-1.20250906.0.tgz. Extracting by manifest.
+652 silly tarball no local data for @cloudflare/unenv-preset@https://registry.npmjs.org/@cloudflare/unenv-preset/-/unenv-preset-2.7.3.tgz. Extracting by manifest.
+653 silly tarball no local data for @img/sharp-win32-x64@https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.33.5.tgz. Extracting by manifest.
+654 silly tarball no local data for @cloudflare/kv-asset-handler@https://registry.npmjs.org/@cloudflare/kv-asset-handler/-/kv-asset-handler-0.4.0.tgz. Extracting by manifest.
+655 silly tarball no local data for semver@https://registry.npmjs.org/semver/-/semver-7.7.4.tgz. Extracting by manifest.
+656 silly tarball no local data for color@https://registry.npmjs.org/color/-/color-4.2.3.tgz. Extracting by manifest.
+657 silly tarball no local data for @esbuild/win32-x64@https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.25.4.tgz. Extracting by manifest.
+658 silly tarball no local data for sharp@https://registry.npmjs.org/sharp/-/sharp-0.33.5.tgz. Extracting by manifest.
+659 silly tarball no local data for zod@https://registry.npmjs.org/zod/-/zod-3.22.3.tgz. Extracting by manifest.
+660 silly tarball no local data for acorn@https://registry.npmjs.org/acorn/-/acorn-8.14.0.tgz. Extracting by manifest.
+661 http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 393ms
+662 silly audit report {
+662 silly audit report   wrangler: [
+662 silly audit report     {
+662 silly audit report       id: 1112456,
+662 silly audit report       url: 'https://github.com/advisories/GHSA-36p8-mvp6-cv38',
+662 silly audit report       title: 'Wrangler affected by OS Command Injection in `wrangler pages deploy`',
+662 silly audit report       severity: 'high',
+662 silly audit report       vulnerable_versions: '>=4.0.0 <4.59.1',
+662 silly audit report       cwe: [Array],
+662 silly audit report       cvss: [Object]
+662 silly audit report     }
+662 silly audit report   ]
+662 silly audit report }
+663 silly packumentCache corgi:https://registry.npmjs.org/wrangler cache-miss
+664 http fetch GET 200 https://registry.npmjs.org/simple-swizzle/-/simple-swizzle-0.2.4.tgz 424ms (cache miss)
+665 http fetch GET 200 https://registry.npmjs.org/is-arrayish/-/is-arrayish-0.3.4.tgz 447ms (cache miss)
+666 http fetch GET 200 https://registry.npmjs.org/ohash/-/ohash-2.0.11.tgz 421ms (cache miss)
+667 http fetch GET 200 https://registry.npmjs.org/color-string/-/color-string-1.9.1.tgz 436ms (cache miss)
+668 http fetch GET 200 https://registry.npmjs.org/defu/-/defu-6.1.4.tgz 430ms (cache miss)
+669 http fetch GET 200 https://registry.npmjs.org/stoppable/-/stoppable-1.1.0.tgz 440ms (cache miss)
+670 http fetch GET 200 https://registry.npmjs.org/color/-/color-4.2.3.tgz 425ms (cache miss)
+671 http fetch GET 200 https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.3.2.tgz 460ms (cache miss)
+672 http fetch GET 200 https://registry.npmjs.org/exsolve/-/exsolve-1.0.8.tgz 464ms (cache miss)
+673 http fetch GET 200 https://registry.npmjs.org/esbuild/-/esbuild-0.25.4.tgz 493ms (cache miss)
+674 http fetch GET 200 https://registry.npmjs.org/ufo/-/ufo-1.6.3.tgz 516ms (cache miss)
+675 http fetch GET 200 https://registry.npmjs.org/@cloudflare/unenv-preset/-/unenv-preset-2.7.3.tgz 492ms (cache miss)
+676 http fetch GET 200 https://registry.npmjs.org/mime/-/mime-3.0.0.tgz 510ms (cache miss)
+677 http fetch GET 200 https://registry.npmjs.org/@cloudflare/kv-asset-handler/-/kv-asset-handler-0.4.0.tgz 522ms (cache miss)
+678 http fetch GET 200 https://registry.npmjs.org/glob-to-regexp/-/glob-to-regexp-0.4.1.tgz 581ms (cache miss)
+679 http fetch GET 200 https://registry.npmjs.org/acorn/-/acorn-8.14.0.tgz 611ms (cache miss)
+680 http fetch GET 200 https://registry.npmjs.org/exit-hook/-/exit-hook-2.2.1.tgz 781ms (cache miss)
+681 http fetch GET 200 https://registry.npmjs.org/sharp/-/sharp-0.33.5.tgz 887ms (cache miss)
+682 http fetch GET 200 https://registry.npmjs.org/semver/-/semver-7.7.4.tgz 1006ms (cache miss)
+683 http fetch GET 200 https://registry.npmjs.org/zod/-/zod-3.22.3.tgz 1070ms (cache miss)
+684 http fetch GET 200 https://registry.npmjs.org/wrangler/-/wrangler-4.35.0.tgz 1851ms (cache miss)
+685 http fetch GET 200 https://registry.npmjs.org/workerd/-/workerd-1.20250906.0.tgz 2150ms (cache miss)
+686 http fetch GET 200 https://registry.npmjs.org/wrangler 2062ms (cache miss)
+687 silly packumentCache corgi:https://registry.npmjs.org/wrangler set size:undefined disposed:false
+688 http fetch GET 200 https://registry.npmjs.org/undici/-/undici-7.24.4.tgz 3100ms (cache miss)
+689 http fetch GET 200 https://registry.npmjs.org/miniflare/-/miniflare-4.20250906.0.tgz 3163ms (cache miss)
+690 http fetch GET 200 https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.25.4.tgz 3208ms (cache miss)
+691 http fetch GET 200 https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.33.5.tgz 3223ms (cache miss)
+692 http fetch GET 200 https://registry.npmjs.org/unenv/-/unenv-2.0.0-rc.21.tgz 3466ms (cache miss)
+693 http fetch GET 200 https://registry.npmjs.org/@cloudflare/workerd-windows-64/-/workerd-windows-64-1.20250906.0.tgz 6975ms (cache miss)
+694 info run sharp@0.33.5 install node_modules/miniflare/node_modules/sharp node install/check
+695 info run sharp@0.33.5 install { code: 'EPERM', signal: undefined }
+696 warn cleanup Failed to remove some directories [
+696 warn cleanup   [
+696 warn cleanup     '\\\\?\\D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-windows-64',
+696 warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\node_modules\@cloudflare\workerd-windows-64\bin'] {
+696 warn cleanup       errno: -4048,
+696 warn cleanup       code: 'EPERM',
+696 warn cleanup       syscall: 'rmdir',
+696 warn cleanup       path: 'D:\\Tel4vn-ojt-project\\internal-collab-web\\internal-collab-web-fe\\node_modules\\@cloudflare\\workerd-windows-64\\bin'
+696 warn cleanup     }
+696 warn cleanup   ]
+696 warn cleanup ]
+697 verbose stack Error: spawn EPERM
+697 verbose stack     at ChildProcess.spawn (node:internal/child_process:420:11)
+697 verbose stack     at spawn (node:child_process:786:9)
+697 verbose stack     at promiseSpawn (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\promise-spawn\lib\index.js:39:16)
+697 verbose stack     at spawnWithShell (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\promise-spawn\lib\index.js:124:10)
+697 verbose stack     at promiseSpawn (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\promise-spawn\lib\index.js:12:12)
+697 verbose stack     at runScriptPkg (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\run-script\lib\run-script-pkg.js:79:13)
+697 verbose stack     at runScript (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\run-script\lib\run-script.js:9:12)
+697 verbose stack     at C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\rebuild.js:331:17
+697 verbose stack     at run (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\promise-call-limit\dist\commonjs\index.js:67:22)
+697 verbose stack     at C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\promise-call-limit\dist\commonjs\index.js:84:9
+698 error code EPERM
+699 error syscall spawn
+700 error errno -4048
+701 error Error: spawn EPERM
+701 error     at ChildProcess.spawn (node:internal/child_process:420:11)
+701 error     at spawn (node:child_process:786:9)
+701 error     at promiseSpawn (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\promise-spawn\lib\index.js:39:16)
+701 error     at spawnWithShell (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\promise-spawn\lib\index.js:124:10)
+701 error     at promiseSpawn (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\promise-spawn\lib\index.js:12:12)
+701 error     at runScriptPkg (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\run-script\lib\run-script-pkg.js:79:13)
+701 error     at runScript (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\run-script\lib\run-script.js:9:12)
+701 error     at C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\rebuild.js:331:17
+701 error     at run (C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\promise-call-limit\dist\commonjs\index.js:67:22)
+701 error     at C:\Users\GIAP TRONG NGHIA\AppData\Roaming\npm\node_modules\npm\node_modules\promise-call-limit\dist\commonjs\index.js:84:9 {
+701 error   errno: -4048,
+701 error   code: 'EPERM',
+701 error   syscall: 'spawn'
+701 error }
+702 error
+702 error The operation was rejected by your operating system.
+702 error It's possible that the file was already in use (by a text editor or antivirus),
+702 error or that you lack permissions to access it.
+702 error
+702 error If you believe this might be a permissions issue, please double-check the
+702 error permissions of the file and its containing directories, or try running
+702 error the command again as root/Administrator.
+703 silly unfinished npm timer reify 1773666223957
+704 silly unfinished npm timer reify:build 1773666237233
+705 silly unfinished npm timer build 1773666237233
+706 silly unfinished npm timer build:deps 1773666237233
+707 silly unfinished npm timer build:run:install 1773666237247
+708 silly unfinished npm timer build:run:install:node_modules/miniflare/node_modules/sharp 1773666237248
+709 verbose cwd D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe
+710 verbose os Windows_NT 10.0.26200
+711 verbose node v22.19.0
+712 verbose npm  v11.6.0
+713 notice
+713 notice New minor version of npm available! 11.6.0 -> 11.11.1
+713 notice Changelog: https://github.com/npm/cli/releases/tag/v11.11.1
+713 notice To update run: npm install -g npm@11.11.1
+713 notice  { force: true, [Symbol(proc-log.meta)]: true }
+714 verbose exit -4048
+715 verbose code -4048
+716 error A complete log of this run can be found in: D:\Tel4vn-ojt-project\internal-collab-web\internal-collab-web-fe\.npm-cache\_logs\2026-03-16T13_03_43_483Z-debug-0.log
