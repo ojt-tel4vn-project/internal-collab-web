@@ -1,10 +1,6 @@
 "use client";
 
-<<<<<<< Updated upstream
 import { useCallback, useEffect, useState } from "react";
-=======
-import { useCallback, useEffect, useState } from "react";
->>>>>>> Stashed changes
 import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 
 type LeaveEmployee = {
@@ -87,21 +83,12 @@ export default function ManagerLeaveApprovalsPage() {
     const [rejectError, setRejectError] = useState<string | null>(null);
     const [rejectLoading, setRejectLoading] = useState(false);
 
-<<<<<<< Updated upstream
     const fetchData = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             const [pendingRes, overviewRes] = await Promise.all([
                 fetch(`/api/manager/leave-requests/pending-approval?page=${page}&limit=${LIMIT}`),
-=======
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const [pendingRes, overviewRes] = await Promise.all([
-                fetch(`/api/manager/leave-requests/pending-approval?page=${page}&limit=${LIMIT}`),
->>>>>>> Stashed changes
                 fetch("/api/manager/leave-overview"),
             ]);
 
@@ -119,7 +106,6 @@ export default function ManagerLeaveApprovalsPage() {
             }
         } catch {
             setError("Unable to connect to server.");
-<<<<<<< Updated upstream
         } finally {
             setLoading(false);
         }
@@ -128,16 +114,6 @@ export default function ManagerLeaveApprovalsPage() {
     useEffect(() => {
         void fetchData();
     }, [fetchData]);
-=======
-        } finally {
-            setLoading(false);
-        }
-    }, [page]);
-
-    useEffect(() => {
-        void fetchData();
-    }, [fetchData]);
->>>>>>> Stashed changes
 
     const filteredRequests = requests.filter((r) => {
         if (activeFilter === "All") return true;
@@ -320,11 +296,7 @@ export default function ManagerLeaveApprovalsPage() {
 
                                             <div className="flex-1 text-sm font-semibold text-slate-600">
                                                 <p className="text-[11px] uppercase tracking-wide text-slate-400">Notes</p>
-<<<<<<< Updated upstream
                                                 <p className="text-sm text-slate-700">&quot;{req.reason}&quot;</p>
-=======
-                                                <p className="text-sm text-slate-700">&quot;{req.reason}&quot;</p>
->>>>>>> Stashed changes
                                             </div>
 
                                             <div className="flex items-center gap-2">
@@ -352,11 +324,7 @@ export default function ManagerLeaveApprovalsPage() {
 
                                         {req.approver_comment && (
                                             <div className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-600">
-<<<<<<< Updated upstream
                                                 Rejection reason: &quot;{req.approver_comment}&quot;
-=======
-                                                Rejection reason: &quot;{req.approver_comment}&quot;
->>>>>>> Stashed changes
                                             </div>
                                         )}
                                     </article>
