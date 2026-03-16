@@ -48,8 +48,6 @@ export default function ManagerHomePage() {
     ];
 
     const upcomingLeaves = overview?.upcoming_leaves ?? [];
-    const visibleLeaves = upcomingLeaves.slice(0, VISIBLE_LEAVE_COUNT);
-    const hiddenCount = upcomingLeaves.length - visibleLeaves.length;
 
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
@@ -101,10 +99,10 @@ export default function ManagerHomePage() {
                                     <span>On Leave Today</span>
                                 </div>
                                 <div className="mt-4 space-y-3">
-                                    {visibleLeaves.length === 0 && (
+                                    {upcomingLeaves.length === 0 && (
                                         <p className="text-sm text-slate-400">No one on leave today.</p>
                                     )}
-                                    {visibleLeaves.map((p) => (
+                                    {upcomingLeaves.map((p) => (
                                         <div key={p.employee} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3">
                                             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-700">
                                                 {p.employee.split(" ").map((n) => n[0]).join("").slice(0, 2)}
@@ -117,11 +115,6 @@ export default function ManagerHomePage() {
                                             </div>
                                         </div>
                                     ))}
-                                    {hiddenCount > 0 && (
-                                        <button className="mt-2 w-full rounded-xl border border-dashed border-slate-200 py-3 text-sm font-semibold text-slate-500">
-                                            +{hiddenCount} more
-                                        </button>
-                                    )}
                                 </div>
                             </div>
                         </div>
