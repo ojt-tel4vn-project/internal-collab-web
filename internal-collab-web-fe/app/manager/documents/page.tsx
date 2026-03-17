@@ -1,69 +1,178 @@
+import { headers } from "next/headers";
+import { EmployeeDocumentsClient } from "@/components/documents/EmployeeDocumentsClient";
 import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
+import type { DocumentApiItem, DocumentsApiResponse } from "@/types/document";
+import { normalizeDocument } from "@/types/document";
 
-const documents = [
-    { title: "Q4 OKRs", category: "Planning", owner: "Ops", updated: "Oct 10", status: "Published" },
-    { title: "Policy Updates", category: "HR", owner: "HR", updated: "Oct 02", status: "Review" },
-    { title: "Team Handbook", category: "Onboarding", owner: "Ops", updated: "Sep 25", status: "Published" },
-    { title: "Security Checklist", category: "Compliance", owner: "Security", updated: "Sep 18", status: "Draft" },
-];
+type LoadResult = {
+    documents: ReturnType<typeof normalizeDocument>[];
+    error: string | null;
+};
 
-function StatusPill({ status }: { status: string }) {
-    const map: Record<string, string> = {
-        Published: "bg-emerald-50 text-emerald-600",
-        Review: "bg-amber-50 text-amber-600",
-        Draft: "bg-slate-100 text-slate-600",
+type CategoryApiItem = {
+    id?: string;
+    name?: string;
+    ID?: string;
+    Name?: string;
+};
+
+type CategoriesApiResponse =
+    | CategoryApiItem[]
+    | {
+        data?: CategoryApiItem[];
+        body?: CategoryApiItem[] | { data?: CategoryApiItem[] };
     };
 
-    return <span className={`rounded-full px-3 py-1 text-xs font-semibold ${map[status] || "bg-slate-100 text-slate-600"}`}>{status}</span>;
+type CategoryMap = Record<string, string>;
+
+type ProfileSummary = {
+    id?: string;
+};
+
+function asText(value: unknown) {
+    return typeof value === "string" ? value : "";
 }
 
-export default function ManagerDocumentsPage() {
+function normalizeCategory(item: CategoryApiItem) {
+    const id = asText(item.id ?? item.ID);
+    const name = asText(item.name ?? item.Name);
+    return { id, name };
+}
+
+async function getBaseUrlAndCookie() {
+    const headerStore = await headers();
+    const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+    const protocol = headerStore.get("x-forwarded-proto") ?? "http";
+    const baseUrl = host
+        ? `${protocol}://${host}`
+        : process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000";
+    const cookieHeader = headerStore.get("cookie") ?? "";
+    return { baseUrl, cookieHeader };
+}
+
+async function fetchDocuments(): Promise<LoadResult> {
+    const { baseUrl, cookieHeader } = await getBaseUrlAndCookie();
+    const url = new URL("/api/employee/documents", baseUrl).toString();
+
+    const res = await fetch(url, {
+        next: { revalidate: 3600 },
+        headers: {
+            accept: "application/json, application/problem+json",
+            cookie: cookieHeader,
+        },
+    });
+
+    if (!res.ok) {
+        const raw = await res.text().catch(() => "");
+        let message = `Unable to load documents (HTTP ${res.status})`;
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string };
+                message = parsed.message || parsed.detail || parsed.title || message;
+            } catch {
+                message = raw.slice(0, 200);
+            }
+        }
+        return { documents: [], error: message };
+    }
+
+    const payload = (await res.json()) as DocumentsApiResponse;
+    let items: DocumentApiItem[] = [];
+    if (Array.isArray(payload)) {
+        items = payload;
+    } else if (Array.isArray(payload?.data)) {
+        items = payload.data;
+    } else if (Array.isArray(payload?.body)) {
+        items = payload.body as DocumentApiItem[];
+    } else if (Array.isArray(payload?.body?.data)) {
+        items = payload.body.data as DocumentApiItem[];
+    }
+
+    return { documents: items.map(normalizeDocument), error: null };
+}
+
+async function fetchCategories(): Promise<CategoryMap> {
+    const { baseUrl, cookieHeader } = await getBaseUrlAndCookie();
+    const url = new URL("/api/employee/documents/categories", baseUrl).toString();
+
+    const res = await fetch(url, {
+        cache: "no-store",
+        headers: {
+            accept: "application/json, application/problem+json",
+            cookie: cookieHeader,
+        },
+    });
+
+    if (!res.ok) return {};
+
+    const payload = (await res.json()) as CategoriesApiResponse;
+    let items: CategoryApiItem[] = [];
+    if (Array.isArray(payload)) {
+        items = payload;
+    } else if (Array.isArray(payload?.data)) {
+        items = payload.data;
+    } else if (Array.isArray(payload?.body)) {
+        items = payload.body as CategoryApiItem[];
+    } else if (Array.isArray(payload?.body?.data)) {
+        items = payload.body.data as CategoryApiItem[];
+    }
+
+    const categoryMap: CategoryMap = {};
+    for (const item of items) {
+        const { id, name } = normalizeCategory(item);
+        if (id) categoryMap[id] = name || id;
+    }
+    return categoryMap;
+}
+
+async function fetchUserId(): Promise<string | null> {
+    const { baseUrl, cookieHeader } = await getBaseUrlAndCookie();
+    const url = new URL("/api/employee/me", baseUrl).toString();
+
+    const res = await fetch(url, {
+        cache: "no-store",
+        headers: {
+            accept: "application/json, application/problem+json",
+            cookie: cookieHeader,
+        },
+    });
+
+    if (!res.ok) return null;
+
+    const payload = (await res.json()) as ProfileSummary;
+    return typeof payload?.id === "string" && payload.id.trim() ? payload.id.trim() : null;
+}
+
+export default async function ManagerDocumentsPage() {
+    const [{ documents, error }, categoryMap, userId] = await Promise.all([
+        fetchDocuments(),
+        fetchCategories(),
+        fetchUserId(),
+    ]);
+
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
             <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
                 <ManagerSideNav />
 
-                <section className="flex-1 space-y-5">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <h1 className="text-2xl font-bold">Documents</h1>
-                            <p className="text-sm text-slate-500">Quick access to shared documents and policy files</p>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm font-semibold">
-                            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm">Filter</button>
-                            <button className="rounded-full bg-blue-600 px-4 py-2 text-white shadow">Upload</button>
-                        </div>
+                <section className="flex-1 space-y-6">
+                    <div>
+                        <h1 className="text-2xl font-bold">Documents</h1>
+                        <p className="text-sm text-slate-500">Quick access to company policies and shared files.</p>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
-                        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] items-center gap-2 border-b border-slate-100 px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            <span>Title</span>
-                            <span>Category</span>
-                            <span>Owner</span>
-                            <span>Updated</span>
-                            <span className="text-right">Status</span>
+                    {error ? (
+                        <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                            {error}
                         </div>
+                    ) : null}
 
-                        <div className="divide-y divide-slate-100 text-sm font-semibold text-slate-800">
-                            {documents.map((doc) => (
-                                <div key={doc.title} className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] items-center gap-2 px-5 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-700">DOC</span>
-                                        <div>
-                                            <p className="text-sm font-semibold text-slate-900">{doc.title}</p>
-                                            <p className="text-xs font-semibold text-slate-500">Shared with managers</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-slate-600">{doc.category}</span>
-                                    <span className="text-slate-600">{doc.owner}</span>
-                                    <span className="text-slate-600">{doc.updated}</span>
-                                    <div className="flex justify-end">
-                                        <StatusPill status={doc.status} />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <EmployeeDocumentsClient
+                        documents={documents}
+                        categoryMap={categoryMap}
+                        roleLabel="Manager"
+                        userId={userId}
+                    />
                 </section>
             </div>
         </main>

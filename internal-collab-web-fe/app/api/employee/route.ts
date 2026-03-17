@@ -28,6 +28,23 @@ type LeaveOverviewResponse = {
     };
 };
 
+type NotificationUnreadCountResponse = {
+    count?: number;
+    unread_count?: number;
+    data?: {
+        count?: number;
+        unread_count?: number;
+    };
+    body?: {
+        count?: number;
+        unread_count?: number;
+        data?: {
+            count?: number;
+            unread_count?: number;
+        };
+    };
+};
+
 type EmployeeDetailResponse = {
     first_name?: unknown;
     last_name?: unknown;
@@ -206,6 +223,26 @@ function normalizeStatus(value: unknown) {
     return normalized;
 }
 
+function normalizeNumber(value: unknown) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return value;
+    }
+
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) {
+            return null;
+        }
+
+        const parsed = Number(trimmed);
+        if (Number.isFinite(parsed)) {
+            return parsed;
+        }
+    }
+
+    return null;
+}
+
 export async function GET(request: NextRequest) {
     const view = request.nextUrl.searchParams.get("view");
     if (view === "hr-management") {
@@ -302,10 +339,35 @@ export async function GET(request: NextRequest) {
 
     const leaveOverviewPayload = parseJson<LeaveOverviewResponse>(leaveOverviewResult.text);
 
+    const attendanceCommentsResult = await proxyToBackend({
+        method: "GET",
+        path: "/notifications/unread-count",
+        request,
+        authSession: state.authSession as never,
+    });
+    mergeProxyState(state, attendanceCommentsResult);
+
+    if (!attendanceCommentsResult.ok) {
+        return finalizeProxyErrorResponse(attendanceCommentsResult, state);
+    }
+
+    const attendanceCommentsPayload = parseJson<NotificationUnreadCountResponse>(attendanceCommentsResult.text);
+    const attendanceComments =
+        normalizeNumber(attendanceCommentsPayload?.count) ??
+        normalizeNumber(attendanceCommentsPayload?.unread_count) ??
+        normalizeNumber(attendanceCommentsPayload?.data?.count) ??
+        normalizeNumber(attendanceCommentsPayload?.data?.unread_count) ??
+        normalizeNumber(attendanceCommentsPayload?.body?.count) ??
+        normalizeNumber(attendanceCommentsPayload?.body?.unread_count) ??
+        normalizeNumber(attendanceCommentsPayload?.body?.data?.count) ??
+        normalizeNumber(attendanceCommentsPayload?.body?.data?.unread_count) ??
+        0;
+
     return finalizeJsonResponse(
         {
             totalEmployees,
             leaveRequests: leaveOverviewPayload?.data?.total_requests ?? 0,
+            attendanceComments,
         },
         state,
     );

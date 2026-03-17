@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { DashboardCalendar } from "@/components/dashboard/home/Calendar";

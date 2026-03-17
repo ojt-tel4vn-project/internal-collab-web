@@ -220,7 +220,7 @@ export function LeaderboardCard({ entries }: LeaderboardProps) {
             icon={<MedalIcon className="h-6 w-6 text-orange-500" />}
             footerSlot={
                 <Link
-                    href="/employee/leaderboard"
+                    href={viewAllHref}
                     className="block w-full rounded-2xl bg-orange-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-orange-600"
                 >
                     View Full Rankings <ArrowUpRightIcon className="ml-2 inline h-4 w-4" />

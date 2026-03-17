@@ -21,6 +21,7 @@ export interface CalendarEvent {
     id: string;
     name: string;
     date: string;
+    type?: "birthday" | "leave";
 }
 
 export interface TaskItem {
@@ -30,7 +31,7 @@ export interface TaskItem {
 
 export interface LeaderboardItem {
     name: string;
-    role: string;
+    role?: string;
     points: number;
     rank: number;
     highlight?: boolean;
