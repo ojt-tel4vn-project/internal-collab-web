@@ -11,6 +11,7 @@ interface CalendarProps {
     baseDate?: Date;
     viewMode?: CalendarView;
     events?: CalendarEvent[];
+    eventGroupLabel?: string;
 }
 
 function getMonthDayKey(value: string) {
