@@ -10,8 +10,6 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Attendance", href: "/employee/attendance", icon: ClockIcon },
     { label: "Leave", href: "/employee/leaverequest", icon: CalendarIcon },
     { label: "Documents", href: "/employee/documents", icon: DocumentIcon },
-    { label: "My Profile", href: "/employee/myprofile", icon: GridIcon },
-    { label: "Notifications", href: "/employee/notification", icon: ClockIcon },
 ];
 
 function isActive(pathname: string, href: string) {
