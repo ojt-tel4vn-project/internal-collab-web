@@ -249,8 +249,8 @@ export default function ManagerLeaveApprovalsPage() {
                             ))}
                         </div>
                         <div className="flex items-center gap-2">
-                            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm">All Members âŒ„</button>
-                            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm">Date Range âŒ„</button>
+                            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm">All Members ▾</button>
+                            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm">Date Range ▾</button>
                         </div>
                     </div>
 

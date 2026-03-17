@@ -90,17 +90,16 @@ export default function ManagerHomePage() {
             }
         }
 
-        // Birthday events (adjusted to current year)
+        // Birthday events (timezone-safe: parse date string directly, no UTC conversion)
         const currentYear = new Date().getFullYear();
         for (const emp of birthdays) {
             if (!emp.birth_date) continue;
-            const parsed = new Date(emp.birth_date);
-            if (Number.isNaN(parsed.getTime())) continue;
-            const thisYearDate = new Date(currentYear, parsed.getMonth(), parsed.getDate());
+            const ymdMatch = emp.birth_date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!ymdMatch) continue;
             events.push({
                 id: `bday-${emp.id}`,
                 name: emp.full_name,
-                date: thisYearDate.toISOString(),
+                date: `${currentYear}-${ymdMatch[2]}-${ymdMatch[3]}`,
                 type: "birthday",
             });
         }
