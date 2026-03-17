@@ -5,9 +5,10 @@ import { SectionCard } from "./common/SectionCard";
 
 interface LeaderboardProps {
     entries: LeaderboardItem[];
+    viewAllHref?: string;
 }
 
-export function LeaderboardCard({ entries }: LeaderboardProps) {
+export function LeaderboardCard({ entries, viewAllHref = "/employee/leaderboard" }: LeaderboardProps) {
     return (
         <SectionCard
             title="Leaderboard"
@@ -15,7 +16,7 @@ export function LeaderboardCard({ entries }: LeaderboardProps) {
             icon={<MedalIcon className="h-6 w-6 text-orange-500" />}
             footerSlot={
                 <Link
-                    href="/employee/leaderboard"
+                    href={viewAllHref}
                     className="block w-full rounded-2xl bg-orange-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-orange-600"
                 >
                     View Full Rankings <ArrowUpRightIcon className="ml-2 inline h-4 w-4" />
@@ -49,7 +50,9 @@ export function LeaderboardCard({ entries }: LeaderboardProps) {
                                 </div>
                                 <div>
                                     <p className="text-sm font-semibold text-slate-900">{entry.name}</p>
-                                    <p className="text-xs text-slate-500">{entry.role}</p>
+                                    {entry.role && (
+                                        <p className="text-xs text-slate-500">{entry.role}</p>
+                                    )}
                                 </div>
                             </div>
                             <div className="text-right">

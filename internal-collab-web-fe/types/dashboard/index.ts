@@ -30,7 +30,7 @@ export interface TaskItem {
 
 export interface LeaderboardItem {
     name: string;
-    role: string;
+    role?: string;
     points: number;
     rank: number;
     highlight?: boolean;

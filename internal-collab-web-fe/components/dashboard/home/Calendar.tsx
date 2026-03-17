@@ -10,6 +10,7 @@ interface CalendarProps {
     baseDate?: Date;
     viewMode?: CalendarView;
     events?: CalendarEvent[];
+    eventGroupLabel?: string;
 }
 
 function buildEventMap(events: CalendarEvent[]) {
@@ -63,7 +64,7 @@ function buildWeeks(baseDate: Date, events: CalendarEvent[]): { label: string; w
     return { label, weeks, focusIndex };
 }
 
-export function DashboardCalendar({ baseDate, viewMode = "monthly", events = [] }: CalendarProps) {
+export function DashboardCalendar({ baseDate, viewMode = "monthly", events = [], eventGroupLabel = "birthdays" }: CalendarProps) {
     const [viewDate, setViewDate] = useState<Date>(baseDate ?? new Date());
     const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
 
@@ -202,10 +203,10 @@ export function DashboardCalendar({ baseDate, viewMode = "monthly", events = [] 
 
             <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
                 {!selectedEvents.length ? (
-                    <p className="text-sm text-slate-500">Click a highlighted date to see employee birthdays.</p>
+                    <p className="text-sm text-slate-500">Click a highlighted date to see {eventGroupLabel}.</p>
                 ) : (
                     <div className="space-y-2">
-                        <p className="text-sm font-semibold text-slate-900">{selectedDayLabel} birthdays</p>
+                        <p className="text-sm font-semibold text-slate-900">{selectedDayLabel} — {eventGroupLabel}</p>
                         <div className="flex flex-wrap gap-2">
                             {selectedEvents.map((event) => (
                                 <span
