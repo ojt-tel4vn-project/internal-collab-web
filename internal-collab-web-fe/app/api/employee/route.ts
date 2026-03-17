@@ -278,7 +278,7 @@ export async function GET(request: NextRequest) {
         return createProxyResponse(upstreamResponse);
     }
 
-    if (view === "hr-departments") {
+    if (view === "departments") {
         if (!hasAuthSession(request)) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
