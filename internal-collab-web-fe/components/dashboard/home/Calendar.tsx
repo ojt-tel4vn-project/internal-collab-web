@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { extractBirthdayEntries, toCalendarEvents } from "@/lib/birthdays";
 import type { CalendarEvent, DayCell } from "@/types/dashboard";
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from "./Icons";
 
@@ -12,16 +13,47 @@ interface CalendarProps {
     events?: CalendarEvent[];
 }
 
+function getMonthDayKey(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) {
+        return null;
+    }
+
+    const mdMatch = trimmed.match(/^(\d{2})-(\d{2})$/);
+    if (mdMatch) {
+        const month = Number(mdMatch[1]);
+        const day = Number(mdMatch[2]);
+        if (Number.isFinite(month) && Number.isFinite(day) && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+            return `${month}-${day}`;
+        }
+    }
+
+    const ymdMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (ymdMatch) {
+        const month = Number(ymdMatch[2]);
+        const day = Number(ymdMatch[3]);
+        if (Number.isFinite(month) && Number.isFinite(day) && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+            return `${month}-${day}`;
+        }
+    }
+
+    const parsed = new Date(trimmed);
+    if (Number.isNaN(parsed.getTime())) {
+        return null;
+    }
+
+    return `${parsed.getMonth() + 1}-${parsed.getDate()}`;
+}
+
 function buildEventMap(events: CalendarEvent[]) {
     const eventMap = new Map<string, CalendarEvent[]>();
 
     for (const event of events) {
-        const parsed = new Date(event.date);
-        if (Number.isNaN(parsed.getTime())) {
+        const key = getMonthDayKey(event.date);
+        if (!key) {
             continue;
         }
 
-        const key = `${parsed.getMonth() + 1}-${parsed.getDate()}`;
         const existing = eventMap.get(key) ?? [];
         existing.push(event);
         eventMap.set(key, existing);
@@ -63,42 +95,58 @@ function buildWeeks(baseDate: Date, events: CalendarEvent[]): { label: string; w
     return { label, weeks, focusIndex };
 }
 
-export function DashboardCalendar({ baseDate, viewMode = "monthly", events = [] }: CalendarProps) {
+export function DashboardCalendar({ baseDate, viewMode = "monthly", events }: CalendarProps) {
     const [viewDate, setViewDate] = useState<Date>(baseDate ?? new Date());
-    const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
+    const [fetchedEvents, setFetchedEvents] = useState<CalendarEvent[]>([]);
+    const today = useMemo(() => new Date(), []);
 
-    const { weeks, label, focusIndex } = useMemo(() => buildWeeks(viewDate, events), [events, viewDate]);
-    const selectedEvents = useMemo(() => {
-        if (!selectedDayKey) {
-            return [];
+    const externalEvents = events ?? [];
+    const hasExternalEvents = externalEvents.length > 0;
+
+    useEffect(() => {
+        if (hasExternalEvents) {
+            return;
         }
 
-        for (const row of weeks) {
-            for (const cell of row) {
-                if (cell.day && `${viewDate.getMonth() + 1}-${cell.day}` === selectedDayKey) {
-                    return cell.events ?? [];
+        let isCancelled = false;
+
+        async function loadBirthdays() {
+            try {
+                const response = await fetch("/api/employee/birthdays", {
+                    cache: "no-store",
+                });
+
+                if (!response.ok) {
+                    throw new Error("Unable to load birthdays.");
+                }
+
+                const payload = (await response.json()) as unknown;
+                const birthdayEntries = extractBirthdayEntries(payload);
+                const nextEvents = toCalendarEvents(birthdayEntries);
+
+                if (!isCancelled) {
+                    setFetchedEvents(nextEvents);
+                }
+            } catch {
+                if (!isCancelled) {
+                    setFetchedEvents([]);
                 }
             }
         }
 
-        return [];
-    }, [selectedDayKey, viewDate, weeks]);
-    const selectedDayLabel = useMemo(() => {
-        if (!selectedDayKey) {
-            return null;
-        }
+        void loadBirthdays();
 
-        const [, rawDay] = selectedDayKey.split("-");
-        const day = Number(rawDay);
-        if (!Number.isFinite(day)) {
-            return null;
-        }
+        return () => {
+            isCancelled = true;
+        };
+    }, [hasExternalEvents]);
 
-        return new Date(viewDate.getFullYear(), viewDate.getMonth(), day).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "long",
-        });
-    }, [selectedDayKey, viewDate]);
+    const calendarEvents = hasExternalEvents ? externalEvents : fetchedEvents;
+
+    const { weeks, label, focusIndex } = useMemo(
+        () => buildWeeks(viewDate, calendarEvents),
+        [calendarEvents, viewDate],
+    );
 
     const shiftMonth = (delta: number) => {
         setViewDate((d) => {
@@ -115,7 +163,6 @@ export function DashboardCalendar({ baseDate, viewMode = "monthly", events = [] 
         setViewDate((d) => (viewMode === "weekly" ? new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7) : d));
     const goToday = () => setViewDate(new Date());
 
-    // Re-route monthly navigation through month shifter to preserve selected day across months
     const handlePrev = () => (viewMode === "weekly" ? goPrev() : shiftMonth(-1));
     const handleNext = () => (viewMode === "weekly" ? goNext() : shiftMonth(1));
 
@@ -163,22 +210,29 @@ export function DashboardCalendar({ baseDate, viewMode = "monthly", events = [] 
                     <React.Fragment key={rowIndex}>
                         {row.map((cell, cellIndex) => {
                             const isEmpty = !cell.day;
-                            const focus = cell.isFocus;
                             const hasEvent = cell.hasEvent;
+                            const isToday = Boolean(
+                                cell.day &&
+                                    viewDate.getFullYear() === today.getFullYear() &&
+                                    viewDate.getMonth() === today.getMonth() &&
+                                    cell.day === today.getDate(),
+                            );
+                            const birthdayNames = (cell.events ?? [])
+                                .map((event) => event.name.trim())
+                                .filter(Boolean);
+                            const tooltipTitle = birthdayNames.join(", ");
+                            const dayTone = isToday
+                                ? "bg-blue-600 text-white ring-1 ring-blue-600"
+                                : hasEvent
+                                  ? "cursor-default bg-orange-50 text-orange-700 ring-1 ring-orange-200"
+                                  : "text-slate-700";
 
                             return (
                                 <div key={`${rowIndex}-${cellIndex}`} className="flex aspect-square items-center justify-center">
                                     {isEmpty ? null : (
                                         <div
-                                            className={`relative flex h-10 w-10 items-center justify-center rounded-full transition ${focus ? "bg-blue-600 text-white" : "text-slate-700"} ${hasEvent ? "cursor-pointer hover:bg-orange-50" : ""}`}
-                                            onClick={() => {
-                                                if (!hasEvent || !cell.day) {
-                                                    return;
-                                                }
-
-                                                const nextKey = `${viewDate.getMonth() + 1}-${cell.day}`;
-                                                setSelectedDayKey((current) => (current === nextKey ? null : nextKey));
-                                            }}
+                                            title={hasEvent && tooltipTitle ? tooltipTitle : undefined}
+                                            className={`group relative flex h-10 w-10 items-center justify-center rounded-full transition ${dayTone}`}
                                         >
                                             {cell.day}
                                             {hasEvent ? (
@@ -188,6 +242,18 @@ export function DashboardCalendar({ baseDate, viewMode = "monthly", events = [] 
                                                         <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white">
                                                             {cell.events?.length}
                                                         </span>
+                                                    ) : null}
+                                                    {birthdayNames.length > 0 ? (
+                                                        <div className="pointer-events-none absolute left-1/2 top-0 z-20 hidden w-52 -translate-x-1/2 -translate-y-[calc(100%+8px)] rounded-xl bg-slate-900 px-3 py-2 text-left text-xs text-white shadow-lg group-hover:block">
+                                                            <p className="mb-1 font-semibold text-orange-200">Birthdays</p>
+                                                            <div className="space-y-1">
+                                                                {birthdayNames.map((name, idx) => (
+                                                                    <p key={`${name}-${idx}`} className="truncate" title={name}>
+                                                                        {name}
+                                                                    </p>
+                                                                ))}
+                                                            </div>
+                                                        </div>
                                                     ) : null}
                                                 </>
                                             ) : null}
@@ -201,23 +267,7 @@ export function DashboardCalendar({ baseDate, viewMode = "monthly", events = [] 
             </div>
 
             <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                {!selectedEvents.length ? (
-                    <p className="text-sm text-slate-500">Click a highlighted date to see employee birthdays.</p>
-                ) : (
-                    <div className="space-y-2">
-                        <p className="text-sm font-semibold text-slate-900">{selectedDayLabel} birthdays</p>
-                        <div className="flex flex-wrap gap-2">
-                            {selectedEvents.map((event) => (
-                                <span
-                                    key={event.id}
-                                    className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700"
-                                >
-                                    {event.name}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                <p className="text-sm text-slate-500">Birthday dates are marked in orange. Hover each date to see names.</p>
             </div>
         </div>
     );
