@@ -65,7 +65,7 @@ function formatDateRange(from: string, to: string, days: number) {
     const fromDate = new Date(from);
     const toDate = new Date(to);
     if (from === to) return `${fmt(fromDate)} (${days} day)`;
-    return `${fmt(fromDate)} – ${fmt(toDate)} (${days} days)`;
+    return `${fmt(fromDate)} â€“ ${fmt(toDate)} (${days} days)`;
 }
 
 export default function ManagerLeaveApprovalsPage() {
@@ -249,8 +249,8 @@ export default function ManagerLeaveApprovalsPage() {
                             ))}
                         </div>
                         <div className="flex items-center gap-2">
-                            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm">All Members ⌄</button>
-                            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm">Date Range ⌄</button>
+                            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm">All Members âŒ„</button>
+                            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm">Date Range âŒ„</button>
                         </div>
                     </div>
 
@@ -337,7 +337,7 @@ export default function ManagerLeaveApprovalsPage() {
                     {!loading && total > 0 && (
                         <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-5 py-4 text-xs font-semibold text-slate-500">
                             <span>
-                                Showing {Math.min((page - 1) * LIMIT + 1, total)}–{Math.min(page * LIMIT, total)} of {total} requests
+                                Showing {Math.min((page - 1) * LIMIT + 1, total)}â€“{Math.min(page * LIMIT, total)} of {total} requests
                             </span>
                             <div className="flex items-center gap-2">
                                 {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((n) => (

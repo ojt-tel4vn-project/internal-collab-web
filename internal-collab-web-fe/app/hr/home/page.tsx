@@ -11,6 +11,7 @@ import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 type HrDashboardMetrics = {
     totalEmployees: number;
     leaveRequests: number;
+    attendanceComments: number;
 };
 
 export default function HrDashboardPage() {
@@ -62,8 +63,8 @@ export default function HrDashboardPage() {
             value: metrics?.totalEmployees?.toString() ?? "--",
         },
         {
-            label: "Attendance Comments",
-            value: "--",
+            label: "Unread attendance comments",
+            value: metrics?.attendanceComments?.toString() ?? "--",
         },
         {
             label: "Leave Requests",
@@ -119,7 +120,6 @@ export default function HrDashboardPage() {
                                 </div>
                                 <DashboardCalendar viewMode={viewMode} />
                             </div>
-
                         </div>
 
                         <div className="space-y-4">
