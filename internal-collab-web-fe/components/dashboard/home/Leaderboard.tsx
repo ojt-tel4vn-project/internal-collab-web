@@ -38,6 +38,7 @@ type RemoteState = {
 
 interface LeaderboardProps {
     entries?: LeaderboardItem[];
+    viewAllHref?: string;
 }
 
 function asNumber(value: unknown) {
@@ -145,7 +146,7 @@ async function readHomeLeaderboard(signal?: AbortSignal) {
         }));
 }
 
-export function LeaderboardCard({ entries }: LeaderboardProps) {
+export function LeaderboardCard({ entries, viewAllHref = "/employee/leaderboard" }: LeaderboardProps) {
     const hasProvidedEntries = Boolean(entries?.length);
     const [state, setState] = useState<RemoteState>({
         data: [],
