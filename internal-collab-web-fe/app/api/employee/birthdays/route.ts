@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
 
         const upstreamResponse = await proxyToBackend({
             method: "GET",
-            path: "/employees/birthdays",
+            path: `/employees/birthdays`,
             request,
         });
 
@@ -21,4 +21,3 @@ export async function GET(request: NextRequest) {
         );
     }
 }
-

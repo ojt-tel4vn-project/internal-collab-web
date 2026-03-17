@@ -21,13 +21,15 @@ export default function ManagerHomePage() {
     const [overview, setOverview] = useState<LeaveOverview | null>(null);
     const [teamTotal, setTeamTotal] = useState<number | null>(null);
     const [leaderboard, setLeaderboard] = useState<LeaderboardItem[]>([]);
+    const [birthdays, setBirthdays] = useState<{ id: string; full_name: string; birth_date: string }[]>([]);
 
     useEffect(() => {
         async function fetchData() {
-            const [overviewRes, teamRes, lbRes] = await Promise.all([
+            const [overviewRes, teamRes, lbRes, bdRes] = await Promise.all([
                 fetch("/api/manager/leave-overview"),
                 fetch("/api/manager/team"),
                 fetch("/api/stickers/leaderboard?limit=3"),
+                fetch("/api/employee/birthdays"),
             ]);
 
             if (overviewRes.ok) {
@@ -50,6 +52,11 @@ export default function ManagerHomePage() {
                     }))
                 );
             }
+
+            if (bdRes.ok) {
+                const json = await bdRes.json() as { employees?: { id: string; full_name: string; birth_date: string }[] };
+                setBirthdays(json.employees ?? []);
+            }
         }
 
         void fetchData();
@@ -66,21 +73,40 @@ export default function ManagerHomePage() {
 
     const calendarEvents = useMemo<CalendarEvent[]>(() => {
         const events: CalendarEvent[] = [];
+
+        // Team leave events (upcoming)
         for (const leave of upcomingLeaves) {
             const from = new Date(leave.from_date);
             const to = new Date(leave.to_date);
             const cursor = new Date(from);
             while (cursor <= to) {
                 events.push({
-                    id: `${leave.employee}-${cursor.toISOString()}`,
+                    id: `leave-${leave.employee}-${cursor.toISOString()}`,
                     name: leave.employee,
                     date: cursor.toISOString(),
+                    type: "leave",
                 });
                 cursor.setDate(cursor.getDate() + 1);
             }
         }
+
+        // Birthday events (adjusted to current year)
+        const currentYear = new Date().getFullYear();
+        for (const emp of birthdays) {
+            if (!emp.birth_date) continue;
+            const parsed = new Date(emp.birth_date);
+            if (Number.isNaN(parsed.getTime())) continue;
+            const thisYearDate = new Date(currentYear, parsed.getMonth(), parsed.getDate());
+            events.push({
+                id: `bday-${emp.id}`,
+                name: emp.full_name,
+                date: thisYearDate.toISOString(),
+                type: "birthday",
+            });
+        }
+
         return events;
-    }, [upcomingLeaves]);
+    }, [upcomingLeaves, birthdays]);
 
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
@@ -125,7 +151,7 @@ export default function ManagerHomePage() {
                             <DashboardCalendar
                                 viewMode={viewMode}
                                 events={calendarEvents}
-                                eventGroupLabel="team on leave"
+                                eventGroupLabel="events"
                             />
                         </div>
 

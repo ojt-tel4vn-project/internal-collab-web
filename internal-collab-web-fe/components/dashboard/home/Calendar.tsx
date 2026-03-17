@@ -211,6 +211,7 @@ export function DashboardCalendar({ baseDate, viewMode = "monthly", events }: Ca
                     <React.Fragment key={rowIndex}>
                         {row.map((cell, cellIndex) => {
                             const isEmpty = !cell.day;
+                            const cellEvents = cell.events ?? [];
                             const hasEvent = cell.hasEvent;
                             const isToday = Boolean(
                                 cell.day &&
@@ -218,44 +219,53 @@ export function DashboardCalendar({ baseDate, viewMode = "monthly", events }: Ca
                                     viewDate.getMonth() === today.getMonth() &&
                                     cell.day === today.getDate(),
                             );
-                            const birthdayNames = (cell.events ?? [])
-                                .map((event) => event.name.trim())
-                                .filter(Boolean);
-                            const tooltipTitle = birthdayNames.join(", ");
+
+                            const bdNames = cellEvents.filter((e) => e.type !== "leave").map((e) => e.name.trim()).filter(Boolean);
+                            const leaveNames = cellEvents.filter((e) => e.type === "leave").map((e) => e.name.trim()).filter(Boolean);
+                            const hasBirthday = bdNames.length > 0;
+                            const hasLeave = leaveNames.length > 0;
+
                             const dayTone = isToday
                                 ? "bg-blue-600 text-white ring-1 ring-blue-600"
-                                : hasEvent
-                                  ? "cursor-default bg-orange-50 text-orange-700 ring-1 ring-orange-200"
-                                  : "text-slate-700";
+                                : hasLeave
+                                  ? "cursor-default bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                  : hasBirthday
+                                    ? "cursor-default bg-orange-50 text-orange-700 ring-1 ring-orange-200"
+                                    : "text-slate-700";
 
                             return (
                                 <div key={`${rowIndex}-${cellIndex}`} className="flex aspect-square items-center justify-center">
                                     {isEmpty ? null : (
                                         <div
-                                            title={hasEvent && tooltipTitle ? tooltipTitle : undefined}
                                             className={`group relative flex h-10 w-10 items-center justify-center rounded-full transition ${dayTone}`}
                                         >
                                             {cell.day}
                                             {hasEvent ? (
                                                 <>
-                                                    <span className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-orange-500" />
-                                                    {(cell.events?.length ?? 0) > 1 ? (
-                                                        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white">
-                                                            {cell.events?.length}
-                                                        </span>
-                                                    ) : null}
-                                                    {birthdayNames.length > 0 ? (
-                                                        <div className="pointer-events-none absolute left-1/2 top-0 z-20 hidden w-52 -translate-x-1/2 -translate-y-[calc(100%+8px)] rounded-xl bg-slate-900 px-3 py-2 text-left text-xs text-white shadow-lg group-hover:block">
-                                                            <p className="mb-1 font-semibold text-orange-200">Birthdays</p>
-                                                            <div className="space-y-1">
-                                                                {birthdayNames.map((name, idx) => (
-                                                                    <p key={`${name}-${idx}`} className="truncate" title={name}>
-                                                                        {name}
-                                                                    </p>
+                                                    {/* Dots: orange for birthday, blue for leave */}
+                                                    <div className="absolute bottom-0.5 flex items-center gap-0.5">
+                                                        {hasBirthday && <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />}
+                                                        {hasLeave && <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
+                                                    </div>
+                                                    {/* Tooltip */}
+                                                    <div className="pointer-events-none absolute left-1/2 top-0 z-20 hidden w-52 -translate-x-1/2 -translate-y-[calc(100%+8px)] rounded-xl bg-slate-900 px-3 py-2 text-left text-xs text-white shadow-lg group-hover:block">
+                                                        {hasBirthday && (
+                                                            <div className="mb-1">
+                                                                <p className="font-semibold text-orange-300">🎂 Birthdays</p>
+                                                                {bdNames.map((name, idx) => (
+                                                                    <p key={`bd-${idx}`} className="truncate">{name}</p>
                                                                 ))}
                                                             </div>
-                                                        </div>
-                                                    ) : null}
+                                                        )}
+                                                        {hasLeave && (
+                                                            <div>
+                                                                <p className="font-semibold text-blue-300">🏖️ On Leave</p>
+                                                                {leaveNames.map((name, idx) => (
+                                                                    <p key={`lv-${idx}`} className="truncate">{name}</p>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </>
                                             ) : null}
                                         </div>
@@ -268,7 +278,17 @@ export function DashboardCalendar({ baseDate, viewMode = "monthly", events }: Ca
             </div>
 
             <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                <p className="text-sm text-slate-500">Birthday dates are marked in orange. Hover each date to see names.</p>
+                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                    <span className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-orange-500" />
+                        Birthday
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-blue-500" />
+                        On Leave
+                    </span>
+                    <span className="text-slate-400">Hover a marked date to see names.</span>
+                </div>
             </div>
         </div>
     );

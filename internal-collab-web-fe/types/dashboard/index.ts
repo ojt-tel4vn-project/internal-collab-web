@@ -21,6 +21,7 @@ export interface CalendarEvent {
     id: string;
     name: string;
     date: string;
+    type?: "birthday" | "leave";
 }
 
 export interface TaskItem {
