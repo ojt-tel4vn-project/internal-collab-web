@@ -11,6 +11,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Leave Approvals", href: "/manager/leave-approvals", icon: CalendarIcon, badge: "4" },
     { label: "My Leave", href: "/manager/leaverequest", icon: CalendarIcon },
     { label: "Attendance", href: "/manager/attendance", icon: ClockIcon },
+    { label: "Leaderboard", href: "/manager/leaderboard", icon: GridIcon },
     { label: "Documents", href: "/manager/documents", icon: DocumentIcon },
     { label: "My Profile", href: "/manager/myprofile", icon: GridIcon },
     { label: "Notifications", href: "/manager/notification", icon: ClockIcon },
