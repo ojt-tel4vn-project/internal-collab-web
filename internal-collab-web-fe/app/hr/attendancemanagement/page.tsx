@@ -1,159 +1,554 @@
 "use client";
 
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "@/components/dashboard/home/Icons";
 import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 
-const statCards = [
-    { label: "Total records", value: 48, helper: "Updated just now" },
-    { label: "Confirmed", value: 38, helper: "Processed successfully" },
-    { label: "Pending review", value: 5, helper: "Action required" },
-    { label: "Auto-confirmed", value: 5, helper: "System automated" },
-];
+type AttendanceRow = {
+    id: string;
+    employeeId: string;
+    name: string;
+    email: string;
+    position: string;
+    department: string;
+    present: number;
+    late: number;
+    absent: number;
+    status: string;
+    uploadedAt: string;
+};
 
-const comments = [
-    {
-        name: "Tran Thi B",
-        tag: "Employee Comment",
-        text: "I forgot my badge at home, but I was in by 9:15 AM.",
-        date: "23 Oct",
-    },
-    {
-        name: "Pham Thi D",
-        tag: "System Alert",
-        text: "Missing Check-in time. System defaulted to manual review.",
-        date: "23 Oct",
-    },
-];
+const STATUS_OPTIONS = ["pending", "confirmed", "auto_confirmed"] as const;
+const PAGE_SIZE = 10;
+const LIMIT = 200;
 
-const attendanceRows = [
-    {
-        name: "Nguyen Van A",
-        role: "Engineering",
-        date: "23 Oct 2023",
-        status: "Confirmed",
-        comments: 0,
-    },
-];
+const monthFormatter = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
+const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+});
 
-function StatusPill({ status }: { status: string }) {
-    const map: Record<string, string> = {
-        Confirmed: "bg-emerald-100 text-emerald-700",
-        Pending: "bg-amber-100 text-amber-700",
+function rec(value: unknown): Record<string, unknown> | null {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return null;
+    }
+
+    return value as Record<string, unknown>;
+}
+
+function txt(value: unknown): string {
+    return typeof value === "string" ? value.trim() : "";
+}
+
+function num(value: unknown, fallback = 0): number {
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return value;
+    }
+
+    if (typeof value === "string") {
+        const parsed = Number(value.trim());
+        if (Number.isFinite(parsed)) {
+            return parsed;
+        }
+    }
+
+    return fallback;
+}
+
+function parseError(raw: string, fallback: string): string {
+    if (!raw) {
+        return fallback;
+    }
+
+    try {
+        const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string; error?: string };
+        return parsed.message || parsed.detail || parsed.title || parsed.error || fallback;
+    } catch {
+        return raw.slice(0, 200) || fallback;
+    }
+}
+
+function statusLabel(status: string): string {
+    const normalized = txt(status).toLowerCase();
+    if (!normalized) {
+        return "Unknown";
+    }
+
+    return normalized
+        .replace(/_/g, " ")
+        .split(" ")
+        .filter(Boolean)
+        .map((part) => part[0].toUpperCase() + part.slice(1))
+        .join(" ");
+}
+
+function statusClass(status: string): string {
+    const normalized = txt(status).toLowerCase();
+    if (normalized === "confirmed") {
+        return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100";
+    }
+
+    if (normalized === "auto_confirmed") {
+        return "bg-blue-50 text-blue-700 ring-1 ring-blue-100";
+    }
+
+    return "bg-amber-50 text-amber-700 ring-1 ring-amber-100";
+}
+
+function formatDateTime(value: string): string {
+    if (!value) {
+        return "--";
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return "--";
+    }
+
+    return dateTimeFormatter.format(date);
+}
+
+function initials(name: string): string {
+    const parts = txt(name).split(" ").filter(Boolean);
+    if (parts.length === 0) {
+        return "--";
+    }
+
+    if (parts.length === 1) {
+        return parts[0].slice(0, 2).toUpperCase();
+    }
+
+    return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+}
+
+function parseAttendanceList(payload: unknown): { items: Record<string, unknown>[]; total: number | null } {
+    const root = rec(payload);
+    const body = rec(root?.body);
+    const data = rec(root?.data);
+
+    let rawItems: unknown[] = [];
+    if (Array.isArray(payload)) {
+        rawItems = payload;
+    } else if (Array.isArray(root?.data)) {
+        rawItems = root?.data as unknown[];
+    } else if (Array.isArray(body?.data)) {
+        rawItems = body?.data as unknown[];
+    } else if (Array.isArray(data?.data)) {
+        rawItems = data?.data as unknown[];
+    }
+
+    const total = [root?.total, body?.total, data?.total]
+        .map((value) => num(value, -1))
+        .find((value) => value >= 0);
+
+    return {
+        items: rawItems
+            .map((item) => rec(item))
+            .filter((item): item is Record<string, unknown> => Boolean(item)),
+        total: typeof total === "number" ? total : null,
     };
-    return <span className={`rounded-full px-3 py-1 text-xs font-semibold ${map[status] ?? "bg-slate-100 text-slate-600"}`}>{status}</span>;
+}
+
+function parseDepartmentMap(payload: unknown): Map<string, string> {
+    const map = new Map<string, string>();
+
+    const root = rec(payload);
+    const body = rec(root?.body);
+    const data = rec(root?.data);
+
+    const candidates = [
+        root?.employees,
+        body?.employees,
+        data?.employees,
+        root?.data,
+        body?.data,
+        data?.data,
+    ];
+
+    const source = candidates.find((candidate) => Array.isArray(candidate));
+    if (!Array.isArray(source)) {
+        return map;
+    }
+
+    for (const raw of source) {
+        const employee = rec(raw);
+        if (!employee) {
+            continue;
+        }
+
+        const id = txt(employee.id);
+        const department = employee.department;
+        const departmentName = typeof department === "string"
+            ? txt(department)
+            : txt(rec(department)?.name);
+
+        if (id && departmentName) {
+            map.set(id, departmentName);
+        }
+    }
+
+    return map;
+}
+
+function normalizeRows(items: Record<string, unknown>[], departments: Map<string, string>): AttendanceRow[] {
+    const rows: AttendanceRow[] = [];
+
+    for (const item of items) {
+        const employee = rec(item.employee);
+        const employeeId = txt(employee?.id);
+
+        if (!employeeId) {
+            continue;
+        }
+
+        const attendanceData = rec(item.attendance_data);
+        let derivedPresent = 0;
+        let derivedLate = 0;
+        let derivedAbsent = 0;
+
+        if (attendanceData) {
+            for (const value of Object.values(attendanceData)) {
+                const normalized = txt(value).toLowerCase();
+                if (normalized === "present") derivedPresent += 1;
+                if (normalized === "late") derivedLate += 1;
+                if (normalized === "absent") derivedAbsent += 1;
+            }
+        }
+
+        const status = txt(item.status).toLowerCase() || "pending";
+
+        rows.push({
+            id: txt(item.id) || `${employeeId}-${txt(item.month)}-${txt(item.year)}`,
+            employeeId,
+            name: txt(employee?.full_name) || "Unknown",
+            email: txt(employee?.email),
+            position: txt(employee?.position),
+            department: departments.get(employeeId) || "--",
+            present: num(item.total_days_present, derivedPresent),
+            late: num(item.total_days_late, derivedLate),
+            absent: num(item.total_days_absent, derivedAbsent),
+            status: STATUS_OPTIONS.includes(status as typeof STATUS_OPTIONS[number]) ? status : "pending",
+            uploadedAt: txt(item.uploaded_at),
+        });
+    }
+
+    return rows;
+}
+
+function parseUploadMessage(payload: unknown): string {
+    const root = rec(payload);
+    const body = rec(root?.body);
+    const message = txt(body?.message) || txt(root?.message) || "Attendance uploaded successfully.";
+    const count = Array.isArray(body?.data) ? body?.data.length : Array.isArray(root?.data) ? root?.data.length : null;
+
+    if (typeof count === "number") {
+        return `${message} ${count} record(s) processed.`;
+    }
+
+    return message;
 }
 
 export default function HrAttendanceManagementPage() {
+    const now = new Date();
+    const [month, setMonth] = useState(now.getMonth() + 1);
+    const [year, setYear] = useState(now.getFullYear());
+
+    const [rawItems, setRawItems] = useState<Record<string, unknown>[]>([]);
+    const [departmentById, setDepartmentById] = useState<Record<string, string>>({});
+
+    const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [departmentFilter, setDepartmentFilter] = useState("all");
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
+
+    const [file, setFile] = useState<File | null>(null);
+    const [fileInputKey, setFileInputKey] = useState(0);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+
+    const monthLabel = useMemo(() => monthFormatter.format(new Date(year, month - 1, 1)), [month, year]);
+
+    const loadData = useCallback(async () => {
+        setIsLoading(true);
+        setLoadError(null);
+
+        try {
+            const employeeResponse = await fetch("/api/employee?view=hr-management", { cache: "no-store" });
+            let departments = new Map<string, string>();
+            let warning: string | null = null;
+
+            if (employeeResponse.ok) {
+                const employeePayload = (await employeeResponse.json().catch(() => null)) as unknown;
+                departments = parseDepartmentMap(employeePayload);
+            } else {
+                const raw = await employeeResponse.text().catch(() => "");
+                warning = parseError(raw, "Unable to load departments. Department filter may be incomplete.");
+            }
+
+            const collected: Record<string, unknown>[] = [];
+            let total: number | null = null;
+
+            for (let page = 1; page <= 50; page += 1) {
+                const response = await fetch(
+                    `/api/employee/attendances?month=${month}&year=${year}&page=${page}&limit=${LIMIT}`,
+                    { cache: "no-store" },
+                );
+
+                if (!response.ok) {
+                    const raw = await response.text().catch(() => "");
+                    throw new Error(parseError(raw, `Unable to load attendance records (HTTP ${response.status}).`));
+                }
+
+                const payload = (await response.json().catch(() => null)) as unknown;
+                const parsed = parseAttendanceList(payload);
+                if (total === null && parsed.total !== null) {
+                    total = parsed.total;
+                }
+
+                if (parsed.items.length === 0) {
+                    break;
+                }
+
+                collected.push(...parsed.items);
+
+                if ((total !== null && collected.length >= total) || parsed.items.length < LIMIT) {
+                    break;
+                }
+            }
+
+            setRawItems(collected);
+            setDepartmentById(Object.fromEntries(departments.entries()));
+
+            if (warning) {
+                setLoadError(warning);
+            }
+        } catch (error) {
+            setRawItems([]);
+            setDepartmentById({});
+            setLoadError(error instanceof Error ? error.message : "Unable to load attendance data.");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [month, year]);
+
+    useEffect(() => {
+        void loadData();
+    }, [loadData]);
+
+    const rows = useMemo(() => normalizeRows(rawItems, new Map<string, string>(Object.entries(departmentById))), [rawItems, departmentById]);
+
+    const stats = useMemo(() => {
+        return {
+            total: rows.length,
+            confirmed: rows.filter((row) => row.status === "confirmed").length,
+            pending: rows.filter((row) => row.status === "pending").length,
+            autoConfirmed: rows.filter((row) => row.status === "auto_confirmed").length,
+        };
+    }, [rows]);
+
+    const departmentOptions = useMemo(() => {
+        const set = new Set(rows.map((row) => row.department).filter((item) => item && item !== "--"));
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [rows]);
+
+    const filteredRows = useMemo(() => {
+        const query = search.trim().toLowerCase();
+
+        return rows.filter((row) => {
+            const matchesSearch = !query || `${row.name} ${row.email}`.toLowerCase().includes(query);
+            const matchesStatus = statusFilter === "all" || row.status === statusFilter;
+            const matchesDepartment = departmentFilter === "all" || row.department === departmentFilter;
+            return matchesSearch && matchesStatus && matchesDepartment;
+        });
+    }, [rows, search, statusFilter, departmentFilter]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search, statusFilter, departmentFilter, month, year]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+    useEffect(() => {
+        setCurrentPage((current) => Math.min(current, totalPages));
+    }, [totalPages]);
+
+    const pageStart = filteredRows.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+    const pageEnd = filteredRows.length === 0 ? 0 : Math.min(filteredRows.length, currentPage * PAGE_SIZE);
+    const paginatedRows = filteredRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+    const handleUpload = async () => {
+        setUploadError(null);
+        setUploadSuccess(null);
+
+        if (!file) {
+            setUploadError("Please choose a CSV file to upload.");
+            return;
+        }
+
+        if (!file.name.toLowerCase().endsWith(".csv")) {
+            setUploadError("Only CSV files are supported for attendance upload.");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const csvText = (await file.text()).replace(/^\uFEFF/, "");
+            if (!csvText.trim()) {
+                throw new Error("CSV file is empty.");
+            }
+
+            const response = await fetch(`/api/employee/attendances?month=${month}&year=${year}`, {
+                method: "POST",
+                headers: { "Content-Type": "text/csv" },
+                body: csvText,
+            });
+
+            const raw = await response.text().catch(() => "");
+            if (!response.ok) {
+                throw new Error(parseError(raw, `Unable to upload attendance CSV (HTTP ${response.status}).`));
+            }
+
+            let payload: unknown = null;
+            if (raw) {
+                try {
+                    payload = JSON.parse(raw) as unknown;
+                } catch {
+                    payload = null;
+                }
+            }
+
+            setUploadSuccess(parseUploadMessage(payload));
+            setFile(null);
+            setFileInputKey((current) => current + 1);
+            await loadData();
+        } catch (error) {
+            setUploadError(error instanceof Error ? error.message : "Unable to upload attendance CSV.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const downloadTemplate = () => {
+        const header = ["employee_code", ...Array.from({ length: 31 }, (_, index) => String(index + 1))];
+        const sample = Array.from({ length: 31 }, (_, index) => (index === 0 ? "present" : index === 1 ? "late" : ""));
+        const csv = `${header.join(",")}\n${["EMP001", ...sample].join(",")}\n`;
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = `attendance-template-${year}-${String(month).padStart(2, "0")}.csv`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
             <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-8">
                 <HRSideNav />
 
-                <section className="grid w-full gap-6 lg:grid-cols-[2fr_1fr]">
-                    <div className="space-y-6">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="space-y-1">
-                                <h1 className="text-2xl font-bold">Attendance Management</h1>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-                                <button className="rounded-xl border border-slate-200 bg-white px-4 py-2 shadow-sm">October 2023 ⌄</button>
-                                <button className="rounded-xl border border-slate-200 bg-white px-4 py-2 shadow-sm">Download Template</button>
-                            </div>
+                <section className="w-full space-y-6">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                        <div className="space-y-2">
+                            <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Attendance Management</h1>
+                            <p className="text-sm text-slate-500">Search, filter, and upload monthly attendance records.</p>
                         </div>
 
-                        <div className="grid gap-3 md:grid-cols-4">
-                            {statCards.map((card) => (
-                                <div key={card.label} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                                    <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                        <span>{card.label}</span>
-                                        <span className="text-slate-400">⬇</span>
-                                    </div>
-                                    <div className="mt-3 text-3xl font-extrabold text-slate-900">{card.value}</div>
-                                    <p className="mt-1 text-xs font-semibold text-slate-500">{card.helper}</p>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center shadow-sm">
-                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-2xl text-blue-500">☁️</div>
-                            <h3 className="mt-4 text-lg font-semibold text-slate-900">Upload Attendance File</h3>
-                            <p className="mt-2 text-sm font-semibold text-slate-500">
-                                Drag and drop your Excel or CSV file here, or click to browse. Supported formats: .xlsx, .csv
-                            </p>
-                            <div className="mt-5 flex justify-center">
-                                <button className="rounded-xl border border-slate-200 bg-white px-5 py-2 text-sm font-semibold text-slate-700 shadow-sm">Browse File</button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                                <button type="button" className="rounded-full p-1 text-slate-400 hover:bg-slate-100" onClick={() => setMonth((m) => { if (m === 1) { setYear((y) => y - 1); return 12; } return m - 1; })}>
+                                    <ChevronLeftIcon className="h-4 w-4" />
+                                </button>
+                                <span>{monthLabel}</span>
+                                <button type="button" className="rounded-full p-1 text-slate-400 hover:bg-slate-100" onClick={() => setMonth((m) => { if (m === 12) { setYear((y) => y + 1); return 1; } return m + 1; })}>
+                                    <ChevronRightIcon className="h-4 w-4" />
+                                </button>
                             </div>
-                        </div>
-
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center gap-4 border-b border-slate-100 bg-slate-50 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                <span>Employee</span>
-                                <span>Date</span>
-                                <span>Status</span>
-                                <span>Comments</span>
-                                <span className="text-right">Action</span>
-                            </div>
-                            <div className="divide-y divide-slate-100">
-                                {attendanceRows.map((row) => (
-                                    <div key={row.name} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center gap-4 px-5 py-3 text-sm font-semibold text-slate-800">
-                                        <div className="flex items-center gap-3">
-                                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-700">
-                                                {row.name
-                                                    .split(" ")
-                                                    .map((n) => n[0])
-                                                    .join("")}
-                                            </span>
-                                            <div>
-                                                <p className="text-sm font-semibold text-slate-900">{row.name}</p>
-                                                <p className="text-xs font-semibold text-slate-500">{row.role}</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-sm font-semibold text-slate-700">{row.date}</span>
-                                        <StatusPill status={row.status} />
-                                        <span className="flex items-center gap-1 text-sm font-semibold text-slate-600">🗨️ {row.comments}</span>
-                                        <button className="justify-self-end rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600">⋯</button>
-                                    </div>
-                                ))}
-                            </div>
+                            <button type="button" onClick={downloadTemplate} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
+                                <DownloadIcon className="h-4 w-4" />
+                                Download template
+                            </button>
                         </div>
                     </div>
 
-                    <aside className="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm">
-                        <div className="mb-3 flex items-center justify-between">
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Total records</div><div className="mt-3 text-3xl font-semibold text-slate-950">{stats.total}</div></div>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Confirmed</div><div className="mt-3 text-3xl font-semibold text-slate-950">{stats.confirmed}</div></div>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Pending review</div><div className="mt-3 text-3xl font-semibold text-slate-950">{stats.pending}</div></div>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Auto-confirmed</div><div className="mt-3 text-3xl font-semibold text-slate-950">{stats.autoConfirmed}</div></div>
+                    </div>
+
+                    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                             <div>
-                                <h3 className="text-lg font-semibold text-slate-900">Comments</h3>
-                                <p className="text-xs font-semibold text-slate-500">Needing Review</p>
+                                <h2 className="text-lg font-semibold text-slate-950">Upload Attendance CSV</h2>
+                                <p className="mt-1 text-sm text-slate-500">Backend format: <code>employee_code,1,2,...,31</code></p>
                             </div>
-                            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">2 New</span>
+                            <div className="text-sm font-semibold text-slate-600">Target month: {monthLabel}</div>
+                        </div>
+                        <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center">
+                            <input key={fileInputKey} type="file" accept=".csv,text/csv" onChange={(event: ChangeEvent<HTMLInputElement>) => { setUploadError(null); setUploadSuccess(null); setFile(event.target.files?.[0] ?? null); }} className="block w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:font-semibold file:text-blue-700 hover:file:bg-blue-100" />
+                            <button type="button" onClick={() => void handleUpload()} disabled={isUploading} className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400">{isUploading ? "Uploading..." : "Upload CSV"}</button>
+                        </div>
+                        {uploadError ? <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">{uploadError}</div> : null}
+                        {uploadSuccess ? <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{uploadSuccess}</div> : null}
+                    </section>
+
+                    <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+                        <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
+                                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by employee name" className="min-w-[240px] flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white" />
+                                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="min-w-[180px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white"><option value="all">All status</option>{STATUS_OPTIONS.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select>
+                                <select value={departmentFilter} onChange={(event) => setDepartmentFilter(event.target.value)} className="min-w-[220px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white"><option value="all">All departments</option>{departmentOptions.map((name) => <option key={name} value={name}>{name}</option>)}</select>
+                            </div>
+                            <div className="text-sm text-slate-500">Showing <span className="font-semibold text-slate-900">{pageStart}</span>-<span className="font-semibold text-slate-900">{pageEnd}</span> of <span className="font-semibold text-slate-900">{filteredRows.length}</span> filtered, <span className="font-semibold text-slate-900">{rows.length}</span> records</div>
                         </div>
 
-                        <div className="space-y-4">
-                            {comments.map((c) => (
-                                <div key={c.name} className="rounded-xl border border-slate-100 bg-slate-50 p-4 shadow-sm">
-                                    <div className="mb-2 flex items-center justify-between text-sm font-semibold text-slate-900">
-                                        <div className="flex items-center gap-2">
-                                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">
-                                                {c.name
-                                                    .split(" ")
-                                                    .map((n) => n[0])
-                                                    .join("")}
-                                            </span>
-                                            <span>{c.name}</span>
-                                        </div>
-                                        <span className="text-xs font-semibold text-slate-400">{c.date}</span>
-                                    </div>
-                                    <div className="mb-3 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-                                        <span className="text-[11px] uppercase tracking-wide text-amber-600">{c.tag}</span>
-                                        <p className="mt-1 text-sm font-semibold text-slate-800">“{c.text}”</p>
-                                    </div>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <button className="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white">Edit Record</button>
-                                        <button className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">Keep Original</button>
-                                        <button className="flex-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">Mark Resolved</button>
-                                    </div>
-                                </div>
-                            ))}
+                        {loadError ? <div className="border-b border-rose-100 bg-rose-50 px-5 py-3 text-sm text-rose-600">{loadError}</div> : null}
+
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-slate-200">
+                                <thead className="bg-slate-50"><tr className="text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500"><th className="px-5 py-4">Employee</th><th className="px-5 py-4">Department</th><th className="px-5 py-4 text-center">Present</th><th className="px-5 py-4 text-center">Late</th><th className="px-5 py-4 text-center">Absent</th><th className="px-5 py-4">Status</th><th className="px-5 py-4">Uploaded At</th></tr></thead>
+                                <tbody className="divide-y divide-slate-100 bg-white">
+                                    {isLoading ? (
+                                        <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-500">Loading attendance records...</td></tr>
+                                    ) : filteredRows.length === 0 ? (
+                                        <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-500">No attendance records match the current filters.</td></tr>
+                                    ) : (
+                                        paginatedRows.map((row) => (
+                                            <tr key={row.id} className="align-top hover:bg-slate-50/70">
+                                                <td className="px-5 py-4"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">{initials(row.name)}</span><div className="space-y-1"><div className="font-semibold text-slate-950">{row.name}</div><div className="text-sm text-slate-500">{row.position || "--"}{row.email ? ` / ${row.email}` : ""}</div></div></div></td>
+                                                <td className="px-5 py-4 text-sm text-slate-600">{row.department || "--"}</td>
+                                                <td className="px-5 py-4 text-center text-sm font-semibold text-emerald-700">{row.present}</td>
+                                                <td className="px-5 py-4 text-center text-sm font-semibold text-amber-700">{row.late}</td>
+                                                <td className="px-5 py-4 text-center text-sm font-semibold text-rose-700">{row.absent}</td>
+                                                <td className="px-5 py-4"><span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClass(row.status)}`}>{statusLabel(row.status)}</span></td>
+                                                <td className="px-5 py-4 text-sm text-slate-600">{formatDateTime(row.uploadedAt)}</td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
-                    </aside>
+
+                        {!isLoading && filteredRows.length > 0 ? (
+                            <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                                <div>Page <span className="font-semibold text-slate-900">{currentPage}</span> of <span className="font-semibold text-slate-900">{totalPages}</span></div>
+                                <div className="flex items-center gap-2">
+                                    <button type="button" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={currentPage === 1} className="inline-flex h-10 items-center rounded-lg border border-slate-200 px-3 font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">Previous</button>
+                                    <button type="button" onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={currentPage === totalPages} className="inline-flex h-10 items-center rounded-lg border border-slate-200 px-3 font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">Next</button>
+                                </div>
+                            </div>
+                        ) : null}
+                    </div>
                 </section>
             </div>
         </main>
