@@ -16,8 +16,8 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Employees", href: "/hr/employeemanagement", icon: ClockIcon },
     { label: "Attendance", href: "/hr/attendancemanagement", icon: CalendarIcon },
     { label: "Documents", href: "/hr/documents", icon: DocumentIcon },
-    { label: "Leave Overview", href: "/hr/leave-overview", icon: CalendarIcon },
-    { label: "Points Config", href: "/hr/points-config", icon: NoteIcon },
+    { label: "Leave Request", href: "/hr/leave-overview", icon: CalendarIcon },
+    { label: "Configuration", href: "/hr/configuration", icon: NoteIcon },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -61,3 +61,4 @@ export function HRSideNav() {
         </aside>
     );
 }
+
