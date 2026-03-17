@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
 import { LeaderboardCard } from "@/components/dashboard/home/Leaderboard";
 import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
