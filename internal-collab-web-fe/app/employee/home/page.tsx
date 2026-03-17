@@ -5,7 +5,6 @@ import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
 import { LeaderboardCard } from "@/components/dashboard/home/Leaderboard";
 import { TaskList } from "@/components/dashboard/home/TaskList";
 import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
-import { leaderboard } from "../_data";
 
 export default function EmployeeDashboardPage() {
     const [viewMode, setViewMode] = useState<"monthly" | "weekly">("monthly");
@@ -39,7 +38,7 @@ export default function EmployeeDashboardPage() {
                 </section>
 
                 <aside className="flex w-full max-w-sm flex-col gap-6">
-                    <LeaderboardCard entries={leaderboard} />
+                    <LeaderboardCard />
                 </aside>
             </div>
         </main>

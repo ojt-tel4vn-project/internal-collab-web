@@ -129,3 +129,37 @@ export interface DepartmentOption {
     id: string;
     name: string;
 }
+
+export type TimeFilter = "month" | "quarter" | "year" | "all";
+
+export interface TimeFilterMeta {
+    id: TimeFilter;
+    label: string;
+    summary: string;
+}
+
+export interface PointBalanceData {
+    currentPoints: number;
+    employeeId: string;
+    initialPoints: number;
+    year: number;
+}
+
+export interface LeaderboardEntry {
+    employeeId: string;
+    fullName: string;
+    total: number;
+}
+
+export interface LeaderboardFilters {
+    departmentId: string;
+    timeFilter: TimeFilter;
+    limit?: number;
+}
+
+export const timeFilters: TimeFilterMeta[] = [
+    { id: "month", label: "This Month", summary: "Showing stickers received in the current month." },
+    { id: "quarter", label: "This Quarter", summary: "Showing stickers received in the current quarter." },
+    { id: "year", label: "This Year", summary: "Showing stickers received in the current year." },
+    { id: "all", label: "All Time", summary: "Showing all stickers received so far." },
+];

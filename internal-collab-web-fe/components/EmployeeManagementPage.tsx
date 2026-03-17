@@ -505,7 +505,7 @@ export default function EmployeeManagementPage() {
 
     const loadDepartments = useCallback(async () => {
         try {
-            const response = await fetch("/api/employee?view=hr-departments", {
+            const response = await fetch("/api/employee?view=departments", {
                 cache: "no-store",
             });
 

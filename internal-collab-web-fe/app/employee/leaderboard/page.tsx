@@ -1,132 +1,638 @@
+"use client";
+
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
+import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
+import { LeaderboardResults } from "@/components/leaderboard/LeaderboardResults";
+import { PointsBalanceCard } from "@/components/leaderboard/PointsBalanceCard";
+import { SendStickerCard } from "@/components/leaderboard/SendStickerCard";
+import type {
+    DepartmentOption,
+    LeaderboardEntry,
+    LeaderboardFilters,
+    PointBalanceData,
+} from "@/types/employee";
+import {
+    DepartmentsResponse,
+    buildLeaderboardSearchParams,
+    getErrorMessage,
+    getTimeFilterMeta,
+    isAbortError,
+    LeaderboardResponse,
+    normalizeDepartments,
+    normalizeLeaderboard,
+    normalizePointBalance,
+    PointBalanceResponse,
+} from "./data";
 
-const top3 = [
-    { name: "Maria G.", points: "850 pts", rank: 2, color: "bg-slate-200", badge: "🥈" },
-    { name: "David K.", points: "1,240 pts", rank: 1, color: "bg-amber-400", badge: "🥇" },
-    { name: "James L.", points: "720 pts", rank: 3, color: "bg-orange-300", badge: "🥉" },
-];
+const DEFAULT_LEADERBOARD_LIMIT = 10;
+const DEFAULT_RECEIVER_LIMIT = 50;
+const LAST_STICKER_TYPE_STORAGE_KEY = "employee.lastStickerTypeId";
 
-const rows = [
-    { rank: 4, name: "Elena R.", stickers: "🦉 12", points: 650 },
-    { rank: 5, name: "Marcus W.", stickers: "🔮 10", points: 580 },
-    { rank: 6, name: "Sophie L.", stickers: "🪴 9", points: 420 },
-    { rank: 7, name: "Alex Johnson (You)", stickers: "🫧 8", points: 350, highlight: true },
-    { rank: 8, name: "Daniel C.", stickers: "💎 6", points: 310 },
-    { rank: 9, name: "Aisha K.", stickers: "🏆 5", points: 290 },
-    { rank: 10, name: "Ben T.", stickers: "🎖️ 4", points: 245 },
-];
+type RemoteState<T> = {
+    data: T;
+    error: string | null;
+    loading: boolean;
+};
 
-const stickerTypes = [
-    { label: "Top Performer", icon: "🏆" },
-    { label: "Problem Solver", icon: "🧩" },
-    { label: "Team Player", icon: "🤝" },
-    { label: "Fast Delivery", icon: "⚡" },
-];
+type SendFormState = {
+    message: string;
+    receiverId: string;
+    receiverName: string;
+    stickerTypeId: string;
+};
+
+type SendState = {
+    error: string | null;
+    loading: boolean;
+    success: string | null;
+};
+
+async function readPointBalance(signal?: AbortSignal) {
+    const response = await fetch("/api/employee/stickers/balance", {
+        cache: "no-store",
+        signal,
+    });
+
+    if (!response.ok) {
+        const raw = await response.text().catch(() => "");
+        throw new Error(getErrorMessage(raw, "Unable to load point balance."));
+    }
+
+    return normalizePointBalance((await response.json()) as PointBalanceResponse);
+}
+
+async function readDepartments(signal?: AbortSignal) {
+    const response = await fetch("/api/employee?view=departments", {
+        cache: "no-store",
+        signal,
+    });
+
+    if (!response.ok) {
+        const raw = await response.text().catch(() => "");
+        throw new Error(getErrorMessage(raw, "Department filter is temporarily unavailable."));
+    }
+
+    return normalizeDepartments((await response.json()) as DepartmentsResponse);
+}
+
+async function readLeaderboard(filters: LeaderboardFilters, signal?: AbortSignal) {
+    const params = buildLeaderboardSearchParams(filters);
+    const response = await fetch(`/api/employee/stickers/leaderboard?${params.toString()}`, {
+        cache: "no-store",
+        signal,
+    });
+
+    if (!response.ok) {
+        const raw = await response.text().catch(() => "");
+        throw new Error(getErrorMessage(raw, "Unable to load leaderboard."));
+    }
+
+    return normalizeLeaderboard((await response.json()) as LeaderboardResponse);
+}
+
+async function readReceiverSuggestions(signal?: AbortSignal) {
+    return readLeaderboard(
+        {
+            departmentId: "all",
+            limit: DEFAULT_RECEIVER_LIMIT,
+            timeFilter: "all",
+        },
+        signal,
+    );
+}
+
+async function sendSticker(form: SendFormState) {
+    const response = await fetch("/api/employee/stickers/send", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            message: form.message.trim(),
+            receiver_id: form.receiverId.trim(),
+            sticker_type_id: form.stickerTypeId.trim(),
+        }),
+    });
+
+    if (!response.ok) {
+        const raw = await response.text().catch(() => "");
+        throw new Error(getErrorMessage(raw, "Unable to send sticker."));
+    }
+}
+
+function getBalanceError(error: unknown) {
+    return error instanceof Error ? error.message : "Unable to load point balance.";
+}
+
+function getLeaderboardError(error: unknown) {
+    return error instanceof Error ? error.message : "Unable to load leaderboard.";
+}
+
+function getDepartmentError(error: unknown) {
+    return error instanceof Error ? error.message : "Department filter is temporarily unavailable.";
+}
+
+function getSendAvailabilityLabel(hasAvailablePoints: boolean) {
+    return hasAvailablePoints ? "Ready" : "No points";
+}
 
 export default function LeaderboardPage() {
+    const [balanceState, setBalanceState] = useState<RemoteState<PointBalanceData | null>>({
+        data: null,
+        error: null,
+        loading: true,
+    });
+    const [departmentsState, setDepartmentsState] = useState<{
+        data: DepartmentOption[];
+        error: string | null;
+    }>({
+        data: [],
+        error: null,
+    });
+    const [filters, setFilters] = useState<LeaderboardFilters>({
+        departmentId: "all",
+        limit: DEFAULT_LEADERBOARD_LIMIT,
+        timeFilter: "month",
+    });
+    const [leaderboardState, setLeaderboardState] = useState<RemoteState<LeaderboardEntry[]>>({
+        data: [],
+        error: null,
+        loading: true,
+    });
+    const [receiverState, setReceiverState] = useState<RemoteState<LeaderboardEntry[]>>({
+        data: [],
+        error: null,
+        loading: true,
+    });
+    const [form, setForm] = useState<SendFormState>(() => {
+        const savedStickerTypeId =
+            typeof window === "undefined" ? "" : window.localStorage.getItem(LAST_STICKER_TYPE_STORAGE_KEY) ?? "";
+
+        return {
+            message: "",
+            receiverId: "",
+            receiverName: "",
+            stickerTypeId: savedStickerTypeId,
+        };
+    });
+    const [sendState, setSendState] = useState<SendState>({
+        error: null,
+        loading: false,
+        success: null,
+    });
+    const [isReceiverMenuOpen, setIsReceiverMenuOpen] = useState(false);
+
+    useEffect(() => {
+        try {
+            const nextValue = form.stickerTypeId.trim();
+            if (nextValue) {
+                window.localStorage.setItem(LAST_STICKER_TYPE_STORAGE_KEY, nextValue);
+                return;
+            }
+
+            window.localStorage.removeItem(LAST_STICKER_TYPE_STORAGE_KEY);
+        } catch {
+            return;
+        }
+    }, [form.stickerTypeId]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const balanceController = new AbortController();
+        const departmentsController = new AbortController();
+        const receiverController = new AbortController();
+
+        void readPointBalance(balanceController.signal)
+            .then((balance) => {
+                if (cancelled) {
+                    return;
+                }
+
+                setBalanceState({
+                    data: balance,
+                    error: null,
+                    loading: false,
+                });
+            })
+            .catch((error) => {
+                if (cancelled || isAbortError(error)) {
+                    return;
+                }
+
+                setBalanceState({
+                    data: null,
+                    error: getBalanceError(error),
+                    loading: false,
+                });
+            });
+
+        void readDepartments(departmentsController.signal)
+            .then((departments) => {
+                if (cancelled) {
+                    return;
+                }
+
+                setDepartmentsState({
+                    data: departments,
+                    error: null,
+                });
+                setFilters((current) => {
+                    const stillExists = current.departmentId === "all" || departments.some((item) => item.id === current.departmentId);
+                    return stillExists ? current : { ...current, departmentId: "all" };
+                });
+            })
+            .catch((error) => {
+                if (cancelled || isAbortError(error)) {
+                    return;
+                }
+
+                setDepartmentsState({
+                    data: [],
+                    error: getDepartmentError(error),
+                });
+                setFilters((current) => (current.departmentId === "all" ? current : { ...current, departmentId: "all" }));
+            });
+
+        void readReceiverSuggestions(receiverController.signal)
+            .then((entries) => {
+                if (cancelled) {
+                    return;
+                }
+
+                setReceiverState({
+                    data: entries,
+                    error: null,
+                    loading: false,
+                });
+            })
+            .catch((error) => {
+                if (cancelled || isAbortError(error)) {
+                    return;
+                }
+
+                setReceiverState({
+                    data: [],
+                    error: getLeaderboardError(error),
+                    loading: false,
+                });
+            });
+
+        return () => {
+            cancelled = true;
+            balanceController.abort();
+            departmentsController.abort();
+            receiverController.abort();
+        };
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        const controller = new AbortController();
+
+        void readLeaderboard(filters, controller.signal)
+            .then((entries) => {
+                if (cancelled) {
+                    return;
+                }
+
+                setLeaderboardState({
+                    data: entries,
+                    error: null,
+                    loading: false,
+                });
+            })
+            .catch((error) => {
+                if (cancelled || isAbortError(error)) {
+                    return;
+                }
+
+                setLeaderboardState({
+                    data: [],
+                    error: getLeaderboardError(error),
+                    loading: false,
+                });
+            });
+
+        return () => {
+            cancelled = true;
+            controller.abort();
+        };
+    }, [filters]);
+
+    const filterMeta = getTimeFilterMeta(filters.timeFilter);
+    const currentBalance = balanceState.data?.currentPoints ?? 0;
+    const initialBalance = balanceState.data?.initialPoints ?? 0;
+    const currentEmployeeId = balanceState.data?.employeeId ?? "";
+    const normalizedReceiverId = form.receiverId.trim();
+    const normalizedReceiverName = form.receiverName.trim().toLowerCase();
+    const normalizedStickerTypeId = form.stickerTypeId.trim();
+    const hasAvailablePoints = currentBalance > 0;
+    const balanceProgress =
+        balanceState.loading
+            ? 0
+            : initialBalance > 0
+                ? Math.min(Math.max((currentBalance / initialBalance) * 100, 0), 100)
+                : currentBalance > 0
+                    ? 100
+                    : 0;
+    const isSelfReceiver = Boolean(currentEmployeeId) && normalizedReceiverId === currentEmployeeId;
+    const canSend = Boolean(normalizedReceiverId) && Boolean(normalizedStickerTypeId) && hasAvailablePoints && !isSelfReceiver;
+    const rankedEntries = useMemo(
+        () =>
+            [...leaderboardState.data].sort(
+                (left, right) => right.total - left.total || left.fullName.localeCompare(right.fullName),
+            ),
+        [leaderboardState.data],
+    );
+    const receiverEntries = useMemo(
+        () =>
+            [...receiverState.data]
+                .filter((entry) => entry.employeeId !== currentEmployeeId)
+                .sort((left, right) => left.fullName.localeCompare(right.fullName)),
+        [currentEmployeeId, receiverState.data],
+    );
+    const topThree = rankedEntries.slice(0, 3);
+    const selectedDepartment =
+        filters.departmentId === "all"
+            ? "All Departments"
+            : departmentsState.data.find((department) => department.id === filters.departmentId)?.name ?? "Selected Department";
+    const receiverMatches = useMemo(() => {
+        const query = normalizedReceiverName;
+        const filtered = query
+            ? receiverEntries.filter((entry) => entry.fullName.trim().toLowerCase().includes(query))
+            : receiverEntries;
+
+        return filtered.slice(0, 8);
+    }, [normalizedReceiverName, receiverEntries]);
+    const selectedReceiver =
+        receiverEntries.find((entry) => entry.employeeId === normalizedReceiverId) ??
+        rankedEntries.find((entry) => entry.employeeId === normalizedReceiverId) ??
+        null;
+    const isReceiverPendingSelection = Boolean(form.receiverName.trim()) && !normalizedReceiverId;
+
+    function updateFormField(field: keyof SendFormState, value: string) {
+        setForm((current) => {
+            if (field === "receiverName") {
+                return {
+                    ...current,
+                    receiverId: "",
+                    receiverName: value,
+                };
+            }
+
+            return {
+                ...current,
+                [field]: value,
+            };
+        });
+        setSendState((current) =>
+            current.error || current.success
+                ? {
+                    ...current,
+                    error: null,
+                    success: null,
+                }
+                : current,
+        );
+    }
+
+    function handleReceiverPick(receiverId: string) {
+        const selectedEntry =
+            receiverEntries.find((entry) => entry.employeeId === receiverId) ??
+            rankedEntries.find((entry) => entry.employeeId === receiverId);
+
+        setForm((current) => ({
+            ...current,
+            receiverId,
+            receiverName: selectedEntry?.fullName ?? "",
+        }));
+        setIsReceiverMenuOpen(false);
+        setSendState((current) =>
+            current.error || current.success
+                ? {
+                    ...current,
+                    error: null,
+                    success: null,
+                }
+                : current,
+        );
+    }
+
+    async function refreshAfterSend() {
+        setBalanceState((current) => ({
+            ...current,
+            error: null,
+            loading: true,
+        }));
+        setLeaderboardState((current) => ({
+            ...current,
+            error: null,
+            loading: true,
+        }));
+
+        const [balanceResult, leaderboardResult, receiverResult] = await Promise.allSettled([
+            readPointBalance(),
+            readLeaderboard(filters),
+            readReceiverSuggestions(),
+        ]);
+
+        if (balanceResult.status === "fulfilled") {
+            setBalanceState({
+                data: balanceResult.value,
+                error: null,
+                loading: false,
+            });
+        } else if (!isAbortError(balanceResult.reason)) {
+            setBalanceState((current) => ({
+                ...current,
+                error: getBalanceError(balanceResult.reason),
+                loading: false,
+            }));
+        }
+
+        if (leaderboardResult.status === "fulfilled") {
+            setLeaderboardState({
+                data: leaderboardResult.value,
+                error: null,
+                loading: false,
+            });
+        } else if (!isAbortError(leaderboardResult.reason)) {
+            setLeaderboardState((current) => ({
+                ...current,
+                error: getLeaderboardError(leaderboardResult.reason),
+                loading: false,
+            }));
+        }
+
+        if (receiverResult.status === "fulfilled") {
+            setReceiverState((current) => ({
+                ...current,
+                data: receiverResult.value,
+                error: null,
+                loading: false,
+            }));
+        } else if (!isAbortError(receiverResult.reason)) {
+            setReceiverState((current) => ({
+                ...current,
+                error: getLeaderboardError(receiverResult.reason),
+                loading: false,
+            }));
+        }
+    }
+
+    async function handleSendSticker(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        if (sendState.loading) {
+            return;
+        }
+
+        if (!normalizedReceiverId || !normalizedStickerTypeId) {
+            setSendState({
+                error: !normalizedReceiverId ? "Please choose a receiver from the suggestions." : "Sticker type ID is required.",
+                loading: false,
+                success: null,
+            });
+            return;
+        }
+
+        if (!hasAvailablePoints) {
+            setSendState({
+                error: "You need remaining points to send a sticker.",
+                loading: false,
+                success: null,
+            });
+            return;
+        }
+
+        if (isSelfReceiver) {
+            setSendState({
+                error: "You cannot send a sticker to yourself.",
+                loading: false,
+                success: null,
+            });
+            return;
+        }
+
+        setSendState({
+            error: null,
+            loading: true,
+            success: null,
+        });
+
+        try {
+            await sendSticker(form);
+            setForm((current) => ({
+                ...current,
+                message: "",
+                receiverId: "",
+                receiverName: "",
+            }));
+            setSendState({
+                error: null,
+                loading: false,
+                success: "Sticker sent successfully.",
+            });
+            void refreshAfterSend();
+        } catch (error) {
+            setSendState({
+                error: error instanceof Error ? error.message : "Unable to send sticker.",
+                loading: false,
+                success: null,
+            });
+        }
+    }
+
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <div className="flex w-[260px] flex-col gap-4">
-                    <EmployeeSideNav />
-
-                    <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-sm">
-                        <div className="flex items-center justify-between text-[11px] font-semibold uppercase text-slate-500">
-                            <span>My Balance</span>
-                            <span className="text-slate-400">✺</span>
-                        </div>
-                        <div className="mt-2 text-3xl font-extrabold text-slate-900">350</div>
-                        <p className="text-sm font-semibold text-slate-500">pts available</p>
-                        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
-                            <span>Next tier: 500 pts</span>
-                            <span className="text-blue-600">Resets in 12 days</span>
-                        </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm space-y-3">
-                        <p className="text-sm font-semibold text-slate-900">Send a Sticker</p>
-                        <input
-                            placeholder="Search colleague..."
-                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-600 outline-none focus:border-blue-500"
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row lg:items-start lg:py-8">
+                <aside className="w-full lg:sticky lg:top-8 lg:w-[19.5rem] lg:flex-none">
+                    <div className="space-y-4">
+                        <EmployeeSideNav />
+                        <PointsBalanceCard
+                            availabilityLabel={getSendAvailabilityLabel(hasAvailablePoints)}
+                            balanceError={balanceState.error}
+                            balanceProgress={balanceProgress}
+                            currentBalance={currentBalance}
+                            hasAvailablePoints={hasAvailablePoints}
+                            loading={balanceState.loading}
+                            year={balanceState.data?.year ?? new Date().getFullYear()}
                         />
-                        <div className="grid grid-cols-2 gap-3">
-                            {stickerTypes.map((s) => (
-                                <button
-                                    key={s.label}
-                                    className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:border-blue-200"
-                                >
-                                    <span>{s.icon}</span>
-                                    <span className="text-left">{s.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                        <textarea
-                            placeholder="Add a nice message..."
-                            className="min-h-[90px] w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 outline-none focus:border-blue-500"
+
+                        <SendStickerCard
+                            canSend={canSend}
+                            form={form}
+                            isReceiverMenuOpen={isReceiverMenuOpen}
+                            isReceiverPendingSelection={isReceiverPendingSelection}
+                            isSelfReceiver={isSelfReceiver}
+                            onMessageChange={(value) => updateFormField("message", value)}
+                            onReceiverBlur={() => {
+                                window.setTimeout(() => setIsReceiverMenuOpen(false), 120);
+                            }}
+                            onReceiverFocus={() => setIsReceiverMenuOpen(true)}
+                            onReceiverNameChange={(value) => updateFormField("receiverName", value)}
+                            onReceiverPick={handleReceiverPick}
+                            onStickerTypeChange={(value) => updateFormField("stickerTypeId", value)}
+                            onSubmit={handleSendSticker}
+                            receiverError={receiverState.error}
+                            receiverLoading={receiverState.loading}
+                            receiverMatches={receiverMatches}
+                            selectedReceiverName={selectedReceiver?.fullName ?? null}
+                            sendState={sendState}
                         />
-                        <button className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow hover:bg-blue-700">
-                            Send Sticker ➤
-                        </button>
                     </div>
-                </div>
+                </aside>
+ 
+                <section className="min-w-0 flex-1 space-y-6">
+                    <LeaderboardOverview
+                        departmentId={filters.departmentId}
+                        departments={departmentsState.data}
+                        departmentsError={departmentsState.error}
+                        filterLabel={filterMeta.label}
+                        filterSummary={filterMeta.summary}
+                        onDepartmentChange={(departmentId) => {
+                            if (filters.departmentId === departmentId) {
+                                return;
+                            }
 
-                <section className="flex-1 space-y-6">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <h1 className="text-3xl font-bold">Leaderboard</h1>
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">This Month</p>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs font-semibold">
-                            <button className="rounded-full bg-blue-600 px-3 py-1 text-white shadow">This Month</button>
-                            <button className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">This Year</button>
-                            <button className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">All Depts</button>
-                        </div>
-                    </div>
+                            setLeaderboardState((current) => ({
+                                ...current,
+                                error: null,
+                                loading: true,
+                            }));
+                            setFilters((current) => ({
+                                ...current,
+                                departmentId,
+                            }));
+                        }}
+                        onTimeFilterChange={(timeFilter) => {
+                            if (filters.timeFilter === timeFilter) {
+                                return;
+                            }
 
-                    <div className="rounded-2xl border border-slate-100 bg-white px-5 py-5 shadow-sm space-y-4">
-                        <div className="flex flex-col items-center gap-4 rounded-2xl bg-gradient-to-b from-slate-50 to-white py-6">
-                            <div className="flex items-end gap-6">
-                                {top3.map((p, idx) => (
-                                    <div key={p.rank} className="flex flex-col items-center gap-2">
-                                        <div className={`flex h-16 w-16 items-center justify-center rounded-full border-4 border-white shadow ${p.color}`}>
-                                            <span className="text-lg">{p.badge}</span>
-                                        </div>
-                                        <div className="flex flex-col items-center leading-tight">
-                                            <p className="text-sm font-semibold text-slate-900">{p.name}</p>
-                                            <p className="text-[11px] font-semibold text-blue-600">{p.points}</p>
-                                        </div>
-                                        <div className={`h-16 w-20 rounded-xl ${idx === 1 ? "bg-amber-400" : idx === 0 ? "bg-slate-300" : "bg-orange-300"}`} />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                            setLeaderboardState((current) => ({
+                                ...current,
+                                error: null,
+                                loading: true,
+                            }));
+                            setFilters((current) => ({ ...current, timeFilter }));
+                        }}
+                        selectedDepartment={selectedDepartment}
+                        selectedTimeFilter={filters.timeFilter}
+                        visibleRanks={rankedEntries.length}
+                    />
 
-                        <div className="rounded-2xl border border-slate-100">
-                            <div className="grid grid-cols-[60px_1fr_120px_120px] items-center border-b border-slate-100 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                                <span>Rank</span>
-                                <span>Employee</span>
-                                <span className="text-center">Stickers</span>
-                                <span className="text-right">Points</span>
-                            </div>
-                            {rows.map((row, idx) => (
-                                <div
-                                    key={row.rank}
-                                    className={`grid grid-cols-[60px_1fr_120px_120px] items-center px-4 py-3 text-sm font-semibold ${row.highlight ? "bg-blue-50" : ""
-                                        } ${idx !== rows.length - 1 ? "border-b border-slate-100" : ""}`}
-                                >
-                                    <span className="text-slate-500">{row.rank}</span>
-                                    <div className="flex items-center gap-3">
-                                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-slate-200 to-slate-400 text-xs font-bold text-white">
-                                            {row.rank}
-                                        </span>
-                                        <span className="text-slate-800">{row.name}</span>
-                                    </div>
-                                    <span className="text-center text-slate-600">{row.stickers}</span>
-                                    <span className="text-right text-slate-800">{row.points}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <LeaderboardResults
+                        currentEmployeeId={currentEmployeeId}
+                        error={leaderboardState.error}
+                        loading={leaderboardState.loading}
+                        normalizedReceiverId={normalizedReceiverId}
+                        normalizedReceiverName={normalizedReceiverName}
+                        onReceiverPick={handleReceiverPick}
+                        rankedEntries={rankedEntries}
+                        topThree={topThree}
+                    />
                 </section>
             </div>
         </main>
