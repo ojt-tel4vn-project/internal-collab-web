@@ -32,6 +32,7 @@ export function EmployeeSideNav() {
                             <li key={item.href}>
                                 <Link
                                     href={item.href}
+                                    prefetch={false}
                                     aria-current={active ? "page" : undefined}
                                     className={`flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${base}`}
                                 >

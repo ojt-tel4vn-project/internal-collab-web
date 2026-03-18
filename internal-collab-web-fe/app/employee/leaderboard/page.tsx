@@ -11,6 +11,7 @@ import type {
     LeaderboardEntry,
     LeaderboardFilters,
     PointBalanceData,
+    StickerTypeOption,
 } from "@/types/employee";
 import {
     DepartmentsResponse,
@@ -22,7 +23,9 @@ import {
     normalizeDepartments,
     normalizeLeaderboard,
     normalizePointBalance,
+    normalizeStickerTypes,
     PointBalanceResponse,
+    StickerTypesResponse,
 } from "./data";
 
 const DEFAULT_LEADERBOARD_LIMIT = 10;
@@ -102,6 +105,20 @@ async function readReceiverSuggestions(signal?: AbortSignal) {
     );
 }
 
+async function readStickerTypes(signal?: AbortSignal) {
+    const response = await fetch("/api/employee/stickers/types", {
+        cache: "no-store",
+        signal,
+    });
+
+    if (!response.ok) {
+        const raw = await response.text().catch(() => "");
+        throw new Error(getErrorMessage(raw, "Unable to load sticker options."));
+    }
+
+    return normalizeStickerTypes((await response.json()) as StickerTypesResponse);
+}
+
 async function sendSticker(form: SendFormState) {
     const response = await fetch("/api/employee/stickers/send", {
         method: "POST",
@@ -131,6 +148,10 @@ function getLeaderboardError(error: unknown) {
 
 function getDepartmentError(error: unknown) {
     return error instanceof Error ? error.message : "Department filter is temporarily unavailable.";
+}
+
+function getStickerTypeError(error: unknown) {
+    return error instanceof Error ? error.message : "Unable to load sticker options.";
 }
 
 function getSendAvailabilityLabel(hasAvailablePoints: boolean) {
@@ -165,6 +186,11 @@ export default function LeaderboardPage() {
         error: null,
         loading: true,
     });
+    const [stickerTypesState, setStickerTypesState] = useState<RemoteState<StickerTypeOption[]>>({
+        data: [],
+        error: null,
+        loading: true,
+    });
     const [form, setForm] = useState<SendFormState>(() => {
         const savedStickerTypeId =
             typeof window === "undefined" ? "" : window.localStorage.getItem(LAST_STICKER_TYPE_STORAGE_KEY) ?? "";
@@ -182,10 +208,16 @@ export default function LeaderboardPage() {
         success: null,
     });
     const [isReceiverMenuOpen, setIsReceiverMenuOpen] = useState(false);
+    const persistedStickerTypeId =
+        stickerTypesState.data.find((item) => item.id === form.stickerTypeId.trim())?.id ?? "";
 
     useEffect(() => {
+        if (stickerTypesState.loading) {
+            return;
+        }
+
         try {
-            const nextValue = form.stickerTypeId.trim();
+            const nextValue = persistedStickerTypeId;
             if (nextValue) {
                 window.localStorage.setItem(LAST_STICKER_TYPE_STORAGE_KEY, nextValue);
                 return;
@@ -195,13 +227,14 @@ export default function LeaderboardPage() {
         } catch {
             return;
         }
-    }, [form.stickerTypeId]);
+    }, [persistedStickerTypeId, stickerTypesState.loading]);
 
     useEffect(() => {
         let cancelled = false;
         const balanceController = new AbortController();
         const departmentsController = new AbortController();
         const receiverController = new AbortController();
+        const stickerTypesController = new AbortController();
 
         void readPointBalance(balanceController.signal)
             .then((balance) => {
@@ -278,11 +311,36 @@ export default function LeaderboardPage() {
                 });
             });
 
+        void readStickerTypes(stickerTypesController.signal)
+            .then((types) => {
+                if (cancelled) {
+                    return;
+                }
+
+                setStickerTypesState({
+                    data: types,
+                    error: null,
+                    loading: false,
+                });
+            })
+            .catch((error) => {
+                if (cancelled || isAbortError(error)) {
+                    return;
+                }
+
+                setStickerTypesState({
+                    data: [],
+                    error: getStickerTypeError(error),
+                    loading: false,
+                });
+            });
+
         return () => {
             cancelled = true;
             balanceController.abort();
             departmentsController.abort();
             receiverController.abort();
+            stickerTypesController.abort();
         };
     }, []);
 
@@ -338,7 +396,6 @@ export default function LeaderboardPage() {
                     ? 100
                     : 0;
     const isSelfReceiver = Boolean(currentEmployeeId) && normalizedReceiverId === currentEmployeeId;
-    const canSend = Boolean(normalizedReceiverId) && Boolean(normalizedStickerTypeId) && hasAvailablePoints && !isSelfReceiver;
     const rankedEntries = useMemo(
         () =>
             [...leaderboardState.data].sort(
@@ -370,7 +427,11 @@ export default function LeaderboardPage() {
         receiverEntries.find((entry) => entry.employeeId === normalizedReceiverId) ??
         rankedEntries.find((entry) => entry.employeeId === normalizedReceiverId) ??
         null;
+    const selectedStickerType =
+        stickerTypesState.data.find((item) => item.id === persistedStickerTypeId) ?? null;
+    const normalizedStickerTypeId = selectedStickerType?.id ?? "";
     const isReceiverPendingSelection = Boolean(form.receiverName.trim()) && !normalizedReceiverId;
+    const canSend = Boolean(normalizedReceiverId) && Boolean(selectedStickerType) && hasAvailablePoints && !isSelfReceiver;
 
     function updateFormField(field: keyof SendFormState, value: string) {
         setForm((current) => {
@@ -489,9 +550,9 @@ export default function LeaderboardPage() {
             return;
         }
 
-        if (!normalizedReceiverId || !normalizedStickerTypeId) {
+        if (!normalizedReceiverId || !selectedStickerType) {
             setSendState({
-                error: !normalizedReceiverId ? "Please choose a receiver from the suggestions." : "Sticker type ID is required.",
+                error: !normalizedReceiverId ? "Please choose a receiver from the suggestions." : "Please choose a sticker.",
                 loading: false,
                 success: null,
             });
@@ -523,7 +584,10 @@ export default function LeaderboardPage() {
         });
 
         try {
-            await sendSticker(form);
+            await sendSticker({
+                ...form,
+                stickerTypeId: normalizedStickerTypeId,
+            });
             setForm((current) => ({
                 ...current,
                 message: "",
@@ -563,7 +627,10 @@ export default function LeaderboardPage() {
 
                         <SendStickerCard
                             canSend={canSend}
-                            form={form}
+                            form={{
+                                ...form,
+                                stickerTypeId: normalizedStickerTypeId,
+                            }}
                             isReceiverMenuOpen={isReceiverMenuOpen}
                             isReceiverPendingSelection={isReceiverPendingSelection}
                             isSelfReceiver={isSelfReceiver}
@@ -580,7 +647,11 @@ export default function LeaderboardPage() {
                             receiverLoading={receiverState.loading}
                             receiverMatches={receiverMatches}
                             selectedReceiverName={selectedReceiver?.fullName ?? null}
+                            selectedStickerType={selectedStickerType}
                             sendState={sendState}
+                            stickerTypeError={stickerTypesState.error}
+                            stickerTypeLoading={stickerTypesState.loading}
+                            stickerTypes={stickerTypesState.data}
                         />
                     </div>
                 </aside>

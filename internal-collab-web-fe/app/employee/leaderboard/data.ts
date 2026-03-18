@@ -2,6 +2,7 @@ import type {
     DepartmentOption,
     LeaderboardFilters,
     PointBalanceData,
+    StickerTypeOption,
     TimeFilter,
 } from "@/types/employee";
 import { parseApiErrorMessage } from "@/lib/api/errors";
@@ -45,6 +46,24 @@ export type DepartmentsResponse = ApiEnvelope<DepartmentApiItem[]>;
 
 export const asNumber = asFiniteNumber;
 export const asText = (value: unknown, fallback = "") => asTrimmedString(value, fallback);
+
+export function asBoolean(value: unknown, fallback = false) {
+    if (typeof value === "boolean") {
+        return value;
+    }
+
+    if (typeof value === "string") {
+        if (value === "true") {
+            return true;
+        }
+
+        if (value === "false") {
+            return false;
+        }
+    }
+
+    return fallback;
+}
 
 function extractEnvelopeData<T>(payload: ApiEnvelope<T> | null | undefined) {
     if (!payload) {
@@ -113,6 +132,28 @@ export function normalizeDepartments(payload: DepartmentsResponse) {
     }
 
     return Array.from(uniqueDepartments.values());
+}
+
+export function normalizeStickerTypes(payload: StickerTypesResponse) {
+    const data = extractEnvelopeData(payload);
+    if (!Array.isArray(data)) {
+        return [];
+    }
+
+    return data
+        .map((item) => ({
+            category: asText(item.category),
+            description: asText(item.description),
+            displayOrder: asNumber(item.display_order),
+            iconUrl: asText(item.icon_url),
+            id: asText(item.sticker_type_id),
+            isActive: asBoolean(item.is_active, true),
+            name: asText(item.name, "Untitled sticker"),
+            pointCost: Math.max(asNumber(item.point_cost), 0),
+        }))
+        .filter((item) => item.id)
+        .sort((left, right) => left.displayOrder - right.displayOrder || left.name.localeCompare(right.name))
+        .filter((item) => item.isActive) satisfies StickerTypeOption[];
 }
 
 export function buildLeaderboardSearchParams(filters: LeaderboardFilters) {
