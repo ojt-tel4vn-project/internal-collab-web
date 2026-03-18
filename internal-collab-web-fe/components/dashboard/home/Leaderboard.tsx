@@ -103,10 +103,16 @@ function getCurrentMonthRange() {
     const now = new Date();
     const year = now.getFullYear();
     const monthIndex = now.getMonth();
+    const formatDateParam = (date: Date) => {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const dd = String(date.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    };
 
     return {
-        end: new Date(year, monthIndex + 1, 0, 23, 59, 59, 999).toISOString(),
-        start: new Date(year, monthIndex, 1).toISOString(),
+        end: formatDateParam(new Date(year, monthIndex + 1, 0, 23, 59, 59, 999)),
+        start: formatDateParam(new Date(year, monthIndex, 1)),
     };
 }
 
