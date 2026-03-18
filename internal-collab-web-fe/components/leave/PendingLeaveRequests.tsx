@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { parseApiErrorMessage } from "@/lib/api/errors";
 import type { LeaveStatusMeta } from "@/types/leave";
 
 type PendingLeaveRequestItem = {
@@ -20,17 +22,8 @@ type Props = {
     items: PendingLeaveRequestItem[];
 };
 
-function extractErrorMessage(raw: string, fallback: string) {
-    if (!raw) return fallback;
-    try {
-        const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string; error?: string };
-        return parsed.message || parsed.detail || parsed.title || parsed.error || fallback;
-    } catch {
-        return raw.slice(0, 200);
-    }
-}
-
 export function PendingLeaveRequests({ items }: Props) {
+    const router = useRouter();
     const [rows, setRows] = useState(items);
     const [busyId, setBusyId] = useState<string | null>(null);
     const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
@@ -50,22 +43,16 @@ export function PendingLeaveRequests({ items }: Props) {
         setError(null);
         try {
             const res = await fetch(`/api/employee/leave-requests/${encodeURIComponent(id)}`, { method: "DELETE" });
-            if (res.ok || res.status === 204) {
+            if (res.ok) {
                 setRows((prev) => prev.filter((request) => request.id !== id));
-                window.location.reload();
+                router.refresh();
                 return;
             }
 
-            if (!res.ok) {
-                const raw = await res.text();
-                throw new Error(extractErrorMessage(raw, "Unable to cancel leave request"));
-            }
+            const raw = await res.text();
+            throw new Error(parseApiErrorMessage(raw, "Unable to cancel leave request"));
         } catch (err) {
             const message = err instanceof Error ? err.message : "Unable to cancel leave request";
-            if (message.includes("204")) {
-                window.location.reload();
-                return;
-            }
             setError(message);
         } finally {
             setBusyId(null);

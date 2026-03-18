@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/dashboard/home/Icons";
 import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
+import { parseApiErrorMessage } from "@/lib/api/errors";
+import { asFiniteNumber, asString } from "@/lib/normalize";
 
 type AttendanceDayStatus = "present" | "absent" | "late" | "leave" | "unknown";
 
@@ -59,23 +61,10 @@ const weekdayFormatter = new Intl.DateTimeFormat("en-GB", { weekday: "long" });
 
 const monthLabelFormatter = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
 
-function asNumber(value: unknown, fallback = 0) {
-    if (typeof value === "number" && Number.isFinite(value)) return value;
-    if (typeof value === "string" && value.trim() !== "") {
-        const parsed = Number(value);
-        if (Number.isFinite(parsed)) return parsed;
-    }
-    return fallback;
-}
-
-function asText(value: unknown, fallback = "") {
-    return typeof value === "string" ? value : fallback;
-}
-
 function normalizeAttendance(item: AttendanceApiItem): AttendanceRecord | null {
-    const id = asText(item.id);
-    const month = asNumber(item.month);
-    const year = asNumber(item.year);
+    const id = asString(item.id);
+    const month = asFiniteNumber(item.month);
+    const year = asFiniteNumber(item.year);
     if (!id || !month || !year) return null;
 
     return {
@@ -83,21 +72,11 @@ function normalizeAttendance(item: AttendanceApiItem): AttendanceRecord | null {
         month,
         year,
         attendanceData: item.attendance_data ?? {},
-        totalDaysPresent: asNumber(item.total_days_present),
-        totalDaysAbsent: asNumber(item.total_days_absent),
-        totalDaysLate: asNumber(item.total_days_late),
-        status: asText(item.status, "pending"),
+        totalDaysPresent: asFiniteNumber(item.total_days_present),
+        totalDaysAbsent: asFiniteNumber(item.total_days_absent),
+        totalDaysLate: asFiniteNumber(item.total_days_late),
+        status: asString(item.status, "pending"),
     };
-}
-
-function getErrorMessage(raw: string, fallback: string) {
-    if (!raw) return fallback;
-    try {
-        const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string; error?: string };
-        return parsed.message || parsed.detail || parsed.title || parsed.error || fallback;
-    } catch {
-        return raw.slice(0, 200);
-    }
 }
 
 export default function AttendancePage() {
@@ -123,7 +102,7 @@ export default function AttendancePage() {
             const res = await fetch(`/api/employee/attendances?month=${month}&year=${year}`, { cache: "no-store" });
             if (!res.ok) {
                 const raw = await res.text().catch(() => "");
-                throw new Error(getErrorMessage(raw, "Unable to load attendance data."));
+                throw new Error(parseApiErrorMessage(raw, "Unable to load attendance data."));
             }
 
             const payload = (await res.json()) as AttendanceListResponse;
@@ -214,7 +193,7 @@ export default function AttendancePage() {
             });
             if (!res.ok) {
                 const raw = await res.text().catch(() => "");
-                throw new Error(getErrorMessage(raw, "Unable to confirm attendance."));
+                throw new Error(parseApiErrorMessage(raw, "Unable to confirm attendance."));
             }
             await loadAttendance();
             setActionMessage("Attendance confirmed.");
@@ -244,7 +223,7 @@ export default function AttendancePage() {
             });
             if (!res.ok) {
                 const raw = await res.text().catch(() => "");
-                throw new Error(getErrorMessage(raw, "Unable to submit comment."));
+                throw new Error(parseApiErrorMessage(raw, "Unable to submit comment."));
             }
             setActionMessage(dayNumber ? `Comment submitted for day ${dayNumber}.` : "Comment submitted.");
             setCommentDay(null);

@@ -6,6 +6,8 @@ import type {
     LeaveStatusMeta,
 } from "@/types/leave";
 import { buildApiUrl } from "@/lib/backend";
+import { parseApiErrorMessage } from "@/lib/api/errors";
+import { asFiniteNumber, asTrimmedString } from "@/lib/normalize";
 
 type ApiEnvelope = {
     data?: unknown;
@@ -92,15 +94,7 @@ async function fetchApiArray(backendPath: string, fallbackPath: string, errorLab
 
     if (!res.ok) {
         const raw = await res.text().catch(() => "");
-        let message = `Unable to load ${errorLabel} (HTTP ${res.status})`;
-        if (raw) {
-            try {
-                const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string; error?: string };
-                message = parsed.message || parsed.detail || parsed.title || parsed.error || message;
-            } catch {
-                message = raw.slice(0, 200);
-            }
-        }
+        const message = parseApiErrorMessage(raw, `Unable to load ${errorLabel} (HTTP ${res.status})`);
         throw new Error(message);
     }
 
@@ -110,22 +104,8 @@ async function fetchApiArray(backendPath: string, fallbackPath: string, errorLab
     return [];
 }
 
-function asNumber(value: unknown, fallback = 0) {
-    if (typeof value === "number" && Number.isFinite(value)) return value;
-    if (typeof value === "string" && value.trim() !== "") {
-        const parsed = Number(value);
-        if (Number.isFinite(parsed)) return parsed;
-    }
-    return fallback;
-}
-
-function asText(value: unknown, fallback = "") {
-    if (typeof value === "string") {
-        const trimmed = value.trim();
-        return trimmed || fallback;
-    }
-    return fallback;
-}
+const asNumber = asFiniteNumber;
+const asText = (value: unknown, fallback = "") => asTrimmedString(value, fallback, true);
 
 function normalizeQuota(input: unknown, index: number): LeaveQuota {
     if (!input || typeof input !== "object") {
@@ -177,8 +157,8 @@ function normalizeLeaveRequest(input: unknown, index: number): LeaveRequestItem 
         row.leave_type && typeof row.leave_type === "object"
             ? (row.leave_type as Record<string, unknown>)
             : row.leaveType && typeof row.leaveType === "object"
-              ? (row.leaveType as Record<string, unknown>)
-              : null;
+                ? (row.leaveType as Record<string, unknown>)
+                : null;
 
     const id = asText(row.id ?? row.ID, `leave-request-${index}`);
     const leaveTypeId = asText(row.leave_type_id ?? row.leaveTypeID ?? row.leaveTypeId ?? leaveTypeRaw?.id, "");
