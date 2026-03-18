@@ -48,7 +48,7 @@ export function LeaveHistoryPanel({
             <div className="mb-3 flex items-center justify-between text-sm font-semibold text-slate-900">
                 <span>Leave History</span>
                 {canViewAll && showViewAllLink ? (
-                    <Link href={viewAllHref} className="text-xs font-semibold text-blue-600">
+                    <Link href={viewAllHref} prefetch={false} className="text-xs font-semibold text-blue-600">
                         View All ({filteredItems.length})
                     </Link>
                 ) : (

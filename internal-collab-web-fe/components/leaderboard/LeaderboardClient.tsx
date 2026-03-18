@@ -15,6 +15,16 @@ type PointBalance = {
     current_points: number;
 };
 
+type StickerType = {
+    sticker_type_id: string;
+    name: string;
+    description?: string;
+    icon_url?: string;
+    point_cost: number;
+    display_order: number;
+    is_active: boolean;
+};
+
 type Props = {
     sideNav: React.ReactNode;
 };
@@ -28,6 +38,7 @@ const PODIUM_ORDER = [1, 0, 2];
 export function LeaderboardClient({ sideNav }: Props) {
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
     const [balance, setBalance] = useState<PointBalance | null>(null);
+    const [stickerTypes, setStickerTypes] = useState<StickerType[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -35,19 +46,34 @@ export function LeaderboardClient({ sideNav }: Props) {
         setLoading(true);
         setError(null);
         try {
-            const [lbRes, balRes] = await Promise.all([
+            const [lbRes, balRes, typesRes] = await Promise.all([
                 fetch("/api/stickers/leaderboard?limit=10"),
                 fetch("/api/stickers/balance"),
+                fetch("/api/stickers/types"),
             ]);
 
             if (!lbRes.ok) throw new Error("Failed to load leaderboard");
             if (!balRes.ok) throw new Error("Failed to load balance");
+            if (!typesRes.ok) throw new Error("Failed to load sticker types");
 
             const lbData = await lbRes.json();
             const balData = await balRes.json();
+            const typesData = await typesRes.json();
 
             setEntries(lbData.data ?? []);
             setBalance(balData.data ?? null);
+            setStickerTypes(
+                (Array.isArray(typesData.data) ? typesData.data : [])
+                    .filter((item: unknown): item is StickerType => {
+                        if (!item || typeof item !== "object") {
+                            return false;
+                        }
+
+                        const sticker = item as Partial<StickerType>;
+                        return Boolean(sticker.sticker_type_id) && sticker.is_active !== false;
+                    })
+                    .sort((left: StickerType, right: StickerType) => (left.display_order ?? 0) - (right.display_order ?? 0)),
+            );
         } catch (err) {
             setError(err instanceof Error ? err.message : "Something went wrong");
         } finally {
@@ -65,7 +91,7 @@ export function LeaderboardClient({ sideNav }: Props) {
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
             <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <div className="flex w-[260px] flex-col gap-4">
+                <div className="flex w-65 flex-col gap-4">
                     {sideNav}
 
                     {/* Balance card */}
@@ -95,9 +121,53 @@ export function LeaderboardClient({ sideNav }: Props) {
                     {/* Send Sticker panel */}
                     <div className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm space-y-3">
                         <p className="text-sm font-semibold text-slate-900">Send a Sticker</p>
-                        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-[12px] text-amber-700">
-                            Sticker types need to be configured by HR/Admin before sending. Contact your HR to set up sticker types.
-                        </div>
+                        {loading ? (
+                            <div className="space-y-2">
+                                {Array.from({ length: 3 }, (_, index) => (
+                                    <div key={`sticker-type-skeleton-${index}`} className="h-12 animate-pulse rounded-xl bg-slate-100" />
+                                ))}
+                            </div>
+                        ) : stickerTypes.length > 0 ? (
+                            <div className="space-y-2">
+                                {stickerTypes.slice(0, 4).map((item) => (
+                                    <div key={item.sticker_type_id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                                        <div className="flex items-center gap-3">
+                                            <span
+                                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${item.icon_url ? "bg-slate-100 text-transparent" : "bg-white text-slate-600"
+                                                    }`}
+                                                style={
+                                                    item.icon_url
+                                                        ? {
+                                                            backgroundImage: `url("${item.icon_url}")`,
+                                                            backgroundPosition: "center",
+                                                            backgroundSize: "cover",
+                                                        }
+                                                        : undefined
+                                                }
+                                                aria-hidden="true"
+                                            >
+                                                {item.icon_url ? "." : item.name.slice(0, 1).toUpperCase()}
+                                            </span>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <p className="truncate text-sm font-semibold text-slate-800">{item.name}</p>
+                                                    <span className="shrink-0 text-xs font-semibold text-blue-600">
+                                                        {item.point_cost} pt
+                                                    </span>
+                                                </div>
+                                                {item.description ? (
+                                                    <p className="mt-1 text-[11px] text-slate-500">{item.description}</p>
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-[12px] text-amber-700">
+                                No active sticker types are available yet.
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -132,7 +202,7 @@ export function LeaderboardClient({ sideNav }: Props) {
                                 </div>
                             </div>
                         ) : top3.length > 0 ? (
-                            <div className="flex flex-col items-center gap-4 rounded-2xl bg-gradient-to-b from-slate-50 to-white py-6">
+                            <div className="flex flex-col items-center gap-4 rounded-2xl bg-linear-to-b from-slate-50 to-white py-6">
                                 <div className="flex items-end gap-6">
                                     {PODIUM_ORDER.map((rankIdx, posIdx) => {
                                         const entry = top3[rankIdx];
@@ -145,7 +215,7 @@ export function LeaderboardClient({ sideNav }: Props) {
                                                     <span className="text-lg">{PODIUM_BADGES[rankIdx]}</span>
                                                 </div>
                                                 <div className="flex flex-col items-center leading-tight">
-                                                    <p className="max-w-[80px] truncate text-center text-sm font-semibold text-slate-900">
+                                                    <p className="max-w-20 truncate text-center text-sm font-semibold text-slate-900">
                                                         {entry.full_name}
                                                     </p>
                                                     <p className="text-[11px] font-semibold text-blue-600">
@@ -179,7 +249,7 @@ export function LeaderboardClient({ sideNav }: Props) {
                                     >
                                         <span className="text-slate-500">{idx + 4}</span>
                                         <div className="flex items-center gap-3 min-w-0">
-                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-200 to-slate-400 text-xs font-bold text-white">
+                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-slate-200 to-slate-400 text-xs font-bold text-white">
                                                 {idx + 4}
                                             </span>
                                             <span className="truncate text-slate-800">{row.full_name}</span>

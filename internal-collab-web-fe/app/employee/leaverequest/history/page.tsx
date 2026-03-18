@@ -17,7 +17,7 @@ export default async function LeaveHistoryPage() {
                             <h1 className="text-3xl font-bold">Leave History</h1>
                             <p className="text-sm text-slate-500">All processed leave requests.</p>
                         </div>
-                        <Link href="/employee/leaverequest" className="text-sm font-semibold text-blue-600">
+                        <Link href="/employee/leaverequest" prefetch={false} className="text-sm font-semibold text-blue-600">
                             Back to Leave
                         </Link>
                     </div>

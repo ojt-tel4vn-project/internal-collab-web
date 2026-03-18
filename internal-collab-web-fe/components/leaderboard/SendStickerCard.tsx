@@ -1,5 +1,5 @@
 import type { FormEventHandler } from "react";
-import type { LeaderboardEntry } from "@/types/employee";
+import type { LeaderboardEntry, StickerTypeOption } from "@/types/employee";
 
 type StickerFormValues = {
     message: string;
@@ -30,7 +30,11 @@ type SendStickerCardProps = {
     receiverLoading: boolean;
     receiverMatches: LeaderboardEntry[];
     selectedReceiverName: string | null;
+    selectedStickerType: StickerTypeOption | null;
     sendState: StickerSendState;
+    stickerTypeError: string | null;
+    stickerTypeLoading: boolean;
+    stickerTypes: StickerTypeOption[];
 };
 
 export function SendStickerCard({
@@ -50,7 +54,11 @@ export function SendStickerCard({
     receiverLoading,
     receiverMatches,
     selectedReceiverName,
+    selectedStickerType,
     sendState,
+    stickerTypeError,
+    stickerTypeLoading,
+    stickerTypes,
 }: SendStickerCardProps) {
     return (
         <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
@@ -112,18 +120,100 @@ export function SendStickerCard({
                 </div>
 
                 <div className="space-y-2">
-                    <label htmlFor="leaderboard-sticker-type-id" className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                        Sticker Type ID
-                    </label>
-                    <input
-                        id="leaderboard-sticker-type-id"
-                        value={form.stickerTypeId}
-                        onChange={(event) => onStickerTypeChange(event.target.value)}
-                        placeholder="Sticker type ID"
-                        spellCheck={false}
-                        className="h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    />
-                    <p className="text-[11px] text-slate-400">Use the ID from HR.</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        Sticker
+                    </p>
+                    {stickerTypeLoading ? (
+                        <div className="space-y-2">
+                            {Array.from({ length: 3 }, (_, index) => (
+                                <div key={`sticker-type-skeleton-${index}`} className="h-14 animate-pulse rounded-2xl bg-slate-100" />
+                            ))}
+                        </div>
+                    ) : stickerTypeError ? (
+                        <p className="text-[11px] font-semibold text-rose-600">{stickerTypeError}</p>
+                    ) : stickerTypes.length === 0 ? (
+                        <p className="text-[11px] text-slate-400">No active sticker types yet.</p>
+                    ) : (
+                        <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+                            {stickerTypes.map((item) => {
+                                const isSelected = form.stickerTypeId === item.id;
+                                const hasIcon = Boolean(item.iconUrl);
+                                const iconStyle = hasIcon
+                                    ? {
+                                          backgroundImage: `url("${item.iconUrl}")`,
+                                          backgroundPosition: "center",
+                                          backgroundSize: "cover",
+                                      }
+                                    : undefined;
+
+                                return (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() => onStickerTypeChange(item.id)}
+                                        className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left transition ${
+                                            isSelected
+                                                ? "border-blue-500 bg-blue-50 shadow-sm"
+                                                : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        <span
+                                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${
+                                                hasIcon ? "bg-slate-100 text-transparent" : "bg-slate-100 text-slate-600"
+                                            }`}
+                                            style={iconStyle}
+                                            aria-hidden="true"
+                                        >
+                                            {hasIcon ? "." : item.name.slice(0, 1).toUpperCase()}
+                                        </span>
+                                        <span className="min-w-0 flex-1">
+                                            <span className="block truncate text-sm font-semibold text-slate-800">{item.name}</span>
+                                            <span className="block text-[11px] text-slate-500">{item.pointCost} pt</span>
+                                        </span>
+                                        {isSelected ? (
+                                            <span className="text-[11px] font-semibold text-blue-600">Selected</span>
+                                        ) : null}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                    {selectedStickerType ? (
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+                            <div className="flex items-center gap-3">
+                                <span
+                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-xs font-semibold ${
+                                        selectedStickerType.iconUrl ? "bg-slate-100 text-transparent" : "bg-white text-slate-600"
+                                    }`}
+                                    style={
+                                        selectedStickerType.iconUrl
+                                            ? {
+                                                  backgroundImage: `url("${selectedStickerType.iconUrl}")`,
+                                                  backgroundPosition: "center",
+                                                  backgroundSize: "cover",
+                                              }
+                                            : undefined
+                                    }
+                                    aria-hidden="true"
+                                >
+                                    {selectedStickerType.iconUrl ? "." : selectedStickerType.name.slice(0, 1).toUpperCase()}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <p className="truncate text-xs font-semibold text-slate-700">{selectedStickerType.name}</p>
+                                        <span className="shrink-0 text-[11px] font-semibold text-blue-600">
+                                            {selectedStickerType.pointCost} pt
+                                        </span>
+                                    </div>
+                                    {selectedStickerType.description ? (
+                                        <p className="mt-1 text-[11px] text-slate-500">{selectedStickerType.description}</p>
+                                    ) : null}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-[11px] text-slate-400">Choose one active sticker type.</p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
