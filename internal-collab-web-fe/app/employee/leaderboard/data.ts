@@ -130,10 +130,10 @@ export function buildLeaderboardSearchParams(filters: LeaderboardFilters) {
 
     params.set("limit", String(limit));
     if (start) {
-        params.set("start_date", start.toISOString());
+        params.set("start_date", formatDateParam(start));
     }
     if (end) {
-        params.set("end_date", end.toISOString());
+        params.set("end_date", formatDateParam(end));
     }
     if (filters.departmentId && filters.departmentId !== "all") {
         params.set("department_id", filters.departmentId);
@@ -162,6 +162,13 @@ export function getErrorMessage(raw: string, fallback: string) {
     } catch {
         return raw.slice(0, 200);
     }
+}
+
+function formatDateParam(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
 
 export function getTimeRange(filter: TimeFilter) {
