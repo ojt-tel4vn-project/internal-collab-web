@@ -151,6 +151,17 @@ export interface LeaderboardEntry {
     total: number;
 }
 
+export interface StickerTypeOption {
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    iconUrl: string;
+    pointCost: number;
+    displayOrder: number;
+    isActive: boolean;
+}
+
 export interface LeaderboardFilters {
     departmentId: string;
     timeFilter: TimeFilter;

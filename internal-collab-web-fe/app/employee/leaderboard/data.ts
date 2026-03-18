@@ -2,6 +2,7 @@ import type {
     DepartmentOption,
     LeaderboardFilters,
     PointBalanceData,
+    StickerTypeOption,
     TimeFilter,
 } from "@/types/employee";
 import { timeFilters } from "@/types/employee";
@@ -41,6 +42,19 @@ export type DepartmentApiItem = {
 
 export type DepartmentsResponse = ApiEnvelope<DepartmentApiItem[]>;
 
+export type StickerTypeApiItem = {
+    category?: unknown;
+    description?: unknown;
+    display_order?: unknown;
+    icon_url?: unknown;
+    is_active?: unknown;
+    name?: unknown;
+    point_cost?: unknown;
+    sticker_type_id?: unknown;
+};
+
+export type StickerTypesResponse = ApiEnvelope<StickerTypeApiItem[]>;
+
 export function asNumber(value: unknown, fallback = 0) {
     if (typeof value === "number" && Number.isFinite(value)) return value;
     if (typeof value === "string" && value.trim() !== "") {
@@ -52,6 +66,24 @@ export function asNumber(value: unknown, fallback = 0) {
 
 export function asText(value: unknown, fallback = "") {
     return typeof value === "string" ? value.trim() : fallback;
+}
+
+export function asBoolean(value: unknown, fallback = false) {
+    if (typeof value === "boolean") {
+        return value;
+    }
+
+    if (typeof value === "string") {
+        if (value === "true") {
+            return true;
+        }
+
+        if (value === "false") {
+            return false;
+        }
+    }
+
+    return fallback;
 }
 
 function extractEnvelopeData<T>(payload: ApiEnvelope<T> | null | undefined) {
@@ -121,6 +153,28 @@ export function normalizeDepartments(payload: DepartmentsResponse) {
     }
 
     return Array.from(uniqueDepartments.values());
+}
+
+export function normalizeStickerTypes(payload: StickerTypesResponse) {
+    const data = extractEnvelopeData(payload);
+    if (!Array.isArray(data)) {
+        return [];
+    }
+
+    return data
+        .map((item) => ({
+            category: asText(item.category),
+            description: asText(item.description),
+            displayOrder: asNumber(item.display_order),
+            iconUrl: asText(item.icon_url),
+            id: asText(item.sticker_type_id),
+            isActive: asBoolean(item.is_active, true),
+            name: asText(item.name, "Untitled sticker"),
+            pointCost: Math.max(asNumber(item.point_cost), 0),
+        }))
+        .filter((item) => item.id)
+        .sort((left, right) => left.displayOrder - right.displayOrder || left.name.localeCompare(right.name))
+        .filter((item) => item.isActive) satisfies StickerTypeOption[];
 }
 
 export function buildLeaderboardSearchParams(filters: LeaderboardFilters) {
