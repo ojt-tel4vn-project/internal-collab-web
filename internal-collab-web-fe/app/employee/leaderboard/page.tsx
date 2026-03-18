@@ -385,7 +385,6 @@ export default function LeaderboardPage() {
     const normalizedReceiverId = form.receiverId.trim();
     const normalizedReceiverName = form.receiverName.trim().toLowerCase();
     const deferredReceiverQuery = useDeferredValue(normalizedReceiverName);
-    const normalizedStickerTypeId = form.stickerTypeId.trim();
     const hasAvailablePoints = currentBalance > 0;
     const balanceProgress =
         balanceState.loading

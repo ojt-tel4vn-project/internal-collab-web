@@ -69,7 +69,7 @@ export default function ManagerHomePage() {
         { label: "Attendance", value: "92%" },
     ];
 
-    const upcomingLeaves = overview?.upcoming_leaves ?? [];
+    const upcomingLeaves = useMemo(() => overview?.upcoming_leaves ?? [], [overview?.upcoming_leaves]);
 
     const calendarEvents = useMemo<CalendarEvent[]>(() => {
         const events: CalendarEvent[] = [];

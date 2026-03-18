@@ -44,6 +44,19 @@ export type DepartmentApiItem = {
 
 export type DepartmentsResponse = ApiEnvelope<DepartmentApiItem[]>;
 
+export type StickerTypeApiItem = {
+    sticker_type_id?: unknown;
+    name?: unknown;
+    description?: unknown;
+    icon_url?: unknown;
+    point_cost?: unknown;
+    display_order?: unknown;
+    is_active?: unknown;
+    category?: unknown;
+};
+
+export type StickerTypesResponse = ApiEnvelope<StickerTypeApiItem[]>;
+
 export const asNumber = asFiniteNumber;
 export const asText = (value: unknown, fallback = "") => asTrimmedString(value, fallback);
 
