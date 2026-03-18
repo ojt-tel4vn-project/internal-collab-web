@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import type {
     CreateLeaveRequestPayload,
     CreateLeaveRequestResponse,
@@ -13,9 +14,12 @@ interface LeaveRequestFormProps {
 }
 
 const TOAST_DURATION_MS = 1500;
-const SUCCESS_RELOAD_DELAY_MS = 800;
+const SUCCESS_REFRESH_DELAY_MS = 800;
 
 export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) {
+    const router = useRouter();
+    const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [form, setForm] = useState<CreateLeaveRequestPayload>({
         leave_type_id: defaultLeaveTypeId || "",
         from_date: "",
@@ -30,8 +34,14 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
     const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
     function showToast(message: string, tone: "success" | "error") {
+        if (toastTimeoutRef.current) {
+            clearTimeout(toastTimeoutRef.current);
+        }
         setToast({ message, tone });
-        setTimeout(() => setToast(null), TOAST_DURATION_MS);
+        toastTimeoutRef.current = setTimeout(() => {
+            setToast(null);
+            toastTimeoutRef.current = null;
+        }, TOAST_DURATION_MS);
     }
 
     function update<K extends keyof CreateLeaveRequestPayload>(key: K, value: string) {
@@ -51,8 +61,11 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
                 const data = (await res.json()) as GetLeaveTypesResponse;
                 if (!mounted) return;
                 setLeaveTypes(data?.data ?? []);
-                if (!form.leave_type_id && data?.data?.[0]?.id) {
-                    setForm((prev) => ({ ...prev, leave_type_id: data.data[0].id }));
+                const preferredLeaveTypeId =
+                    data?.data?.find((type) => type.id === defaultLeaveTypeId)?.id ?? data?.data?.[0]?.id ?? "";
+
+                if (preferredLeaveTypeId) {
+                    setForm((prev) => (prev.leave_type_id ? prev : { ...prev, leave_type_id: preferredLeaveTypeId }));
                 }
             } catch (err) {
                 if (!mounted) return;
@@ -66,7 +79,18 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
         return () => {
             mounted = false;
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [defaultLeaveTypeId]);
+
+    useEffect(() => {
+        return () => {
+            if (toastTimeoutRef.current) {
+                clearTimeout(toastTimeoutRef.current);
+            }
+
+            if (refreshTimeoutRef.current) {
+                clearTimeout(refreshTimeoutRef.current);
+            }
+        };
     }, []);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -106,9 +130,13 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
 
             showToast("Leave request submitted", "success");
             setForm({ leave_type_id: defaultLeaveTypeId || "", from_date: "", to_date: "", reason: "", contact_during_leave: "" });
-            setTimeout(() => {
-                window.location.reload();
-            }, SUCCESS_RELOAD_DELAY_MS);
+            if (refreshTimeoutRef.current) {
+                clearTimeout(refreshTimeoutRef.current);
+            }
+            refreshTimeoutRef.current = setTimeout(() => {
+                router.refresh();
+                refreshTimeoutRef.current = null;
+            }, SUCCESS_REFRESH_DELAY_MS);
         } catch (err) {
             const message = err instanceof Error ? err.message : "Unable to submit leave request";
             setError(message);
@@ -178,7 +206,7 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
                     required
                     value={form.reason}
                     onChange={(e) => update("reason", e.target.value)}
-                    className="min-h-[100px] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
+                    className="min-h-25 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
                     placeholder="Briefly explain your leave request..."
                 />
             </div>

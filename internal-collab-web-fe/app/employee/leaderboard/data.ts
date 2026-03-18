@@ -5,6 +5,8 @@ import type {
     StickerTypeOption,
     TimeFilter,
 } from "@/types/employee";
+import { parseApiErrorMessage } from "@/lib/api/errors";
+import { asFiniteNumber, asTrimmedString } from "@/lib/normalize";
 import { timeFilters } from "@/types/employee";
 
 type ApiEnvelope<T> = {
@@ -42,31 +44,8 @@ export type DepartmentApiItem = {
 
 export type DepartmentsResponse = ApiEnvelope<DepartmentApiItem[]>;
 
-export type StickerTypeApiItem = {
-    category?: unknown;
-    description?: unknown;
-    display_order?: unknown;
-    icon_url?: unknown;
-    is_active?: unknown;
-    name?: unknown;
-    point_cost?: unknown;
-    sticker_type_id?: unknown;
-};
-
-export type StickerTypesResponse = ApiEnvelope<StickerTypeApiItem[]>;
-
-export function asNumber(value: unknown, fallback = 0) {
-    if (typeof value === "number" && Number.isFinite(value)) return value;
-    if (typeof value === "string" && value.trim() !== "") {
-        const parsed = Number(value);
-        if (Number.isFinite(parsed)) return parsed;
-    }
-    return fallback;
-}
-
-export function asText(value: unknown, fallback = "") {
-    return typeof value === "string" ? value.trim() : fallback;
-}
+export const asNumber = asFiniteNumber;
+export const asText = (value: unknown, fallback = "") => asTrimmedString(value, fallback);
 
 export function asBoolean(value: unknown, fallback = false) {
     if (typeof value === "boolean") {
@@ -209,13 +188,7 @@ export function isAbortError(error: unknown) {
 }
 
 export function getErrorMessage(raw: string, fallback: string) {
-    if (!raw) return fallback;
-    try {
-        const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string; error?: string };
-        return parsed.message || parsed.detail || parsed.title || parsed.error || fallback;
-    } catch {
-        return raw.slice(0, 200);
-    }
+    return parseApiErrorMessage(raw, fallback);
 }
 
 function formatDateParam(date: Date) {
