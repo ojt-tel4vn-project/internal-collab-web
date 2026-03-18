@@ -2,19 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarIcon, ClockIcon, DocumentIcon, GridIcon } from "@/components/dashboard/home/Icons";
+import {
+    HomeIcon,
+    UsersIcon,
+    ClipboardDocumentCheckIcon,
+    DocumentTextIcon,
+} from "@heroicons/react/24/outline";
 import type { NavItem } from "@/types/dashboard";
 
 const NAV_ITEMS: NavItem[] = [
-    { label: "Home", href: "/manager/home", icon: GridIcon },
-    { label: "Team", href: "/manager/team", icon: ClockIcon },
-    { label: "Leave Approvals", href: "/manager/leave-approvals", icon: CalendarIcon, badge: "4" },
-    { label: "My Leave", href: "/manager/leaverequest", icon: CalendarIcon },
-    { label: "Attendance", href: "/manager/attendance", icon: ClockIcon },
-    { label: "Leaderboard", href: "/manager/leaderboard", icon: GridIcon },
-    { label: "Documents", href: "/manager/documents", icon: DocumentIcon },
-    { label: "My Profile", href: "/manager/myprofile", icon: GridIcon },
-    { label: "Notifications", href: "/manager/notification", icon: ClockIcon },
+    { label: "Home", href: "/manager/home", icon: HomeIcon },
+    { label: "Team", href: "/manager/team", icon: UsersIcon },
+    { label: "Leave Approvals", href: "/manager/leave-approvals", icon: ClipboardDocumentCheckIcon },
+    { label: "Documents", href: "/manager/documents", icon: DocumentTextIcon },
 ];
 
 function isActive(pathname: string, href: string) {

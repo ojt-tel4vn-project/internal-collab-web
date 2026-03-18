@@ -184,10 +184,10 @@ export function buildLeaderboardSearchParams(filters: LeaderboardFilters) {
 
     params.set("limit", String(limit));
     if (start) {
-        params.set("start_date", formatDateParam(start));
+        params.set("start_date", formatRFC3339Start(start));
     }
     if (end) {
-        params.set("end_date", formatDateParam(end));
+        params.set("end_date", formatRFC3339End(end));
     }
     if (filters.departmentId && filters.departmentId !== "all") {
         params.set("department_id", filters.departmentId);
@@ -218,11 +218,18 @@ export function getErrorMessage(raw: string, fallback: string) {
     }
 }
 
-function formatDateParam(date: Date) {
+function formatRFC3339Start(date: Date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return `${year}-${month}-${day}T00:00:00Z`;
+}
+
+function formatRFC3339End(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}T23:59:59Z`;
 }
 
 export function getTimeRange(filter: TimeFilter) {
