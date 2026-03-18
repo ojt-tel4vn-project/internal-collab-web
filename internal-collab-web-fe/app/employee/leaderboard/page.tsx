@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
 import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
 import { LeaderboardResults } from "@/components/leaderboard/LeaderboardResults";
@@ -326,6 +326,7 @@ export default function LeaderboardPage() {
     const currentEmployeeId = balanceState.data?.employeeId ?? "";
     const normalizedReceiverId = form.receiverId.trim();
     const normalizedReceiverName = form.receiverName.trim().toLowerCase();
+    const deferredReceiverQuery = useDeferredValue(normalizedReceiverName);
     const normalizedStickerTypeId = form.stickerTypeId.trim();
     const hasAvailablePoints = currentBalance > 0;
     const balanceProgress =
@@ -358,13 +359,13 @@ export default function LeaderboardPage() {
             ? "All Departments"
             : departmentsState.data.find((department) => department.id === filters.departmentId)?.name ?? "Selected Department";
     const receiverMatches = useMemo(() => {
-        const query = normalizedReceiverName;
+        const query = deferredReceiverQuery;
         const filtered = query
             ? receiverEntries.filter((entry) => entry.fullName.trim().toLowerCase().includes(query))
             : receiverEntries;
 
         return filtered.slice(0, 8);
-    }, [normalizedReceiverName, receiverEntries]);
+    }, [deferredReceiverQuery, receiverEntries]);
     const selectedReceiver =
         receiverEntries.find((entry) => entry.employeeId === normalizedReceiverId) ??
         rankedEntries.find((entry) => entry.employeeId === normalizedReceiverId) ??
@@ -547,7 +548,7 @@ export default function LeaderboardPage() {
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
             <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row lg:items-start lg:py-8">
-                <aside className="w-full lg:sticky lg:top-8 lg:w-[19.5rem] lg:flex-none">
+                <aside className="w-full lg:sticky lg:top-8 lg:w-78 lg:flex-none">
                     <div className="space-y-4">
                         <EmployeeSideNav />
                         <PointsBalanceCard
@@ -583,7 +584,7 @@ export default function LeaderboardPage() {
                         />
                     </div>
                 </aside>
- 
+
                 <section className="min-w-0 flex-1 space-y-6">
                     <LeaderboardOverview
                         departmentId={filters.departmentId}

@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
 import { EmployeeDocumentsClient } from "@/components/documents/EmployeeDocumentsClient";
 import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
+import { parseApiErrorMessage } from "@/lib/api/errors";
+import { asString } from "@/lib/normalize";
 import type { DocumentApiItem, DocumentsApiResponse } from "@/types/document";
 import { normalizeDocument } from "@/types/document";
 
@@ -29,13 +31,9 @@ type EmployeeProfileSummary = {
     id?: string;
 };
 
-function asText(value: unknown) {
-    return typeof value === "string" ? value : "";
-}
-
 function normalizeCategory(item: CategoryApiItem) {
-    const id = asText(item.id ?? item.ID);
-    const name = asText(item.name ?? item.Name);
+    const id = asString(item.id ?? item.ID);
+    const name = asString(item.name ?? item.Name);
     return { id, name };
 }
 
@@ -59,15 +57,7 @@ async function fetchDocuments(): Promise<LoadResult> {
 
     if (!res.ok) {
         const raw = await res.text().catch(() => "");
-        let message = `Unable to load documents (HTTP ${res.status})`;
-        if (raw) {
-            try {
-                const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string; error?: string };
-                message = parsed.message || parsed.detail || parsed.title || parsed.error || message;
-            } catch {
-                message = raw.slice(0, 200);
-            }
-        }
+        const message = parseApiErrorMessage(raw, `Unable to load documents (HTTP ${res.status})`);
         return { documents: [], error: message };
     }
 
