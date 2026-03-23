@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { TaskList } from "@/components/dashboard/home/TaskList";
 import { LeaderboardCard } from "@/components/dashboard/home/Leaderboard";
 import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
-import { leaderboard } from "@/app/employee/_data";
 import { CalendarIcon } from "@/components/dashboard/home/Icons";
 import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 
@@ -125,7 +124,7 @@ export default function HrDashboardPage() {
                         <div className="space-y-4">
                             <TaskList />
 
-                            <LeaderboardCard entries={leaderboard} />
+                            <LeaderboardCard />
                         </div>
                     </div>
                 </section>
