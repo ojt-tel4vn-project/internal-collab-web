@@ -62,3 +62,28 @@ export async function POST(request: NextRequest) {
     }
 }
 
+export async function DELETE(request: NextRequest) {
+    try {
+        if (!hasAuthSession(request)) {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const id = request.nextUrl.searchParams.get("id")?.trim();
+        if (!id) {
+            return NextResponse.json({ message: "Document id is required." }, { status: 400 });
+        }
+
+        const upstreamResponse = await proxyToBackend({
+            method: "DELETE",
+            path: `/hr/documents/${encodeURIComponent(id)}`,
+            request,
+        });
+
+        return createProxyResponse(upstreamResponse);
+    } catch {
+        return NextResponse.json(
+            { message: "Unable to delete document." },
+            { status: 500 },
+        );
+    }
+}

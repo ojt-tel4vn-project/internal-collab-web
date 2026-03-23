@@ -24,7 +24,14 @@ type ProfileSummary = {
     };
 };
 
+type BirthdayNotificationConfig = {
+    enabled: boolean;
+    notificationTime: string;
+    channels: string[];
+};
+
 const STORAGE_PREFIX = "birthday_announcement_seen";
+const DEFAULT_NOTIFICATION_TIME = "09:00";
 
 function asText(value: unknown) {
     if (typeof value === "string") {
@@ -80,6 +87,99 @@ function getTodayKey(now = new Date()) {
     return `${year}-${month}-${day}`;
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return null;
+    }
+
+    return value as Record<string, unknown>;
+}
+
+function asBoolean(value: unknown, fallback: boolean) {
+    if (typeof value === "boolean") {
+        return value;
+    }
+
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === "true") {
+            return true;
+        }
+        if (normalized === "false") {
+            return false;
+        }
+    }
+
+    return fallback;
+}
+
+function asStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value
+        .map((entry) => asText(entry).toLowerCase())
+        .filter(Boolean);
+}
+
+function findConfigRecord(payload: unknown): Record<string, unknown> | null {
+    const root = asRecord(payload);
+    const body = asRecord(root?.body);
+    const data = asRecord(root?.data);
+
+    const candidates = [
+        asRecord(body?.data),
+        asRecord(data?.data),
+        asRecord(root?.data),
+        body,
+        data,
+        root,
+    ];
+
+    for (const candidate of candidates) {
+        if (!candidate) {
+            continue;
+        }
+
+        if (candidate.enabled !== undefined || candidate.notification_time !== undefined || candidate.channels !== undefined) {
+            return candidate;
+        }
+    }
+
+    return null;
+}
+
+function parseBirthdayNotificationConfig(payload: unknown): BirthdayNotificationConfig | null {
+    const record = findConfigRecord(payload);
+    if (!record) {
+        return null;
+    }
+
+    const channels = asStringArray(record.channels);
+
+    return {
+        enabled: asBoolean(record.enabled, true),
+        notificationTime: asText(record.notification_time) || DEFAULT_NOTIFICATION_TIME,
+        channels,
+    };
+}
+
+function getNotificationDelayMs(notificationTime: string, now = new Date()) {
+    const match = notificationTime.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+    if (!match) {
+        return 0;
+    }
+
+    const hour = Number(match[1]);
+    const minute = Number(match[2]);
+    const scheduled = new Date(now);
+    scheduled.setHours(hour, minute, 0, 0);
+
+    const diff = scheduled.getTime() - now.getTime();
+    return diff > 0 ? diff : 0;
+}
+
 export function BirthdayAnnouncementModal() {
     const [names, setNames] = useState<string[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -94,21 +194,29 @@ export function BirthdayAnnouncementModal() {
 
     useEffect(() => {
         let isCancelled = false;
+        let timerId: number | null = null;
 
         async function checkBirthdays() {
             try {
-                const [profileRes, birthdaysRes] = await Promise.all([
+                const [profileRes, birthdaysRes, configRes] = await Promise.all([
                     fetch("/api/employee/me", { cache: "no-store" }),
                     fetch("/api/employee/birthdays", { cache: "no-store" }),
+                    fetch("/api/employee/birthdays/config", { cache: "no-store" }),
                 ]);
 
-                if (!profileRes.ok || !birthdaysRes.ok) {
+                if (!profileRes.ok || !birthdaysRes.ok || !configRes.ok) {
                     return;
                 }
 
                 const profilePayload = (await profileRes.json().catch(() => null)) as ProfileSummary | null;
                 const profileId = getProfileIdentifier(profilePayload);
                 if (!profileId) {
+                    return;
+                }
+
+                const configPayload = (await configRes.json().catch(() => null)) as unknown;
+                const config = parseBirthdayNotificationConfig(configPayload);
+                if (!config || !config.enabled || !config.channels.includes("in_app")) {
                     return;
                 }
 
@@ -131,19 +239,36 @@ export function BirthdayAnnouncementModal() {
                 }
 
                 const storageKey = `${STORAGE_PREFIX}:${profileId}:${getTodayKey()}`;
-                try {
-                    const seen = window.localStorage.getItem(storageKey);
-                    if (seen === "1") {
-                        return;
+                const showModal = () => {
+                    try {
+                        const seen = window.localStorage.getItem(storageKey);
+                        if (seen === "1") {
+                            return;
+                        }
+                        window.localStorage.setItem(storageKey, "1");
+                    } catch {
+                        // Ignore storage access errors.
                     }
-                    window.localStorage.setItem(storageKey, "1");
-                } catch {
-                    // Ignore storage access errors.
-                }
 
-                if (!isCancelled) {
-                    setNames(uniqueNames);
-                    setIsOpen(true);
+                    if (!isCancelled) {
+                        setNames(uniqueNames);
+                        setIsOpen(true);
+                    }
+                };
+
+                const delayMs = getNotificationDelayMs(config.notificationTime);
+                if (delayMs > 0) {
+                    timerId = window.setTimeout(showModal, delayMs);
+                } else {
+                    try {
+                        const seen = window.localStorage.getItem(storageKey);
+                        if (seen === "1") {
+                            return;
+                        }
+                    } catch {
+                        // Ignore storage access errors.
+                    }
+                    showModal();
                 }
             } catch {
                 // Ignore transient fetch errors.
@@ -154,6 +279,9 @@ export function BirthdayAnnouncementModal() {
 
         return () => {
             isCancelled = true;
+            if (timerId !== null) {
+                window.clearTimeout(timerId);
+            }
         };
     }, []);
 
@@ -206,4 +334,3 @@ export function BirthdayAnnouncementModal() {
         </div>
     );
 }
-

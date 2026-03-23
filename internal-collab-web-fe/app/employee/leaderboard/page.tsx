@@ -119,17 +119,37 @@ async function readStickerTypes(signal?: AbortSignal) {
     return normalizeStickerTypes((await response.json()) as StickerTypesResponse);
 }
 
-async function sendSticker(form: SendFormState) {
+async function sendSticker(input: {
+    message: string;
+    receiverEmail: string;
+    receiverEmployeeCode: string;
+    stickerTypeId: string;
+}) {
+    const receiverEmail = input.receiverEmail.trim();
+    const receiverEmployeeCode = input.receiverEmployeeCode.trim();
+    const stickerTypeId = input.stickerTypeId.trim();
+
+    if (!receiverEmail && !receiverEmployeeCode) {
+        throw new Error("Selected receiver does not have email or employee code.");
+    }
+
+    const payload: Record<string, string> = {
+        message: input.message.trim(),
+        sticker_type_id: stickerTypeId,
+    };
+
+    if (receiverEmail) {
+        payload.receiver_email = receiverEmail;
+    } else {
+        payload.receiver_employee_code = receiverEmployeeCode;
+    }
+
     const response = await fetch("/api/employee/stickers/send", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-            message: form.message.trim(),
-            receiver_id: form.receiverId.trim(),
-            sticker_type_id: form.stickerTypeId.trim(),
-        }),
+        body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -583,8 +603,14 @@ export default function LeaderboardPage() {
         });
 
         try {
+            if (!selectedReceiver) {
+                throw new Error("Please choose a receiver from the suggestions.");
+            }
+
             await sendSticker({
-                ...form,
+                message: form.message,
+                receiverEmail: selectedReceiver.email,
+                receiverEmployeeCode: selectedReceiver.employeeCode,
                 stickerTypeId: normalizedStickerTypeId,
             });
             setForm((current) => ({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 
 type AttendanceConfiguration = {
@@ -15,6 +15,12 @@ type PointConfiguration = {
     resetDay: number;
 };
 
+type BirthdayConfiguration = {
+    enabled: boolean;
+    notificationTime: string;
+    channels: string[];
+};
+
 const DEFAULT_ATTENDANCE_CONFIGURATION: AttendanceConfiguration = {
     confirmationDeadlineDays: 5,
     autoConfirmEnabled: true,
@@ -26,6 +32,21 @@ const DEFAULT_POINT_CONFIGURATION: PointConfiguration = {
     resetMonth: 1,
     resetDay: 1,
 };
+
+const DEFAULT_BIRTHDAY_CONFIGURATION: BirthdayConfiguration = {
+    enabled: true,
+    notificationTime: "09:00",
+    channels: ["in_app", "email"],
+};
+
+const BIRTHDAY_CHANNEL_OPTIONS = [
+    { label: "In App", value: "in_app" },
+    { label: "Email", value: "email" },
+] as const;
+
+const HOUR_12_OPTIONS = Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, "0"));
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, "0"));
+const MERIDIEM_OPTIONS = ["AM", "PM"] as const;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -71,6 +92,16 @@ function asBoolean(value: unknown, fallback: boolean): boolean {
     }
 
     return fallback;
+}
+
+function asStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value
+        .map((entry) => asText(entry))
+        .filter(Boolean);
 }
 
 function parseErrorMessage(raw: string, fallback: string): string {
@@ -159,6 +190,21 @@ function parsePointConfig(payload: unknown): PointConfiguration | null {
     };
 }
 
+function parseBirthdayConfig(payload: unknown): BirthdayConfiguration | null {
+    const record = findConfigRecord(payload, ["enabled", "notification_time", "channels"]);
+    if (!record) {
+        return null;
+    }
+
+    const channels = asStringArray(record.channels);
+
+    return {
+        enabled: asBoolean(record.enabled, DEFAULT_BIRTHDAY_CONFIGURATION.enabled),
+        notificationTime: asText(record.notification_time) || DEFAULT_BIRTHDAY_CONFIGURATION.notificationTime,
+        channels: channels.length > 0 ? channels : DEFAULT_BIRTHDAY_CONFIGURATION.channels,
+    };
+}
+
 function parseSuccessMessage(payload: unknown, fallback: string): string {
     const root = asRecord(payload);
     const body = asRecord(root?.body);
@@ -177,15 +223,79 @@ function maxDayInMonth(month: number): number {
     return monthDays[month - 1] ?? 31;
 }
 
+function formatTimeAsAmPm(value: string): string {
+    const match = value.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+    if (!match) {
+        return "--";
+    }
+
+    const hour24 = Number(match[1]);
+    const minute = match[2];
+    const period = hour24 >= 12 ? "PM" : "AM";
+    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+
+    return `${String(hour12).padStart(2, "0")}:${minute} ${period}`;
+}
+
+type NotificationTimeParts = {
+    hour: string;
+    minute: string;
+    period: (typeof MERIDIEM_OPTIONS)[number];
+};
+
+function splitNotificationTime(value: string): NotificationTimeParts {
+    const match = value.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+    if (!match) {
+        return { hour: "09", minute: "00", period: "AM" };
+    }
+
+    const hour24 = Number(match[1]);
+    const minute = match[2];
+    const period: NotificationTimeParts["period"] = hour24 >= 12 ? "PM" : "AM";
+    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+
+    return {
+        hour: String(hour12).padStart(2, "0"),
+        minute,
+        period,
+    };
+}
+
+function composeNotificationTime(
+    hour: string,
+    minute: string,
+    period: NotificationTimeParts["period"],
+): string {
+    const hourNumber = Number(hour);
+    const minuteNumber = Number(minute);
+
+    const isValidHour = Number.isInteger(hourNumber) && hourNumber >= 1 && hourNumber <= 12;
+    const isValidMinute = Number.isInteger(minuteNumber) && minuteNumber >= 0 && minuteNumber <= 59;
+    if (!isValidHour || !isValidMinute) {
+        return DEFAULT_BIRTHDAY_CONFIGURATION.notificationTime;
+    }
+
+    let hour24 = hourNumber % 12;
+    if (period === "PM") {
+        hour24 += 12;
+    }
+
+    return `${String(hour24).padStart(2, "0")}:${String(minuteNumber).padStart(2, "0")}`;
+}
+
 export default function HrConfigurationPage() {
     const [attendanceConfig, setAttendanceConfig] = useState<AttendanceConfiguration>(
         DEFAULT_ATTENDANCE_CONFIGURATION,
     );
     const [pointConfig, setPointConfig] = useState<PointConfiguration>(DEFAULT_POINT_CONFIGURATION);
+    const [birthdayConfig, setBirthdayConfig] = useState<BirthdayConfiguration>(
+        DEFAULT_BIRTHDAY_CONFIGURATION,
+    );
 
     const [isLoading, setIsLoading] = useState(true);
     const [attendanceLoadError, setAttendanceLoadError] = useState<string | null>(null);
-    const [pointLoadNote, setPointLoadNote] = useState<string | null>(null);
+    const [pointLoadError, setPointLoadError] = useState<string | null>(null);
+    const [birthdayLoadError, setBirthdayLoadError] = useState<string | null>(null);
 
     const [attendanceSaving, setAttendanceSaving] = useState(false);
     const [attendanceSuccess, setAttendanceSuccess] = useState<string | null>(null);
@@ -195,15 +305,26 @@ export default function HrConfigurationPage() {
     const [pointSuccess, setPointSuccess] = useState<string | null>(null);
     const [pointError, setPointError] = useState<string | null>(null);
 
+    const [birthdaySaving, setBirthdaySaving] = useState(false);
+    const [birthdaySuccess, setBirthdaySuccess] = useState<string | null>(null);
+    const [birthdayError, setBirthdayError] = useState<string | null>(null);
+
+    const birthdayTimeParts = useMemo(
+        () => splitNotificationTime(birthdayConfig.notificationTime),
+        [birthdayConfig.notificationTime],
+    );
+
     const loadConfigurations = useCallback(async () => {
         setIsLoading(true);
         setAttendanceLoadError(null);
-        setPointLoadNote(null);
+        setPointLoadError(null);
+        setBirthdayLoadError(null);
 
         try {
-            const [attendanceResponse, pointResponse] = await Promise.all([
+            const [attendanceResponse, pointResponse, birthdayResponse] = await Promise.all([
                 fetch("/api/hr/attendance-config", { cache: "no-store" }),
                 fetch("/api/hr/point-config", { cache: "no-store" }),
+                fetch("/api/hr/birthday-config", { cache: "no-store" }),
             ]);
 
             if (attendanceResponse.ok) {
@@ -226,29 +347,41 @@ export default function HrConfigurationPage() {
                 if (parsed) {
                     setPointConfig(parsed);
                 } else {
-                    setPointLoadNote(
-                        "Point configuration API did not return current values. You can still save new values.",
-                    );
+                    setPointLoadError("Unable to load point configuration.");
                 }
             } else {
                 const raw = await pointResponse.text().catch(() => "");
-                if (pointResponse.status === 404 || pointResponse.status === 405) {
-                    setPointLoadNote(
-                        "Backend does not expose point configuration for reading. Enter values and save to update.",
-                    );
+                setPointLoadError(
+                    parseErrorMessage(
+                        raw,
+                        "Unable to load point configuration.",
+                    ),
+                );
+            }
+
+            if (birthdayResponse.ok) {
+                const payload = (await birthdayResponse.json().catch(() => null)) as unknown;
+                const parsed = parseBirthdayConfig(payload);
+
+                if (parsed) {
+                    setBirthdayConfig(parsed);
                 } else {
-                    setPointLoadNote(
-                        parseErrorMessage(
-                            raw,
-                            "Unable to load point configuration right now. You can still save updates.",
-                        ),
-                    );
+                    setBirthdayLoadError("Unable to load birthday configuration.");
                 }
+            } else {
+                const raw = await birthdayResponse.text().catch(() => "");
+                setBirthdayLoadError(
+                    parseErrorMessage(
+                        raw,
+                        "Unable to load birthday configuration.",
+                    ),
+                );
             }
         } catch (error) {
             const fallback = error instanceof Error ? error.message : "Unable to load configuration.";
             setAttendanceLoadError(fallback);
-            setPointLoadNote("Unable to load point configuration right now. You can still save updates.");
+            setPointLoadError("Unable to load point configuration.");
+            setBirthdayLoadError("Unable to load birthday configuration.");
         } finally {
             setIsLoading(false);
         }
@@ -388,6 +521,63 @@ export default function HrConfigurationPage() {
         }
     };
 
+    const handleSaveBirthday = async () => {
+        setBirthdayError(null);
+        setBirthdaySuccess(null);
+
+        const notificationTime = birthdayConfig.notificationTime.trim();
+        if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(notificationTime)) {
+            setBirthdayError("Notification time must be in HH:mm format.");
+            return;
+        }
+
+        const channels = Array.from(new Set(birthdayConfig.channels.map((item) => item.trim()).filter(Boolean)));
+        if (channels.length === 0) {
+            setBirthdayError("Please select at least one notification channel.");
+            return;
+        }
+
+        setBirthdaySaving(true);
+        try {
+            const response = await fetch("/api/hr/birthday-config", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    enabled: birthdayConfig.enabled,
+                    notification_time: notificationTime,
+                    channels,
+                }),
+            });
+
+            const raw = await response.text().catch(() => "");
+            if (!response.ok) {
+                throw new Error(
+                    parseErrorMessage(raw, `Unable to update birthday configuration (HTTP ${response.status}).`),
+                );
+            }
+
+            let payload: unknown = null;
+            if (raw) {
+                try {
+                    payload = JSON.parse(raw) as unknown;
+                } catch {
+                    payload = null;
+                }
+            }
+
+            setBirthdayConfig((current) => ({
+                ...current,
+                notificationTime,
+                channels,
+            }));
+            setBirthdaySuccess(parseSuccessMessage(payload, "Birthday configuration updated."));
+        } catch (error) {
+            setBirthdayError(error instanceof Error ? error.message : "Unable to update birthday configuration.");
+        } finally {
+            setBirthdaySaving(false);
+        }
+    };
+
     return (
         <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
             <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-8">
@@ -398,7 +588,7 @@ export default function HrConfigurationPage() {
                         <div className="space-y-1">
                             <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Configuration</h1>
                             <p className="text-sm text-slate-500">
-                                Manage attendance configuration and point configuration from one place.
+                                Manage attendance, point, and birthday configuration from one place.
                             </p>
                         </div>
                         <button
@@ -512,9 +702,9 @@ export default function HrConfigurationPage() {
                                 </p>
                             </div>
 
-                            {pointLoadNote ? (
-                                <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                                    {pointLoadNote}
+                            {pointLoadError ? (
+                                <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                    {pointLoadError}
                                 </div>
                             ) : null}
 
@@ -598,6 +788,159 @@ export default function HrConfigurationPage() {
                                     className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
                                 >
                                     {pointSaving ? "Saving..." : "Save Point Configuration"}
+                                </button>
+                            </form>
+                        </section>
+
+                        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <div className="space-y-1">
+                                <h2 className="text-xl font-semibold text-slate-950">Birthday Configuration</h2>
+                                <p className="text-sm text-slate-500">
+                                    Configure birthday notification settings for the whole company.
+                                </p>
+                            </div>
+
+                            {birthdayLoadError ? (
+                                <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                    {birthdayLoadError}
+                                </div>
+                            ) : null}
+
+                            <form
+                                className="mt-5 space-y-4"
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    void handleSaveBirthday();
+                                }}
+                            >
+                                <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                    <span className="text-sm font-semibold text-slate-700">Enable Birthday Notifications</span>
+                                    <input
+                                        type="checkbox"
+                                        checked={birthdayConfig.enabled}
+                                        onChange={(event) => setBirthdayConfig((current) => ({
+                                            ...current,
+                                            enabled: event.target.checked,
+                                        }))}
+                                        className="h-4 w-4 cursor-pointer rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                </label>
+
+                                <div className="space-y-2">
+                                    <label htmlFor="birthday-notification-time" className="text-sm font-semibold text-slate-700">
+                                        Notification Time
+                                    </label>
+                                    <div id="birthday-notification-time" className="grid gap-2 sm:grid-cols-3">
+                                        <select
+                                            aria-label="Notification hour"
+                                            value={birthdayTimeParts.hour}
+                                            onChange={(event) => setBirthdayConfig((current) => ({
+                                                ...current,
+                                                notificationTime: composeNotificationTime(
+                                                    event.target.value,
+                                                    birthdayTimeParts.minute,
+                                                    birthdayTimeParts.period,
+                                                ),
+                                            }))}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white"
+                                        >
+                                            {HOUR_12_OPTIONS.map((hour) => (
+                                                <option key={hour} value={hour}>{hour}</option>
+                                            ))}
+                                        </select>
+
+                                        <select
+                                            aria-label="Notification minute"
+                                            value={birthdayTimeParts.minute}
+                                            onChange={(event) => setBirthdayConfig((current) => ({
+                                                ...current,
+                                                notificationTime: composeNotificationTime(
+                                                    birthdayTimeParts.hour,
+                                                    event.target.value,
+                                                    birthdayTimeParts.period,
+                                                ),
+                                            }))}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white"
+                                        >
+                                            {MINUTE_OPTIONS.map((minute) => (
+                                                <option key={minute} value={minute}>{minute}</option>
+                                            ))}
+                                        </select>
+
+                                        <select
+                                            aria-label="Notification period"
+                                            value={birthdayTimeParts.period}
+                                            onChange={(event) => setBirthdayConfig((current) => ({
+                                                ...current,
+                                                notificationTime: composeNotificationTime(
+                                                    birthdayTimeParts.hour,
+                                                    birthdayTimeParts.minute,
+                                                    event.target.value as NotificationTimeParts["period"],
+                                                ),
+                                            }))}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white"
+                                        >
+                                            {MERIDIEM_OPTIONS.map((period) => (
+                                                <option key={period} value={period}>{period}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <p className="text-xs text-slate-500">
+                                        Display time: {formatTimeAsAmPm(birthdayConfig.notificationTime)}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <p className="text-sm font-semibold text-slate-700">Channels</p>
+                                    <div className="grid gap-2 sm:grid-cols-2">
+                                        {BIRTHDAY_CHANNEL_OPTIONS.map((option) => {
+                                            const checked = birthdayConfig.channels.includes(option.value);
+
+                                            return (
+                                                <label key={option.value} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={checked}
+                                                        onChange={(event) => setBirthdayConfig((current) => {
+                                                            if (event.target.checked) {
+                                                                return {
+                                                                    ...current,
+                                                                    channels: Array.from(new Set([...current.channels, option.value])),
+                                                                };
+                                                            }
+
+                                                            return {
+                                                                ...current,
+                                                                channels: current.channels.filter((item) => item !== option.value),
+                                                            };
+                                                        })}
+                                                        className="h-4 w-4 cursor-pointer rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                                    />
+                                                    <span>{option.label}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {birthdayError ? (
+                                    <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                        {birthdayError}
+                                    </div>
+                                ) : null}
+
+                                {birthdaySuccess ? (
+                                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                                        {birthdaySuccess}
+                                    </div>
+                                ) : null}
+
+                                <button
+                                    type="submit"
+                                    disabled={birthdaySaving}
+                                    className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                                >
+                                    {birthdaySaving ? "Saving..." : "Save Birthday Configuration"}
                                 </button>
                             </form>
                         </section>

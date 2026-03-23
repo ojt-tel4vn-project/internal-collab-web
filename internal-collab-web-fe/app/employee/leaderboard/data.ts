@@ -29,7 +29,10 @@ export type PointBalanceResponse = ApiEnvelope<PointBalanceApiData>;
 
 export type LeaderboardApiItem = {
     employee_id?: unknown;
+    employee_code?: unknown;
+    email?: unknown;
     full_name?: unknown;
+    position?: unknown;
     total?: unknown;
 };
 
@@ -121,7 +124,10 @@ export function normalizeLeaderboard(payload: LeaderboardResponse) {
     return data
         .map((entry) => ({
             employeeId: asText(entry.employee_id),
+            employeeCode: asText(entry.employee_code),
+            email: asText(entry.email),
             fullName: asText(entry.full_name, "Unnamed employee"),
+            position: asText(entry.position),
             total: asNumber(entry.total),
         }))
         .filter((entry) => entry.employeeId);

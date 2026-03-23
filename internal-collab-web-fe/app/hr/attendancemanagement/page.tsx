@@ -435,19 +435,12 @@ export default function HrAttendanceManagementPage() {
     };
 
     const downloadTemplate = () => {
-        const header = ["employee_code", ...Array.from({ length: 31 }, (_, index) => String(index + 1))];
-        const sample = Array.from({ length: 31 }, (_, index) => (index === 0 ? "present" : index === 1 ? "late" : ""));
-        const csv = `${header.join(",")}\n${["EMP001", ...sample].join(",")}\n`;
-
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
         const anchor = document.createElement("a");
-        anchor.href = url;
-        anchor.download = `attendance-template-${year}-${String(month).padStart(2, "0")}.csv`;
+        anchor.href = "/templates/attendance-template.xlsx";
+        anchor.download = "attendance-template.xlsx";
         document.body.appendChild(anchor);
         anchor.click();
         document.body.removeChild(anchor);
-        URL.revokeObjectURL(url);
     };
 
     return (
@@ -474,7 +467,7 @@ export default function HrAttendanceManagementPage() {
                             </div>
                             <button type="button" onClick={downloadTemplate} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
                                 <DownloadIcon className="h-4 w-4" />
-                                Download template
+                                Download Excel template
                             </button>
                         </div>
                     </div>
@@ -490,12 +483,34 @@ export default function HrAttendanceManagementPage() {
                         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                             <div>
                                 <h2 className="text-lg font-semibold text-slate-950">Upload Attendance CSV</h2>
-                                <p className="mt-1 text-sm text-slate-500">Backend format: <code>employee_code,1,2,...,31</code></p>
+                                <p className="mt-1 text-sm text-slate-500">Fill the Excel template, then save/export it as CSV before uploading.</p>
                             </div>
                             <div className="text-sm font-semibold text-slate-600">Target month: {monthLabel}</div>
                         </div>
                         <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center">
-                            <input key={fileInputKey} type="file" accept=".csv,text/csv" onChange={(event: ChangeEvent<HTMLInputElement>) => { setUploadError(null); setUploadSuccess(null); setFile(event.target.files?.[0] ?? null); }} className="block w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:font-semibold file:text-blue-700 hover:file:bg-blue-100" />
+                            <div className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                                <label
+                                    htmlFor="attendance-csv-file"
+                                    className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                                >
+                                    Choose file
+                                </label>
+                                <span className="truncate text-sm text-slate-600">
+                                    {file ? file.name : "No file chosen"}
+                                </span>
+                                <input
+                                    key={fileInputKey}
+                                    id="attendance-csv-file"
+                                    type="file"
+                                    accept=".csv,text/csv"
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                        setUploadError(null);
+                                        setUploadSuccess(null);
+                                        setFile(event.target.files?.[0] ?? null);
+                                    }}
+                                    className="sr-only"
+                                />
+                            </div>
                             <button type="button" onClick={() => void handleUpload()} disabled={isUploading} className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400">{isUploading ? "Uploading..." : "Upload CSV"}</button>
                         </div>
                         {uploadError ? <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">{uploadError}</div> : null}

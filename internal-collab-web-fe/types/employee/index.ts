@@ -147,7 +147,10 @@ export interface PointBalanceData {
 
 export interface LeaderboardEntry {
     employeeId: string;
+    employeeCode: string;
+    email: string;
     fullName: string;
+    position: string;
     total: number;
 }
 

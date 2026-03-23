@@ -3,18 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-    HomeIcon,
-    UsersIcon,
-    ClipboardDocumentCheckIcon,
-    DocumentTextIcon,
-} from "@heroicons/react/24/outline";
+    CalendarIcon,
+    ClockIcon,
+    DocumentIcon,
+    GridIcon,
+} from "@/components/dashboard/home/Icons";
 import type { NavItem } from "@/types/dashboard";
 
 const NAV_ITEMS: NavItem[] = [
-    { label: "Home", href: "/manager/home", icon: HomeIcon },
-    { label: "Team", href: "/manager/team", icon: UsersIcon },
-    { label: "Leave Approvals", href: "/manager/leave-approvals", icon: ClipboardDocumentCheckIcon },
-    { label: "Documents", href: "/manager/documents", icon: DocumentTextIcon },
+    { label: "Home", href: "/manager/home", icon: GridIcon },
+    { label: "Team", href: "/manager/team", icon: ClockIcon },
+    { label: "Leave Approvals", href: "/manager/leave-approvals", icon: CalendarIcon },
+    { label: "Documents", href: "/manager/documents", icon: DocumentIcon },
 ];
 
 function isActive(pathname: string, href: string) {
