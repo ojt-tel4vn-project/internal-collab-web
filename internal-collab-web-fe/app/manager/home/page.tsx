@@ -165,8 +165,11 @@ export default function ManagerHomePage() {
                                     {upcomingLeaves.length === 0 && (
                                         <p className="text-sm text-slate-400">No upcoming leaves.</p>
                                     )}
-                                    {upcomingLeaves.map((p) => (
-                                        <div key={p.employee} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3">
+                                    {upcomingLeaves.map((p, index) => (
+                                        <div
+                                            key={`${p.employee}-${p.from_date}-${p.to_date}-${index}`}
+                                            className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3"
+                                        >
                                             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-700">
                                                 {p.employee.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                                             </span>
