@@ -24,6 +24,11 @@ type EmployeeFormState = {
     join_date: string;
 };
 
+type DepartmentFormState = {
+    description: string;
+    name: string;
+};
+
 type ToastState = {
     message: string;
     tone: "success" | "error";
@@ -43,9 +48,13 @@ const EMPTY_FORM: EmployeeFormState = {
     join_date: "",
 };
 
+const EMPTY_DEPARTMENT_FORM: DepartmentFormState = {
+    description: "",
+    name: "",
+};
+
 const STATUS_FILTER_OPTIONS = ["pending", "active", "offboard"] as const;
 const STATUS_UPDATE_OPTIONS = ["pending", "active", "offboard"] as const;
-const EDITABLE_DEPARTMENT_NAMES = ["Human Resources", "Engineering", "Production", "Marketing"] as const;
 const PAGE_SIZE = 10;
 
 function normalizeText(value: unknown) {
@@ -256,35 +265,6 @@ function resolveEmployeeRoleId(detail: HrEmployeeDetail | null, summary: HrEmplo
     return normalizeText(detail?.role_id) || getRoleId(detail?.role) || getRoleId(summary?.role);
 }
 
-function normalizeDepartmentKey(value: string) {
-    return normalizeText(value).toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function toEditableDepartmentName(name: string): (typeof EDITABLE_DEPARTMENT_NAMES)[number] | null {
-    const key = normalizeDepartmentKey(name);
-    if (!key) {
-        return null;
-    }
-
-    if (key === "hr" || key.includes("humanresources") || key.includes("humanresource")) {
-        return "Human Resources";
-    }
-
-    if (key.includes("engineering")) {
-        return "Engineering";
-    }
-
-    if (key.includes("production") || key.includes("product") || key === "prod") {
-        return "Production";
-    }
-
-    if (key.includes("marketing")) {
-        return "Marketing";
-    }
-
-    return null;
-}
-
 function mapDetailToForm(detail: HrEmployeeDetail): EmployeeFormState {
     return {
         email: normalizeText(detail.email),
@@ -458,7 +438,9 @@ export default function EmployeeManagementPage() {
 
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isDepartmentCreateOpen, setIsDepartmentCreateOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDepartmentSubmitting, setIsDepartmentSubmitting] = useState(false);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
     const [deletingEmployeeId, setDeletingEmployeeId] = useState<string | null>(null);
     const [employeePendingDelete, setEmployeePendingDelete] = useState<HrEmployeeSummary | null>(null);
@@ -467,6 +449,8 @@ export default function EmployeeManagementPage() {
     const [selectedEmployeeDetail, setSelectedEmployeeDetail] = useState<HrEmployeeDetail | null>(null);
     const [employeeForm, setEmployeeForm] = useState<EmployeeFormState>(EMPTY_FORM);
     const [formError, setFormError] = useState<string | null>(null);
+    const [departmentForm, setDepartmentForm] = useState<DepartmentFormState>(EMPTY_DEPARTMENT_FORM);
+    const [departmentFormError, setDepartmentFormError] = useState<string | null>(null);
 
     const showToast = useCallback((message: string, tone: "success" | "error") => {
         if (toastTimeoutRef.current) {
@@ -505,7 +489,7 @@ export default function EmployeeManagementPage() {
 
     const loadDepartments = useCallback(async () => {
         try {
-            const response = await fetch("/api/employee?view=departments", {
+            const response = await fetch("/api/hr/departments", {
                 cache: "no-store",
             });
 
@@ -566,22 +550,21 @@ export default function EmployeeManagementPage() {
             sourceDepartments.push({ id, name });
         }
 
-        const departmentByCanonicalName = new Map<(typeof EDITABLE_DEPARTMENT_NAMES)[number], DepartmentOption>();
+        const departmentById = new Map<string, DepartmentOption>();
         for (const department of sourceDepartments) {
-            const canonicalName = toEditableDepartmentName(department.name);
-            if (!canonicalName || departmentByCanonicalName.has(canonicalName)) {
+            const id = normalizeText(department.id);
+            const name = normalizeText(department.name);
+            if (!id || !name || departmentById.has(id)) {
                 continue;
             }
 
-            departmentByCanonicalName.set(canonicalName, {
-                id: department.id,
-                name: canonicalName,
+            departmentById.set(id, {
+                id,
+                name,
             });
         }
 
-        return EDITABLE_DEPARTMENT_NAMES.map((name) => departmentByCanonicalName.get(name)).filter(
-            (department): department is DepartmentOption => Boolean(department),
-        );
+        return Array.from(departmentById.values()).sort((left, right) => left.name.localeCompare(right.name));
     }, [departments, manageableEmployees]);
 
     const editDepartmentFallback = useMemo(() => {
@@ -669,6 +652,12 @@ export default function EmployeeManagementPage() {
         setIsCreateOpen(true);
     }, []);
 
+    const openDepartmentCreateModal = useCallback(() => {
+        setDepartmentForm(EMPTY_DEPARTMENT_FORM);
+        setDepartmentFormError(null);
+        setIsDepartmentCreateOpen(true);
+    }, []);
+
     const openEditModal = useCallback(
         async (employee: HrEmployeeSummary) => {
             setFormError(null);
@@ -699,6 +688,15 @@ export default function EmployeeManagementPage() {
         [showToast],
     );
 
+    const closeDepartmentCreateModal = useCallback(() => {
+        if (isDepartmentSubmitting) {
+            return;
+        }
+
+        setIsDepartmentCreateOpen(false);
+        setDepartmentFormError(null);
+    }, [isDepartmentSubmitting]);
+
     const resetModals = useCallback(() => {
         setIsCreateOpen(false);
         setIsEditOpen(false);
@@ -707,6 +705,52 @@ export default function EmployeeManagementPage() {
         setEmployeePendingDelete(null);
         setFormError(null);
     }, []);
+
+    const handleDepartmentCreateSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
+        event.preventDefault();
+
+        if (isDepartmentSubmitting) {
+            return;
+        }
+
+        const name = departmentForm.name.trim();
+        const description = departmentForm.description.trim();
+        if (!name) {
+            setDepartmentFormError("Department name is required.");
+            return;
+        }
+        if (!description) {
+            setDepartmentFormError("Department description is required.");
+            return;
+        }
+
+        setDepartmentFormError(null);
+        setIsDepartmentSubmitting(true);
+
+        try {
+            const response = await fetch("/api/hr/departments", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ name, description }),
+            });
+
+            if (!response.ok) {
+                throw new Error(await parseErrorMessage(response, "Unable to create department."));
+            }
+
+            await loadDepartments();
+            setIsDepartmentCreateOpen(false);
+            setDepartmentForm(EMPTY_DEPARTMENT_FORM);
+            setDepartmentFormError(null);
+            showToast("Department added successfully.", "success");
+        } catch (error) {
+            setDepartmentFormError(error instanceof Error ? error.message : "Unable to create department.");
+        } finally {
+            setIsDepartmentSubmitting(false);
+        }
+    };
 
     const handleCreateSubmit: SubmitEventHandler<HTMLFormElement> = async (event) => {
         event.preventDefault();
@@ -866,13 +910,22 @@ export default function EmployeeManagementPage() {
                             Search, filter, onboard, and maintain employee records from one place.
                         </p>
                     </div>
-                    <button
-                        type="button"
-                        onClick={openCreateModal}
-                        className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-                    >
-                        Add employee
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={openDepartmentCreateModal}
+                            className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                        >
+                            Add department
+                        </button>
+                        <button
+                            type="button"
+                            onClick={openCreateModal}
+                            className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                        >
+                            Add employee
+                        </button>
+                    </div>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -1204,6 +1257,62 @@ export default function EmployeeManagementPage() {
                                 className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {isSubmitting ? "Creating..." : "Create employee"}
+                            </button>
+                        </div>
+                    </form>
+                </ModalShell>
+            ) : null}
+
+            {isDepartmentCreateOpen ? (
+                <ModalShell
+                    title="Add department"
+                    description="Create a new department for employee assignment."
+                    onClose={closeDepartmentCreateModal}
+                    widthClassName="max-w-xl"
+                >
+                    <form className="space-y-5" onSubmit={handleDepartmentCreateSubmit}>
+                        {departmentFormError ? (
+                            <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                                {departmentFormError}
+                            </div>
+                        ) : null}
+
+                        <FieldShell label="Department name" required>
+                            <TextInput
+                                value={departmentForm.name}
+                                onChange={(event) =>
+                                    setDepartmentForm((current) => ({ ...current, name: event.target.value }))
+                                }
+                                placeholder="Ex: Finance"
+                                maxLength={120}
+                            />
+                        </FieldShell>
+                        <FieldShell label="Description" required>
+                            <TextInput
+                                value={departmentForm.description}
+                                onChange={(event) =>
+                                    setDepartmentForm((current) => ({ ...current, description: event.target.value }))
+                                }
+                                placeholder="Ex: Handles payroll and people operations"
+                                maxLength={255}
+                            />
+                        </FieldShell>
+
+                        <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
+                            <button
+                                type="button"
+                                onClick={closeDepartmentCreateModal}
+                                disabled={isDepartmentSubmitting}
+                                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isDepartmentSubmitting}
+                                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isDepartmentSubmitting ? "Creating..." : "Create department"}
                             </button>
                         </div>
                     </form>

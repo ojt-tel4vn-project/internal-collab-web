@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertTriangleIcon, DocumentIcon, DownloadIcon } from "@/components/dashboard/home/Icons";
 import type { DocumentRecord, MarkReadResponse } from "@/types/document";
 
@@ -62,6 +63,9 @@ type Props = {
     categoryMap?: Record<string, string>;
     roleLabel?: string;
     userId?: string | null;
+    canDelete?: boolean;
+    deleteEndpointBase?: string;
+    onDeleteSuccess?: (message: string) => void;
 };
 
 type IndexedDocument = DocumentRecord & {
@@ -70,13 +74,23 @@ type IndexedDocument = DocumentRecord & {
 
 const READ_IDS_STORAGE_KEY = "employee_documents_read_ids";
 
-export function EmployeeDocumentsClient({ documents, categoryMap, roleLabel, userId }: Props) {
+export function EmployeeDocumentsClient({
+    documents,
+    categoryMap,
+    roleLabel,
+    userId,
+    canDelete = false,
+    deleteEndpointBase = "/api/hr/documents",
+    onDeleteSuccess,
+}: Props) {
+    const router = useRouter();
     const [query, setQuery] = useState("");
     const deferredQuery = useDeferredValue(query);
     const [statusFilter, setStatusFilter] = useState<"all" | "read" | "unread">("all");
     const [categoryFilter, setCategoryFilter] = useState("all");
     const [readIds, setReadIds] = useState<Set<string>>(new Set());
     const [busyId, setBusyId] = useState<string | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [expandedTitles, setExpandedTitles] = useState<Set<string>>(new Set());
     const [hasHydrated, setHasHydrated] = useState(false);
@@ -247,6 +261,51 @@ export function EmployeeDocumentsClient({ documents, categoryMap, roleLabel, use
         window.open(`/api/employee/documents/${doc.id}/view`, "_blank", "noopener,noreferrer");
     }
 
+    async function handleDelete(doc: DocumentRecord) {
+        if (!canDelete) return;
+        if (!doc.id) {
+            setError("Document id is missing.");
+            return;
+        }
+
+        const confirmed = window.confirm(`Delete document "${doc.title || "Untitled document"}"?`);
+        if (!confirmed) return;
+
+        setDeletingId(doc.id);
+        setError(null);
+        try {
+            const response = await fetch(`${deleteEndpointBase}?id=${encodeURIComponent(doc.id)}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                const raw = await response.text().catch(() => "");
+                let message = `Unable to delete document (HTTP ${response.status})`;
+                if (raw) {
+                    try {
+                        const parsed = JSON.parse(raw) as MarkReadResponse & { detail?: string; title?: string; error?: string };
+                        message = parsed.message || parsed.detail || parsed.title || parsed.error || message;
+                    } catch {
+                        message = raw.slice(0, 200);
+                    }
+                }
+                throw new Error(message);
+            }
+
+            setReadIds((prev) => {
+                const next = new Set(prev);
+                next.delete(doc.id);
+                return next;
+            });
+            onDeleteSuccess?.("Document deleted successfully.");
+            router.refresh();
+        } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : "Unable to delete document.");
+        } finally {
+            setDeletingId(null);
+        }
+    }
+
     function toggleTitle(id: string) {
         setExpandedTitles((prev) => {
             const next = new Set(prev);
@@ -412,11 +471,21 @@ export function EmployeeDocumentsClient({ documents, categoryMap, roleLabel, use
                                     <button
                                         type="button"
                                         onClick={() => handleReadAndView(doc)}
-                                        disabled={busyId === doc.id}
+                                        disabled={busyId === doc.id || deletingId === doc.id}
                                         className="flex-1 rounded-xl bg-blue-600 px-5 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
                                     >
                                         {busyId === doc.id ? "Opening..." : "Read"}
                                     </button>
+                                    {canDelete ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => void handleDelete(doc)}
+                                            disabled={deletingId === doc.id || busyId === doc.id}
+                                            className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-center text-sm font-semibold text-rose-700 shadow-sm hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-70"
+                                        >
+                                            {deletingId === doc.id ? "Deleting..." : "Delete"}
+                                        </button>
+                                    ) : null}
                                     <a
                                         href={`/api/employee/documents/${doc.id}/download`}
                                         className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm hover:border-blue-200"

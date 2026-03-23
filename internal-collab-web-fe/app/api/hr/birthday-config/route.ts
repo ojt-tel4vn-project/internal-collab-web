@@ -13,14 +13,14 @@ export async function GET(request: NextRequest) {
 
         const upstreamResponse = await proxyToBackend({
             method: "GET",
-            path: "/hr/stickers/config",
+            path: "/employees/birthdays/config",
             request,
         });
 
         return createProxyResponse(upstreamResponse);
     } catch {
         return NextResponse.json(
-            { message: "Unable to load point configuration." },
+            { message: "Unable to load birthday configuration." },
             { status: 500 },
         );
     }
@@ -35,14 +35,14 @@ export async function PUT(request: NextRequest) {
         const payload = (await request.json().catch(() => null)) as unknown;
         if (!isRecord(payload)) {
             return NextResponse.json(
-                { message: "Invalid point configuration payload." },
+                { message: "Invalid birthday configuration payload." },
                 { status: 400 },
             );
         }
 
         const upstreamResponse = await proxyToBackend({
             method: "PUT",
-            path: "/hr/stickers/config",
+            path: "/employees/birthdays/config",
             request,
             body: payload,
         });
@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest) {
         return createProxyResponse(upstreamResponse);
     } catch {
         return NextResponse.json(
-            { message: "Unable to update point configuration." },
+            { message: "Unable to update birthday configuration." },
             { status: 500 },
         );
     }

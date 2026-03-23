@@ -32,6 +32,7 @@ const ROLE_OPTIONS = [
 ] as const;
 
 const FILE_ACCEPT = ".pdf,.png,.jpg,.jpeg,.doc,.docx";
+const SUCCESS_STORAGE_KEY = "hr_documents_success_message";
 
 function formatIdLabel(value: string) {
     const cleaned = value.trim();
@@ -90,6 +91,18 @@ export function HRDocumentsClient({ documents, categoryMap, userId }: Props) {
     const [success, setSuccess] = useState<string | null>(null);
 
     useEffect(() => {
+        try {
+            const persisted = window.sessionStorage.getItem(SUCCESS_STORAGE_KEY);
+            if (persisted) {
+                setSuccess(persisted);
+                window.sessionStorage.removeItem(SUCCESS_STORAGE_KEY);
+            }
+        } catch {
+            // Ignore storage read errors
+        }
+    }, []);
+
+    useEffect(() => {
         if (categoryOptions.length === 0) {
             setCategoryId("");
             return;
@@ -106,6 +119,15 @@ export function HRDocumentsClient({ documents, categoryMap, userId }: Props) {
         setFile(null);
         setFileInputKey((prev) => prev + 1);
         setCategoryId(categoryOptions[0]?.id ?? "");
+    }
+
+    function showSuccess(message: string) {
+        setSuccess(message);
+        try {
+            window.sessionStorage.setItem(SUCCESS_STORAGE_KEY, message);
+        } catch {
+            // Ignore storage write errors
+        }
     }
 
     function toggleRole(role: string) {
@@ -163,7 +185,7 @@ export function HRDocumentsClient({ documents, categoryMap, userId }: Props) {
 
             resetForm();
             setShowUploadForm(false);
-            setSuccess("Document uploaded successfully.");
+            showSuccess("Document uploaded successfully.");
             router.refresh();
         } catch (uploadError) {
             setError(uploadError instanceof Error ? uploadError.message : "Unable to upload document.");
@@ -193,13 +215,25 @@ export function HRDocumentsClient({ documents, categoryMap, userId }: Props) {
                     <form onSubmit={handleSubmit} className="mt-5 grid gap-4 md:grid-cols-2">
                         <label className="space-y-2 text-sm font-semibold text-slate-700">
                             <span>File</span>
-                            <input
-                                key={fileInputKey}
-                                type="file"
-                                accept={FILE_ACCEPT}
-                                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                                className="block w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
-                            />
+                            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                                <label
+                                    htmlFor="hr-document-upload"
+                                    className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                                >
+                                    Choose file
+                                </label>
+                                <span className="truncate text-sm font-medium text-slate-600">
+                                    {file ? file.name : "No file chosen"}
+                                </span>
+                                <input
+                                    key={fileInputKey}
+                                    id="hr-document-upload"
+                                    type="file"
+                                    accept={FILE_ACCEPT}
+                                    onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                                    className="sr-only"
+                                />
+                            </div>
                             <span className="block text-xs font-medium text-slate-500">Allowed: PDF, PNG, JPG, DOC, DOCX</span>
                         </label>
 
@@ -302,6 +336,12 @@ export function HRDocumentsClient({ documents, categoryMap, userId }: Props) {
                 categoryMap={categoryMap}
                 roleLabel="HR"
                 userId={userId}
+                canDelete
+                deleteEndpointBase="/api/hr/documents"
+                onDeleteSuccess={(message) => {
+                    setError(null);
+                    showSuccess(message);
+                }}
             />
         </div>
     );

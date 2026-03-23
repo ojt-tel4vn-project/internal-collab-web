@@ -12,13 +12,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ message: "Invalid request payload." }, { status: 400 });
         }
 
-        const receiverId = typeof payload.receiver_id === "string" ? payload.receiver_id.trim() : "";
+        const receiverEmail = typeof payload.receiver_email === "string" ? payload.receiver_email.trim() : "";
+        const receiverEmployeeCode = typeof payload.receiver_employee_code === "string"
+            ? payload.receiver_employee_code.trim()
+            : "";
         const stickerTypeId = typeof payload.sticker_type_id === "string" ? payload.sticker_type_id.trim() : "";
         const message = typeof payload.message === "string" ? payload.message.trim() : "";
 
-        if (!receiverId || !stickerTypeId) {
+        if ((!receiverEmail && !receiverEmployeeCode) || !stickerTypeId) {
             return NextResponse.json(
-                { message: "receiver_id and sticker_type_id are required." },
+                { message: "receiver_email (or receiver_employee_code) and sticker_type_id are required." },
                 { status: 400 },
             );
         }
@@ -36,7 +39,8 @@ export async function POST(request: NextRequest) {
             request,
             body: {
                 message,
-                receiver_id: receiverId,
+                receiver_email: receiverEmail || undefined,
+                receiver_employee_code: receiverEmployeeCode || undefined,
                 sticker_type_id: stickerTypeId,
             },
         });

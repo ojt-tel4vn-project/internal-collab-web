@@ -124,7 +124,7 @@ export default function HrDashboardPage() {
                         <div className="space-y-4">
                             <TaskList />
 
-                            <LeaderboardCard />
+                            <LeaderboardCard viewAllHref="/hr/leaderboard" />
                         </div>
                     </div>
                 </section>

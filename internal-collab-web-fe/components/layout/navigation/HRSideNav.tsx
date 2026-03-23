@@ -8,6 +8,7 @@ import {
     DocumentIcon,
     GridIcon,
     NoteIcon,
+    TrophyIcon,
 } from "@/components/dashboard/home/Icons";
 import type { NavItem } from "@/types/dashboard";
 
@@ -16,6 +17,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Employees", href: "/hr/employeemanagement", icon: ClockIcon },
     { label: "Attendance", href: "/hr/attendancemanagement", icon: CalendarIcon },
     { label: "Documents", href: "/hr/documents", icon: DocumentIcon },
+    { label: "Leaderboard", href: "/hr/leaderboard", icon: TrophyIcon },
     { label: "Leave Request", href: "/hr/leave-overview", icon: CalendarIcon },
     { label: "Configuration", href: "/hr/configuration", icon: NoteIcon },
 ];
@@ -61,4 +63,5 @@ export function HRSideNav() {
         </aside>
     );
 }
+
 
