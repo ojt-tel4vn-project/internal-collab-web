@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
 import { LeaderboardCard } from "@/components/dashboard/home/Leaderboard";
-import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 import type { CalendarEvent, LeaderboardItem } from "@/types/dashboard";
 
 type LeaveOverview = {
@@ -108,11 +107,7 @@ export default function ManagerHomePage() {
     }, [upcomingLeaves, birthdays]);
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <ManagerSideNav />
-
-                <section className="flex-1 space-y-6">
+        <section className="space-y-6">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         {stats.map((item) => (
                             <div
@@ -190,7 +185,5 @@ export default function ManagerHomePage() {
                         </div>
                     </div>
                 </section>
-            </div>
-        </main>
     );
 }

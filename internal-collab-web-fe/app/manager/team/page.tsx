@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { PencilIcon } from "@/components/dashboard/home/Icons";
-import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 
 type Subordinate = {
     id: string;
@@ -95,11 +94,7 @@ export default function ManagerTeamPage() {
     ];
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <ManagerSideNav />
-
-                <section className="flex-1 space-y-5">
+                        <section className="flex-1 space-y-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h1 className="text-2xl font-bold">Team Directory</h1>
@@ -202,7 +197,6 @@ export default function ManagerTeamPage() {
                         </div>
                     </div>
                 </section>
-            </div>
-        </main>
     );
 }
+

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 
 type AttendanceConfiguration = {
     confirmationDeadlineDays: number;
@@ -579,11 +578,7 @@ export default function HrConfigurationPage() {
     };
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-8">
-                <HRSideNav />
-
-                <section className="w-full space-y-6">
+                        <section className="w-full space-y-6">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                         <div className="space-y-1">
                             <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Configuration</h1>
@@ -946,7 +941,6 @@ export default function HrConfigurationPage() {
                         </section>
                     </div>
                 </section>
-            </div>
-        </main>
     );
 }
+

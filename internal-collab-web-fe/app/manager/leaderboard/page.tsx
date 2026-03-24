@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
 import { LeaderboardResults } from "@/components/leaderboard/LeaderboardResults";
 import type { DepartmentOption, LeaderboardEntry, LeaderboardFilters } from "@/types/employee";
@@ -140,13 +139,7 @@ export default function ManagerLeaderboardPage() {
             : departmentsState.data.find((department) => department.id === filters.departmentId)?.name ?? "Selected Department";
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row lg:items-start lg:py-8">
-                <aside className="w-full lg:sticky lg:top-8 lg:w-[19.5rem] lg:flex-none">
-                    <ManagerSideNav />
-                </aside>
-
-                <section className="min-w-0 flex-1 space-y-6">
+                        <section className="min-w-0 flex-1 space-y-6">
                     <LeaderboardOverview
                         departmentId={filters.departmentId}
                         departments={departmentsState.data}
@@ -178,7 +171,6 @@ export default function ManagerLeaderboardPage() {
                         topThree={topThree}
                     />
                 </section>
-            </div>
-        </main>
     );
 }
+

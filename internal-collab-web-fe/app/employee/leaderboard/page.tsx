@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
 import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
 import { LeaderboardResults } from "@/components/leaderboard/LeaderboardResults";
 import { PointsBalanceCard } from "@/components/leaderboard/PointsBalanceCard";
@@ -635,53 +634,7 @@ export default function LeaderboardPage() {
     }
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row lg:items-start lg:py-8">
-                <aside className="w-full lg:sticky lg:top-8 lg:w-78 lg:flex-none">
-                    <div className="space-y-4">
-                        <EmployeeSideNav />
-                        <PointsBalanceCard
-                            availabilityLabel={getSendAvailabilityLabel(hasAvailablePoints)}
-                            balanceError={balanceState.error}
-                            balanceProgress={balanceProgress}
-                            currentBalance={currentBalance}
-                            hasAvailablePoints={hasAvailablePoints}
-                            loading={balanceState.loading}
-                            year={balanceState.data?.year ?? new Date().getFullYear()}
-                        />
-
-                        <SendStickerCard
-                            canSend={canSend}
-                            form={{
-                                ...form,
-                                stickerTypeId: normalizedStickerTypeId,
-                            }}
-                            isReceiverMenuOpen={isReceiverMenuOpen}
-                            isReceiverPendingSelection={isReceiverPendingSelection}
-                            isSelfReceiver={isSelfReceiver}
-                            onMessageChange={(value) => updateFormField("message", value)}
-                            onReceiverBlur={() => {
-                                window.setTimeout(() => setIsReceiverMenuOpen(false), 120);
-                            }}
-                            onReceiverFocus={() => setIsReceiverMenuOpen(true)}
-                            onReceiverNameChange={(value) => updateFormField("receiverName", value)}
-                            onReceiverPick={handleReceiverPick}
-                            onStickerTypeChange={(value) => updateFormField("stickerTypeId", value)}
-                            onSubmit={handleSendSticker}
-                            receiverError={receiverState.error}
-                            receiverLoading={receiverState.loading}
-                            receiverMatches={receiverMatches}
-                            selectedReceiverName={selectedReceiver?.fullName ?? null}
-                            selectedStickerType={selectedStickerType}
-                            sendState={sendState}
-                            stickerTypeError={stickerTypesState.error}
-                            stickerTypeLoading={stickerTypesState.loading}
-                            stickerTypes={stickerTypesState.data}
-                        />
-                    </div>
-                </aside>
-
-                <section className="min-w-0 flex-1 space-y-6">
+                        <section className="min-w-0 flex-1 space-y-6">
                     <LeaderboardOverview
                         departmentId={filters.departmentId}
                         departments={departmentsState.data}
@@ -731,7 +684,6 @@ export default function LeaderboardPage() {
                         topThree={topThree}
                     />
                 </section>
-            </div>
-        </main>
     );
 }
+

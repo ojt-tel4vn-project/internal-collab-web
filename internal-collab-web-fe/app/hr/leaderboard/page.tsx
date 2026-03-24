@@ -15,7 +15,6 @@ import {
 } from "@/app/employee/leaderboard/data";
 import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
 import { LeaderboardResults } from "@/components/leaderboard/LeaderboardResults";
-import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 import type {
     DepartmentOption,
     LeaderboardEntry,
@@ -443,13 +442,9 @@ export default function HrLeaderboardPage() {
     }
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row lg:items-start lg:py-8">
-                <aside className="w-full lg:sticky lg:top-8 lg:w-[19.5rem] lg:flex-none">
-                    <div className="space-y-4">
-                        <HRSideNav />
-
-                        <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="grid gap-6 xl:grid-cols-[22rem_minmax(0,1fr)] xl:items-start">
+            <aside className="space-y-6">
+                <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
                             <div className="mb-4">
                                 <h2 className="text-lg font-bold text-slate-900">Sticker Pool</h2>
                                 <p className="mt-1 text-xs text-slate-500">Add new sticker types for employees to use.</p>
@@ -676,11 +671,10 @@ export default function HrLeaderboardPage() {
                                     </div>
                                 )}
                             </div>
-                        </section>
-                    </div>
-                </aside>
+                </section>
+            </aside>
 
-                <section className="min-w-0 flex-1 space-y-6">
+            <section className="min-w-0 space-y-6">
                     <LeaderboardOverview
                         departmentId={filters.departmentId}
                         departments={departmentsState.data}
@@ -732,8 +726,8 @@ export default function HrLeaderboardPage() {
                         rankedEntries={rankedEntries}
                         topThree={topThree}
                     />
-                </section>
-            </div>
-        </main>
+            </section>
+        </div>
     );
 }
+

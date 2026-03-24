@@ -1,6 +1,5 @@
 import { headers } from "next/headers";
 import { HRDocumentsClient } from "@/components/documents/HRDocumentsClient";
-import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 import type { DocumentApiItem, DocumentsApiResponse } from "@/types/document";
 import { normalizeDocument } from "@/types/document";
 
@@ -151,11 +150,7 @@ export default async function HrDocumentsPage() {
     ]);
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <HRSideNav />
-
-                <section className="flex-1 space-y-6">
+                        <section className="flex-1 space-y-6">
                     <div>
                         <h1 className="text-2xl font-bold">Documents</h1>
                         <p className="text-sm text-slate-500">Quick access to company policies and shared files.</p>
@@ -173,7 +168,6 @@ export default async function HrDocumentsPage() {
                         userId={userId}
                     />
                 </section>
-            </div>
-        </main>
     );
 }
+
