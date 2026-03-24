@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ChevronDownIcon } from "@/components/dashboard/home/Icons";
 
 type LeaveEmployee = {
     id: string;
@@ -64,7 +65,7 @@ function formatDateRange(from: string, to: string, days: number) {
     const fromDate = new Date(from);
     const toDate = new Date(to);
     if (from === to) return `${fmt(fromDate)} (${days} day)`;
-    return `${fmt(fromDate)} � ${fmt(toDate)} (${days} days)`;
+    return `${fmt(fromDate)} - ${fmt(toDate)} (${days} days)`;
 }
 
 export default function ManagerLeaveApprovalsPage() {
@@ -81,6 +82,10 @@ export default function ManagerLeaveApprovalsPage() {
     const [rejectReason, setRejectReason] = useState("");
     const [rejectError, setRejectError] = useState<string | null>(null);
     const [rejectLoading, setRejectLoading] = useState(false);
+    const [approveTarget, setApproveTarget] = useState<LeaveRequest | null>(null);
+    const [approveComment, setApproveComment] = useState("");
+    const [approveError, setApproveError] = useState<string | null>(null);
+    const [approveLoading, setApproveLoading] = useState(false);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -131,24 +136,41 @@ export default function ManagerLeaveApprovalsPage() {
         return "An unexpected error occurred.";
     }
 
-    async function handleApprove(id: string) {
-        setBusyId(id);
+    function openApproveModal(req: LeaveRequest) {
+        setApproveTarget(req);
+        setApproveComment("");
+        setApproveError(null);
+    }
+
+    function closeApproveModal() {
+        setApproveTarget(null);
+        setApproveComment("");
+        setApproveError(null);
+    }
+
+    async function handleApproveConfirm() {
+        if (!approveTarget) return;
+        setApproveLoading(true);
+        setBusyId(approveTarget.id);
+        setApproveError(null);
         setError(null);
         try {
-            const res = await fetch(`/api/manager/leave-requests/${id}/approve`, {
+            const res = await fetch(`/api/manager/leave-requests/${approveTarget.id}/approve`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "approve", comment: "" }),
+                body: JSON.stringify({ action: "approve", comment: approveComment.trim() }),
             });
             if (res.ok) {
+                closeApproveModal();
                 await fetchData();
             } else {
                 const data = await res.json();
-                setError(extractErrorMessage(data));
+                setApproveError(extractErrorMessage(data));
             }
         } catch {
-            setError("Unable to connect to server.");
+            setApproveError("Unable to connect to server.");
         } finally {
+            setApproveLoading(false);
             setBusyId(null);
         }
     }
@@ -230,7 +252,6 @@ export default function ManagerLeaveApprovalsPage() {
                             {error}
                         </div>
                     )}
-
                     {/* Filters */}
                     <div className="flex flex-wrap items-center justify-between gap-3 text-sm font-semibold">
                         <div className="flex items-center gap-2">
@@ -245,8 +266,8 @@ export default function ManagerLeaveApprovalsPage() {
                             ))}
                         </div>
                         <div className="flex items-center gap-2">
-                            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm">All Members ?</button>
-                            <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm">Date Range ?</button>
+                            <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm"><span>All Members</span><ChevronDownIcon className="h-4 w-4 text-slate-400" /></button>
+                            <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 shadow-sm"><span>Date Range</span><ChevronDownIcon className="h-4 w-4 text-slate-400" /></button>
                         </div>
                     </div>
 
@@ -264,6 +285,11 @@ export default function ManagerLeaveApprovalsPage() {
                             {filteredRequests.map((req) => {
                                 const isBusy = busyId === req.id;
                                 const initials = req.employee?.full_name?.split(" ").map((n) => n[0]).join("") ?? "?";
+                                const managerCommentLabel = req.status === "rejected" ? "Rejection reason" : "Manager comment";
+                                const managerCommentTone =
+                                    req.status === "rejected"
+                                        ? "bg-rose-50 text-rose-600"
+                                        : "bg-emerald-50 text-emerald-700";
 
                                 return (
                                     <article key={req.id} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -300,7 +326,7 @@ export default function ManagerLeaveApprovalsPage() {
                                                 {req.status === "pending" && (
                                                     <>
                                                         <button
-                                                            onClick={() => void handleApprove(req.id)}
+                                                            onClick={() => openApproveModal(req)}
                                                             disabled={isBusy}
                                                             className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
                                                         >
@@ -319,8 +345,8 @@ export default function ManagerLeaveApprovalsPage() {
                                         </div>
 
                                         {req.approver_comment && (
-                                            <div className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-600">
-                                                Rejection reason: &quot;{req.approver_comment}&quot;
+                                            <div className={`mt-4 rounded-2xl px-4 py-3 text-xs font-semibold ${managerCommentTone}`}>
+                                                {managerCommentLabel}: &quot;{req.approver_comment}&quot;
                                             </div>
                                         )}
                                     </article>
@@ -328,12 +354,11 @@ export default function ManagerLeaveApprovalsPage() {
                             })}
                         </div>
                     )}
-
                     {/* Pagination */}
                     {!loading && total > 0 && (
                         <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-5 py-4 text-xs font-semibold text-slate-500">
                             <span>
-                                Showing {Math.min((page - 1) * LIMIT + 1, total)}�{Math.min(page * LIMIT, total)} of {total} requests
+                                Showing {Math.min((page - 1) * LIMIT + 1, total)} - {Math.min(page * LIMIT, total)} of {total} requests
                             </span>
                             <div className="flex items-center gap-2">
                                 {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((n) => (
@@ -349,6 +374,52 @@ export default function ManagerLeaveApprovalsPage() {
                         </div>
                     )}
             </section>
+
+            {/* Approve Modal */}
+            {approveTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                        <h2 className="text-lg font-bold text-slate-900">Approve Leave Request</h2>
+                        <p className="mt-1 text-sm text-slate-500">
+                            Approving leave for{" "}
+                            <span className="font-semibold text-slate-700">{approveTarget.employee?.full_name}</span>
+                        </p>
+
+                        <div className="mt-4 space-y-2">
+                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Comment for employee <span className="font-normal normal-case text-slate-400">(optional)</span>
+                            </label>
+                            <textarea
+                                value={approveComment}
+                                onChange={(e) => setApproveComment(e.target.value)}
+                                placeholder="Add a comment for this approval..."
+                                rows={4}
+                                className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-400"
+                            />
+                            {approveError && (
+                                <p className="text-xs font-semibold text-rose-600">{approveError}</p>
+                            )}
+                        </div>
+
+                        <div className="mt-5 flex gap-3">
+                            <button
+                                onClick={closeApproveModal}
+                                disabled={approveLoading}
+                                className="flex-1 rounded-xl border border-slate-200 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => void handleApproveConfirm()}
+                                disabled={approveLoading}
+                                className="flex-1 rounded-xl bg-emerald-500 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+                            >
+                                {approveLoading ? "Approving..." : "Confirm Approve"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Reject Modal */}
             {rejectTarget && (

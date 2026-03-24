@@ -13,6 +13,17 @@ export function GridIcon(props: IconProps) {
     );
 }
 
+export function UsersIcon(props: IconProps) {
+    return (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="10" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+    );
+}
+
 export function ClockIcon(props: IconProps) {
     return (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" {...props}>
@@ -22,11 +33,31 @@ export function ClockIcon(props: IconProps) {
     );
 }
 
+export function CheckCircleIcon(props: IconProps) {
+    return (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <circle cx="12" cy="12" r="9" />
+            <path d="m9 12 2 2 4-4" />
+        </svg>
+    );
+}
+
 export function CalendarIcon(props: IconProps) {
     return (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" {...props}>
             <rect x="4" y="6" width="16" height="14" rx="3" />
             <path d="M8 4v4M16 4v4M4 10h16" />
+        </svg>
+    );
+}
+
+export function UserXIcon(props: IconProps) {
+    return (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="m17 8 4 4" />
+            <path d="m21 8-4 4" />
         </svg>
     );
 }
