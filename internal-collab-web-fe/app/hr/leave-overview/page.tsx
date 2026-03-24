@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/dashboard/home/Icons";
-import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 
 type LeaveRequestApi = {
     id?: unknown;
@@ -404,11 +403,7 @@ export default function HrLeaveRequestPage() {
     };
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-8">
-                <HRSideNav />
-
-                <section className="w-full space-y-6">
+                        <section className="w-full space-y-6">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div className="space-y-1">
                             <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Leave Request</h1>
@@ -537,7 +532,6 @@ export default function HrLeaveRequestPage() {
                         ) : null}
                     </div>
                 </section>
-            </div>
-        </main>
     );
 }
+

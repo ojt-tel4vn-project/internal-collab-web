@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { BirthdayAnnouncementModal } from "@/components/birthdays/BirthdayAnnouncementModal";
+import { RoleWorkspaceShell } from "@/components/layout/RoleWorkspaceShell";
+import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 import HRNavbar from "@/components/layout/navbar/HRNavbar";
 
 export default function HrLayout({
@@ -9,7 +11,9 @@ export default function HrLayout({
     <div className="min-h-screen bg-[#0b1220] text-slate-100">
       <HRNavbar />
       <BirthdayAnnouncementModal />
-      <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+      <RoleWorkspaceShell sideNav={<HRSideNav />}>
+        {children}
+      </RoleWorkspaceShell>
     </div>
   );
 }

@@ -237,12 +237,8 @@ export default function NotificationCenter({
     }
   };
 
-  return (
-    <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-      <div className={`mx-auto flex w-full ${maxWidthClassName} gap-6 px-4 py-8`}>
-        {sideNav ? sideNav : null}
-
-        <section className="flex-1 space-y-6">
+  const content = (
+    <section className="flex-1 space-y-6">
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-3">
               <h1 className="text-2xl font-bold">Notifications</h1>
@@ -378,7 +374,18 @@ export default function NotificationCenter({
             </div>
           </div>
         </section>
-      </div>
+  );
+
+  return (
+    <>
+      {sideNav ? (
+        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
+          <div className={`mx-auto flex w-full ${maxWidthClassName} gap-6 px-4 py-8`}>
+            {sideNav}
+            {content}
+          </div>
+        </main>
+      ) : content}
 
       {selectedNotification ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
@@ -419,6 +426,6 @@ export default function NotificationCenter({
           </div>
         </div>
       ) : null}
-    </main>
+    </>
   );
 }

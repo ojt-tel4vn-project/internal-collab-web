@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/dashboard/home/Icons";
-import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 
 type AttendanceDayStatus = "present" | "absent" | "late" | "leave" | "unknown";
 
@@ -264,11 +263,7 @@ export default function ManagerAttendancePage() {
     const recordStatus = record ? RECORD_STATUS_META[record.status] ?? RECORD_STATUS_META.pending : null;
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <ManagerSideNav />
-
-                <section className="flex-1 space-y-6">
+                        <section className="flex-1 space-y-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
                             <h1 className="text-3xl font-bold">My Attendance</h1>
@@ -403,7 +398,6 @@ export default function ManagerAttendancePage() {
                         </div>
                     ) : null}
                 </section>
-            </div>
-        </main>
     );
 }
+

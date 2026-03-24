@@ -5,7 +5,6 @@ import { TaskList } from "@/components/dashboard/home/TaskList";
 import { LeaderboardCard } from "@/components/dashboard/home/Leaderboard";
 import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
 import { CalendarIcon } from "@/components/dashboard/home/Icons";
-import { HRSideNav } from "@/components/layout/navigation/HRSideNav";
 
 type HrDashboardMetrics = {
     totalEmployees: number;
@@ -72,11 +71,7 @@ export default function HrDashboardPage() {
     ];
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-8">
-                <HRSideNav />
-
-                <section className="flex-1 space-y-6">
+                        <section className="flex-1 space-y-6">
                     <h1 className="text-2xl font-bold">HR Dashboard Overview</h1>
 
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -128,7 +123,6 @@ export default function HrDashboardPage() {
                         </div>
                     </div>
                 </section>
-            </div>
-        </main>
     );
 }
+

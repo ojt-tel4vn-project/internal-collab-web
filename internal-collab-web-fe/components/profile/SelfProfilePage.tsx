@@ -15,7 +15,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 type SelfProfilePageProps = {
-    sideNav: ReactNode;
+    sideNav?: ReactNode;
     defaultName: string;
     noteText?: string;
     fallbackPosition?: string;
@@ -498,12 +498,8 @@ export default function SelfProfilePage({
         }
     };
 
-    return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                {sideNav}
-
-                <section className="flex-1 space-y-6">
+    const content = (
+        <section className="flex-1 space-y-6">
                     <div className="space-y-1">
                         <h1 className="text-3xl font-bold">My Profile</h1>
                         <p className="text-sm text-slate-500">Manage your personal info, contact details, and profile photo.</p>
@@ -580,7 +576,16 @@ export default function SelfProfilePage({
                         </div>
                     )}
                 </section>
+    );
+
+    return sideNav ? (
+        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
+            <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
+                {sideNav}
+                {content}
             </div>
         </main>
+    ) : (
+        content
     );
 }

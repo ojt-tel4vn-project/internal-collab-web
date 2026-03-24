@@ -1,6 +1,5 @@
 import { headers } from "next/headers";
 import { EmployeeDocumentsClient } from "@/components/documents/EmployeeDocumentsClient";
-import { ManagerSideNav } from "@/components/layout/navigation/ManagerSideNav";
 import type { DocumentApiItem, DocumentsApiResponse } from "@/types/document";
 import { normalizeDocument } from "@/types/document";
 
@@ -151,11 +150,7 @@ export default async function ManagerDocumentsPage() {
     ]);
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <ManagerSideNav />
-
-                <section className="flex-1 space-y-6">
+                        <section className="flex-1 space-y-6">
                     <div>
                         <h1 className="text-2xl font-bold">Documents</h1>
                         <p className="text-sm text-slate-500">Quick access to company policies and shared files.</p>
@@ -174,7 +169,6 @@ export default async function ManagerDocumentsPage() {
                         userId={userId}
                     />
                 </section>
-            </div>
-        </main>
     );
 }
+

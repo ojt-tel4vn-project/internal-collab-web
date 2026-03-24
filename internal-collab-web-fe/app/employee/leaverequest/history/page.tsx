@@ -1,17 +1,12 @@
 import Link from "next/link";
 import { LeaveHistoryPanel } from "@/components/leave/LeaveHistoryPanel";
-import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
 import { loadLeaveRequestPageData } from "@/app/employee/leave-request-data";
 
 export default async function LeaveHistoryPage() {
     const { historyItems, loadError } = await loadLeaveRequestPageData();
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <EmployeeSideNav />
-
-                <section className="flex-1 space-y-6">
+                        <section className="flex-1 space-y-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold">Leave History</h1>
@@ -34,7 +29,6 @@ export default async function LeaveHistoryPage() {
                         showViewAllLink={false}
                     />
                 </section>
-            </div>
-        </main>
     );
 }
+

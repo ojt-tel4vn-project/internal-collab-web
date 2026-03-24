@@ -1,6 +1,5 @@
 import { headers } from "next/headers";
 import { EmployeeDocumentsClient } from "@/components/documents/EmployeeDocumentsClient";
-import { EmployeeSideNav } from "@/components/layout/navigation/EmployeeSideNav";
 import { parseApiErrorMessage } from "@/lib/api/errors";
 import { asString } from "@/lib/normalize";
 import type { DocumentApiItem, DocumentsApiResponse } from "@/types/document";
@@ -155,11 +154,7 @@ export default async function DocumentsPage() {
     ]);
 
     return (
-        <main className="min-h-screen bg-[#f6f8fb] text-slate-900">
-            <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 py-8">
-                <EmployeeSideNav />
-
-                <section className="flex-1 space-y-6">
+                        <section className="flex-1 space-y-6">
                     <div>
                         <h1 className="text-2xl font-bold">Documents</h1>
                         <p className="text-sm text-slate-500">Quick access to company policies and shared files.</p>
@@ -178,7 +173,6 @@ export default async function DocumentsPage() {
                         userId={userId}
                     />
                 </section>
-            </div>
-        </main>
     );
 }
+
