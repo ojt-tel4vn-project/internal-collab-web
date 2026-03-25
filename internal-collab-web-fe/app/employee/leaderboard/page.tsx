@@ -673,16 +673,63 @@ export default function LeaderboardPage() {
                         visibleRanks={rankedEntries.length}
                     />
 
-                    <LeaderboardResults
-                        currentEmployeeId={currentEmployeeId}
-                        error={leaderboardState.error}
-                        loading={leaderboardState.loading}
-                        normalizedReceiverId={normalizedReceiverId}
-                        normalizedReceiverName={normalizedReceiverName}
-                        onReceiverPick={handleReceiverPick}
-                        rankedEntries={rankedEntries}
-                        topThree={topThree}
-                    />
+                    <div className="grid gap-6 xl:grid-cols-[24rem_minmax(0,1fr)] xl:items-start">
+                        <aside className="space-y-5 xl:sticky xl:top-8">
+                            <PointsBalanceCard
+                                availabilityLabel={getSendAvailabilityLabel(hasAvailablePoints)}
+                                balanceError={balanceState.error}
+                                balanceProgress={balanceProgress}
+                                currentBalance={currentBalance}
+                                hasAvailablePoints={hasAvailablePoints}
+                                loading={balanceState.loading}
+                                year={balanceState.data?.year ?? new Date().getFullYear()}
+                            />
+
+                            <SendStickerCard
+                                canSend={canSend}
+                                form={{
+                                    message: form.message,
+                                    receiverName: form.receiverName,
+                                    stickerTypeId: form.stickerTypeId,
+                                }}
+                                isReceiverMenuOpen={isReceiverMenuOpen}
+                                isReceiverPendingSelection={isReceiverPendingSelection}
+                                isSelfReceiver={isSelfReceiver}
+                                onMessageChange={(value) => updateFormField("message", value)}
+                                onReceiverBlur={() => {
+                                    window.setTimeout(() => setIsReceiverMenuOpen(false), 120);
+                                }}
+                                onReceiverFocus={() => setIsReceiverMenuOpen(true)}
+                                onReceiverNameChange={(value) => {
+                                    setIsReceiverMenuOpen(true);
+                                    updateFormField("receiverName", value);
+                                }}
+                                onReceiverPick={handleReceiverPick}
+                                onStickerTypeChange={(value) => updateFormField("stickerTypeId", value)}
+                                onSubmit={handleSendSticker}
+                                receiverError={receiverState.error}
+                                receiverLoading={receiverState.loading}
+                                receiverMatches={receiverMatches}
+                                selectedReceiverName={selectedReceiver?.fullName ?? null}
+                                selectedStickerType={selectedStickerType}
+                                sendState={sendState}
+                                stickerTypeError={stickerTypesState.error}
+                                stickerTypeLoading={stickerTypesState.loading}
+                                stickerTypes={stickerTypesState.data}
+                            />
+                        </aside>
+
+                        <LeaderboardResults
+                            currentEmployeeId={currentEmployeeId}
+                            error={leaderboardState.error}
+                            loading={leaderboardState.loading}
+                            normalizedReceiverId={normalizedReceiverId}
+                            normalizedReceiverName={normalizedReceiverName}
+                            onReceiverPick={handleReceiverPick}
+                            rankedEntries={rankedEntries}
+                            topThree={topThree}
+                        />
+                    </div>
                 </section>
     );
 }
