@@ -56,6 +56,9 @@ const EMPTY_DEPARTMENT_FORM: DepartmentFormState = {
 const STATUS_FILTER_OPTIONS = ["pending", "active", "offboard"] as const;
 const STATUS_UPDATE_OPTIONS = ["pending", "active", "offboard"] as const;
 const PAGE_SIZE = 10;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const SIMPLE_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function normalizeText(value: unknown) {
     if (typeof value !== "string") {
@@ -234,6 +237,25 @@ function getRoleId(role: HrEmployeeSummary["role"] | HrEmployeeDetail["role"] | 
     }
 
     return normalizeText(role.id);
+}
+
+function isUuid(value: string | null | undefined) {
+    const normalized = normalizeText(value);
+    return normalized ? UUID_PATTERN.test(normalized) : false;
+}
+
+function isIsoDate(value: string | null | undefined) {
+    const normalized = normalizeText(value);
+    if (!normalized || !ISO_DATE_PATTERN.test(normalized)) {
+        return false;
+    }
+
+    const date = new Date(`${normalized}T00:00:00Z`);
+    if (Number.isNaN(date.getTime())) {
+        return false;
+    }
+
+    return date.toISOString().slice(0, 10) === normalized;
 }
 
 function formatRoleLabel(roleName: string) {
@@ -634,10 +656,10 @@ export default function EmployeeManagementPage() {
         return manageableEmployees
             .filter((employee) => getRoleName(employee.role) === "manager")
             .map((employee) => ({
-                id: employee.id,
+                id: normalizeText(employee.id),
                 full_name: normalizeText(employee.full_name),
             }))
-            .filter((employee) => employee.full_name)
+            .filter((employee) => employee.id && employee.full_name)
             .sort((left, right) => left.full_name.localeCompare(right.full_name));
     }, [manageableEmployees]);
 
@@ -769,6 +791,21 @@ export default function EmployeeManagementPage() {
                 !payload.manager_id
             ) {
                 throw new Error("Please fill all required fields.");
+            }
+            if (!SIMPLE_EMAIL_PATTERN.test(payload.email)) {
+                throw new Error("Invalid email format.");
+            }
+            if (!isIsoDate(payload.date_of_birth)) {
+                throw new Error("Date of birth must use YYYY-MM-DD format.");
+            }
+            if (payload.join_date && !isIsoDate(payload.join_date)) {
+                throw new Error("Join date must use YYYY-MM-DD format.");
+            }
+            if (!isUuid(payload.department_id)) {
+                throw new Error("Invalid department value. Please choose again.");
+            }
+            if (!isUuid(payload.manager_id)) {
+                throw new Error("Invalid manager value. Please choose again.");
             }
 
             const response = await fetch("/api/employee?view=hr-management", {
