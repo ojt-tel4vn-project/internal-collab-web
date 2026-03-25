@@ -62,6 +62,10 @@ type EmployeeDetailResponse = {
     status?: unknown;
 };
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const SIMPLE_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function parseJson<T>(text: string): T | null {
     try {
         return JSON.parse(text) as T;
@@ -243,6 +247,90 @@ function normalizeNumber(value: unknown) {
     return null;
 }
 
+function isUuid(value: string) {
+    return UUID_PATTERN.test(value);
+}
+
+function isIsoDate(value: string) {
+    if (!ISO_DATE_PATTERN.test(value)) {
+        return false;
+    }
+
+    const date = new Date(`${value}T00:00:00Z`);
+    if (Number.isNaN(date.getTime())) {
+        return false;
+    }
+
+    return date.toISOString().slice(0, 10) === value;
+}
+
+function sanitizeCreateEmployeePayload(body: Record<string, unknown>) {
+    const email = normalizeString(body.email);
+    const firstName = normalizeString(body.first_name);
+    const lastName = normalizeString(body.last_name);
+    const position = normalizeString(body.position);
+    const dateOfBirth = normalizeDate(body.date_of_birth);
+
+    if (!email || !firstName || !lastName || !position || !dateOfBirth) {
+        return { payload: null, message: "Please fill all required fields." } as const;
+    }
+
+    if (!SIMPLE_EMAIL_PATTERN.test(email)) {
+        return { payload: null, message: "Invalid email format." } as const;
+    }
+
+    if (!isIsoDate(dateOfBirth)) {
+        return { payload: null, message: "Date of birth must use YYYY-MM-DD format." } as const;
+    }
+
+    const payload: Record<string, unknown> = {
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        date_of_birth: dateOfBirth,
+        position,
+    };
+
+    const phone = normalizeString(body.phone);
+    if (phone) {
+        payload.phone = phone;
+    }
+
+    const address = normalizeString(body.address);
+    if (address) {
+        payload.address = address;
+    }
+
+    const departmentId = normalizeString(body.department_id);
+    if (departmentId) {
+        if (!isUuid(departmentId)) {
+            return { payload: null, message: "Invalid department value." } as const;
+        }
+
+        payload.department_id = departmentId;
+    }
+
+    const managerId = normalizeString(body.manager_id);
+    if (managerId) {
+        if (!isUuid(managerId)) {
+            return { payload: null, message: "Invalid manager value." } as const;
+        }
+
+        payload.manager_id = managerId;
+    }
+
+    const joinDate = normalizeDate(body.join_date);
+    if (joinDate) {
+        if (!isIsoDate(joinDate)) {
+            return { payload: null, message: "Join date must use YYYY-MM-DD format." } as const;
+        }
+
+        payload.join_date = joinDate;
+    }
+
+    return { payload, message: "" } as const;
+}
+
 export async function GET(request: NextRequest) {
     const view = request.nextUrl.searchParams.get("view");
     if (view === "hr-management") {
@@ -383,16 +471,21 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+    const body = asRecord(await request.json().catch(() => null));
     if (!body) {
         return NextResponse.json({ message: "Invalid request payload." }, { status: 400 });
+    }
+
+    const sanitized = sanitizeCreateEmployeePayload(body);
+    if (!sanitized.payload) {
+        return NextResponse.json({ message: sanitized.message }, { status: 400 });
     }
 
     const upstreamResponse = await proxyToBackend({
         method: "POST",
         path: "/hr/employees",
         request,
-        body,
+        body: sanitized.payload,
     });
 
     return createProxyResponse(upstreamResponse);

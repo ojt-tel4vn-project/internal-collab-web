@@ -3,6 +3,14 @@
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "@/components/dashboard/home/Icons";
 
+type AttendanceDayDetail = {
+    day: number;
+    status: string;
+    checkIn: string;
+    checkOut: string;
+    workHours: number | null;
+};
+
 type AttendanceRow = {
     id: string;
     employeeId: string;
@@ -14,7 +22,11 @@ type AttendanceRow = {
     late: number;
     absent: number;
     status: string;
+    confirmedAt: string;
     uploadedAt: string;
+    month: number;
+    year: number;
+    attendanceDays: AttendanceDayDetail[];
 };
 
 const STATUS_OPTIONS = ["pending", "confirmed", "auto_confirmed"] as const;
@@ -57,6 +69,21 @@ function num(value: unknown, fallback = 0): number {
     return fallback;
 }
 
+function optionalNum(value: unknown): number | null {
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return value;
+    }
+
+    if (typeof value === "string") {
+        const parsed = Number(value.trim());
+        if (Number.isFinite(parsed)) {
+            return parsed;
+        }
+    }
+
+    return null;
+}
+
 function parseError(raw: string, fallback: string): string {
     if (!raw) {
         return fallback;
@@ -97,6 +124,27 @@ function statusClass(status: string): string {
     return "bg-amber-50 text-amber-700 ring-1 ring-amber-100";
 }
 
+function dayStatusClass(status: string): string {
+    const normalized = txt(status).toLowerCase();
+    if (normalized === "present") {
+        return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100";
+    }
+
+    if (normalized === "late") {
+        return "bg-amber-50 text-amber-700 ring-1 ring-amber-100";
+    }
+
+    if (normalized === "absent") {
+        return "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+    }
+
+    if (normalized === "leave") {
+        return "bg-sky-50 text-sky-700 ring-1 ring-sky-100";
+    }
+
+    return "bg-slate-100 text-slate-600 ring-1 ring-slate-200";
+}
+
 function formatDateTime(value: string): string {
     if (!value) {
         return "--";
@@ -108,6 +156,22 @@ function formatDateTime(value: string): string {
     }
 
     return dateTimeFormatter.format(date);
+}
+
+function formatWorkHours(value: number | null): string {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+        return "--";
+    }
+
+    return `${value.toFixed(2)} h`;
+}
+
+function formatPeriod(month: number, year: number): string {
+    if (month < 1 || month > 12 || year < 2000) {
+        return "--";
+    }
+
+    return monthFormatter.format(new Date(year, month - 1, 1));
 }
 
 function initials(name: string): string {
@@ -180,9 +244,7 @@ function parseDepartmentMap(payload: unknown): Map<string, string> {
 
         const id = txt(employee.id);
         const department = employee.department;
-        const departmentName = typeof department === "string"
-            ? txt(department)
-            : txt(rec(department)?.name);
+        const departmentName = typeof department === "string" ? txt(department) : txt(rec(department)?.name);
 
         if (id && departmentName) {
             map.set(id, departmentName);
@@ -190,6 +252,46 @@ function parseDepartmentMap(payload: unknown): Map<string, string> {
     }
 
     return map;
+}
+
+function parseAttendanceDays(value: unknown): AttendanceDayDetail[] {
+    const attendanceData = rec(value);
+    if (!attendanceData) {
+        return [];
+    }
+
+    const details: AttendanceDayDetail[] = [];
+    for (const [dayKey, rawValue] of Object.entries(attendanceData)) {
+        const dayNumber = Number.parseInt(dayKey, 10);
+        if (!Number.isFinite(dayNumber) || dayNumber < 1 || dayNumber > 31) {
+            continue;
+        }
+
+        let status = "";
+        let checkIn = "";
+        let checkOut = "";
+        let workHours: number | null = null;
+
+        if (typeof rawValue === "string") {
+            status = txt(rawValue).toLowerCase();
+        } else {
+            const detail = rec(rawValue);
+            status = txt(detail?.status).toLowerCase();
+            checkIn = txt(detail?.check_in_time ?? detail?.checkInTime);
+            checkOut = txt(detail?.check_out_time ?? detail?.checkOutTime);
+            workHours = optionalNum(detail?.work_hours ?? detail?.workHours);
+        }
+
+        details.push({
+            day: dayNumber,
+            status,
+            checkIn,
+            checkOut,
+            workHours,
+        });
+    }
+
+    return details.sort((left, right) => left.day - right.day);
 }
 
 function normalizeRows(items: Record<string, unknown>[], departments: Map<string, string>): AttendanceRow[] {
@@ -203,24 +305,30 @@ function normalizeRows(items: Record<string, unknown>[], departments: Map<string
             continue;
         }
 
-        const attendanceData = rec(item.attendance_data);
+        const dayDetails = parseAttendanceDays(item.attendance_data);
         let derivedPresent = 0;
         let derivedLate = 0;
         let derivedAbsent = 0;
 
-        if (attendanceData) {
-            for (const value of Object.values(attendanceData)) {
-                const normalized = txt(value).toLowerCase();
-                if (normalized === "present") derivedPresent += 1;
-                if (normalized === "late") derivedLate += 1;
-                if (normalized === "absent") derivedAbsent += 1;
+        for (const detail of dayDetails) {
+            const normalizedStatus = txt(detail.status).toLowerCase();
+            if (normalizedStatus === "present") {
+                derivedPresent += 1;
+            }
+            if (normalizedStatus === "late") {
+                derivedLate += 1;
+            }
+            if (normalizedStatus === "absent") {
+                derivedAbsent += 1;
             }
         }
 
         const status = txt(item.status).toLowerCase() || "pending";
+        const month = num(item.month, 0);
+        const year = num(item.year, 0);
 
         rows.push({
-            id: txt(item.id) || `${employeeId}-${txt(item.month)}-${txt(item.year)}`,
+            id: txt(item.id) || `${employeeId}-${month}-${year}`,
             employeeId,
             name: txt(employee?.full_name) || "Unknown",
             email: txt(employee?.email),
@@ -230,7 +338,11 @@ function normalizeRows(items: Record<string, unknown>[], departments: Map<string
             late: num(item.total_days_late, derivedLate),
             absent: num(item.total_days_absent, derivedAbsent),
             status: STATUS_OPTIONS.includes(status as typeof STATUS_OPTIONS[number]) ? status : "pending",
+            confirmedAt: txt(item.confirmed_at),
             uploadedAt: txt(item.uploaded_at),
+            month,
+            year,
+            attendanceDays: dayDetails,
         });
     }
 
@@ -271,6 +383,8 @@ export default function HrAttendanceManagementPage() {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+
+    const [detailRecord, setDetailRecord] = useState<AttendanceRow | null>(null);
 
     const monthLabel = useMemo(() => monthFormatter.format(new Date(year, month - 1, 1)), [month, year]);
 
@@ -341,7 +455,14 @@ export default function HrAttendanceManagementPage() {
         void loadData();
     }, [loadData]);
 
-    const rows = useMemo(() => normalizeRows(rawItems, new Map<string, string>(Object.entries(departmentById))), [rawItems, departmentById]);
+    useEffect(() => {
+        setDetailRecord(null);
+    }, [month, year]);
+
+    const rows = useMemo(
+        () => normalizeRows(rawItems, new Map<string, string>(Object.entries(departmentById))),
+        [rawItems, departmentById],
+    );
 
     const stats = useMemo(() => {
         return {
@@ -443,123 +564,366 @@ export default function HrAttendanceManagementPage() {
     };
 
     return (
-                        <section className="w-full space-y-6">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                        <div className="space-y-2">
-                            <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Attendance Management</h1>
-                            <p className="text-sm text-slate-500">Search, filter, and upload monthly attendance records.</p>
-                        </div>
+        <section className="w-full space-y-6">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div className="space-y-2">
+                    <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Attendance Management</h1>
+                    <p className="text-sm text-slate-500">Search, filter, upload, and inspect monthly attendance records.</p>
+                </div>
 
-                        <div className="flex flex-wrap items-center gap-2">
-                            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-                                <button type="button" className="rounded-full p-1 text-slate-400 hover:bg-slate-100" onClick={() => setMonth((m) => { if (m === 1) { setYear((y) => y - 1); return 12; } return m - 1; })}>
-                                    <ChevronLeftIcon className="h-4 w-4" />
-                                </button>
-                                <span>{monthLabel}</span>
-                                <button type="button" className="rounded-full p-1 text-slate-400 hover:bg-slate-100" onClick={() => setMonth((m) => { if (m === 12) { setYear((y) => y + 1); return 1; } return m + 1; })}>
-                                    <ChevronRightIcon className="h-4 w-4" />
-                                </button>
-                            </div>
-                            <button type="button" onClick={downloadTemplate} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
-                                <DownloadIcon className="h-4 w-4" />
-                                Download Excel template
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                        <button
+                            type="button"
+                            className="rounded-full p-1 text-slate-400 hover:bg-slate-100"
+                            onClick={() =>
+                                setMonth((currentMonth) => {
+                                    if (currentMonth === 1) {
+                                        setYear((currentYear) => currentYear - 1);
+                                        return 12;
+                                    }
+
+                                    return currentMonth - 1;
+                                })
+                            }
+                        >
+                            <ChevronLeftIcon className="h-4 w-4" />
+                        </button>
+                        <span>{monthLabel}</span>
+                        <button
+                            type="button"
+                            className="rounded-full p-1 text-slate-400 hover:bg-slate-100"
+                            onClick={() =>
+                                setMonth((currentMonth) => {
+                                    if (currentMonth === 12) {
+                                        setYear((currentYear) => currentYear + 1);
+                                        return 1;
+                                    }
+
+                                    return currentMonth + 1;
+                                })
+                            }
+                        >
+                            <ChevronRightIcon className="h-4 w-4" />
+                        </button>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={downloadTemplate}
+                        className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+                    >
+                        <DownloadIcon className="h-4 w-4" />
+                        Download Excel template
+                    </button>
+                </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Total records</div>
+                    <div className="mt-3 text-3xl font-semibold text-slate-950">{stats.total}</div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Confirmed</div>
+                    <div className="mt-3 text-3xl font-semibold text-slate-950">{stats.confirmed}</div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Pending review</div>
+                    <div className="mt-3 text-3xl font-semibold text-slate-950">{stats.pending}</div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Auto-confirmed</div>
+                    <div className="mt-3 text-3xl font-semibold text-slate-950">{stats.autoConfirmed}</div>
+                </div>
+            </div>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <h2 className="text-lg font-semibold text-slate-950">Upload Attendance CSV</h2>
+                        <p className="mt-1 text-sm text-slate-500">
+                            Fill the Excel template, then save/export it as CSV before uploading.
+                        </p>
+                    </div>
+                    <div className="text-sm font-semibold text-slate-600">Target month: {monthLabel}</div>
+                </div>
+                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center">
+                    <div className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                        <label
+                            htmlFor="attendance-csv-file"
+                            className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                        >
+                            Choose file
+                        </label>
+                        <span className="truncate text-sm text-slate-600">{file ? file.name : "No file chosen"}</span>
+                        <input
+                            key={fileInputKey}
+                            id="attendance-csv-file"
+                            type="file"
+                            accept=".csv,text/csv"
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                setUploadError(null);
+                                setUploadSuccess(null);
+                                setFile(event.target.files?.[0] ?? null);
+                            }}
+                            className="sr-only"
+                        />
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => void handleUpload()}
+                        disabled={isUploading}
+                        className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                    >
+                        {isUploading ? "Uploading..." : "Upload CSV"}
+                    </button>
+                </div>
+                {uploadError ? (
+                    <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        {uploadError}
+                    </div>
+                ) : null}
+                {uploadSuccess ? (
+                    <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                        {uploadSuccess}
+                    </div>
+                ) : null}
+            </section>
+
+            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+                <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
+                        <input
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            placeholder="Search by employee name"
+                            className="min-w-[240px] flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white"
+                        />
+                        <select
+                            value={statusFilter}
+                            onChange={(event) => setStatusFilter(event.target.value)}
+                            className="min-w-[180px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white"
+                        >
+                            <option value="all">All status</option>
+                            {STATUS_OPTIONS.map((status) => (
+                                <option key={status} value={status}>
+                                    {statusLabel(status)}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            value={departmentFilter}
+                            onChange={(event) => setDepartmentFilter(event.target.value)}
+                            className="min-w-[220px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white"
+                        >
+                            <option value="all">All departments</option>
+                            {departmentOptions.map((name) => (
+                                <option key={name} value={name}>
+                                    {name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="text-sm text-slate-500">
+                        Showing <span className="font-semibold text-slate-900">{pageStart}</span>-
+                        <span className="font-semibold text-slate-900">{pageEnd}</span> of{" "}
+                        <span className="font-semibold text-slate-900">{filteredRows.length}</span> filtered,{" "}
+                        <span className="font-semibold text-slate-900">{rows.length}</span> records
+                    </div>
+                </div>
+
+                {loadError ? (
+                    <div className="border-b border-rose-100 bg-rose-50 px-5 py-3 text-sm text-rose-600">{loadError}</div>
+                ) : null}
+
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-200">
+                        <thead className="bg-slate-50">
+                            <tr className="text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                <th className="px-5 py-4">Employee</th>
+                                <th className="px-5 py-4">Department</th>
+                                <th className="px-5 py-4 text-center">Present</th>
+                                <th className="px-5 py-4 text-center">Late</th>
+                                <th className="px-5 py-4 text-center">Absent</th>
+                                <th className="px-5 py-4">Status</th>
+                                <th className="px-5 py-4">Uploaded At</th>
+                                <th className="px-5 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={8} className="px-5 py-12 text-center text-sm text-slate-500">
+                                        Loading attendance records...
+                                    </td>
+                                </tr>
+                            ) : filteredRows.length === 0 ? (
+                                <tr>
+                                    <td colSpan={8} className="px-5 py-12 text-center text-sm text-slate-500">
+                                        No attendance records match the current filters.
+                                    </td>
+                                </tr>
+                            ) : (
+                                paginatedRows.map((row) => (
+                                    <tr key={row.id} className="align-top hover:bg-slate-50/70">
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">
+                                                    {initials(row.name)}
+                                                </span>
+                                                <div className="space-y-1">
+                                                    <div className="font-semibold text-slate-950">{row.name}</div>
+                                                    <div className="text-sm text-slate-500">
+                                                        {row.position || "--"}
+                                                        {row.email ? ` / ${row.email}` : ""}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4 text-sm text-slate-600">{row.department || "--"}</td>
+                                        <td className="px-5 py-4 text-center text-sm font-semibold text-emerald-700">{row.present}</td>
+                                        <td className="px-5 py-4 text-center text-sm font-semibold text-amber-700">{row.late}</td>
+                                        <td className="px-5 py-4 text-center text-sm font-semibold text-rose-700">{row.absent}</td>
+                                        <td className="px-5 py-4">
+                                            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClass(row.status)}`}>
+                                                {statusLabel(row.status)}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-4 text-sm text-slate-600">{formatDateTime(row.uploadedAt)}</td>
+                                        <td className="px-5 py-4 text-right">
+                                            <button
+                                                type="button"
+                                                onClick={() => setDetailRecord(row)}
+                                                className="inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                            >
+                                                Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {!isLoading && filteredRows.length > 0 ? (
+                    <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            Page <span className="font-semibold text-slate-900">{currentPage}</span> of{" "}
+                            <span className="font-semibold text-slate-900">{totalPages}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                                disabled={currentPage === 1}
+                                className="inline-flex h-10 items-center rounded-lg border border-slate-200 px-3 font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                                disabled={currentPage === totalPages}
+                                className="inline-flex h-10 items-center rounded-lg border border-slate-200 px-3 font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                Next
                             </button>
                         </div>
                     </div>
+                ) : null}
+            </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Total records</div><div className="mt-3 text-3xl font-semibold text-slate-950">{stats.total}</div></div>
-                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Confirmed</div><div className="mt-3 text-3xl font-semibold text-slate-950">{stats.confirmed}</div></div>
-                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Pending review</div><div className="mt-3 text-3xl font-semibold text-slate-950">{stats.pending}</div></div>
-                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Auto-confirmed</div><div className="mt-3 text-3xl font-semibold text-slate-950">{stats.autoConfirmed}</div></div>
-                    </div>
-
-                    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            {detailRecord ? (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+                    <div className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+                        <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-950">Upload Attendance CSV</h2>
-                                <p className="mt-1 text-sm text-slate-500">Fill the Excel template, then save/export it as CSV before uploading.</p>
+                                <h3 className="text-lg font-semibold text-slate-950">Attendance Details</h3>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    {detailRecord.name} · {formatPeriod(detailRecord.month, detailRecord.year)}
+                                </p>
                             </div>
-                            <div className="text-sm font-semibold text-slate-600">Target month: {monthLabel}</div>
-                        </div>
-                        <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center">
-                            <div className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2">
-                                <label
-                                    htmlFor="attendance-csv-file"
-                                    className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
-                                >
-                                    Choose file
-                                </label>
-                                <span className="truncate text-sm text-slate-600">
-                                    {file ? file.name : "No file chosen"}
-                                </span>
-                                <input
-                                    key={fileInputKey}
-                                    id="attendance-csv-file"
-                                    type="file"
-                                    accept=".csv,text/csv"
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                        setUploadError(null);
-                                        setUploadSuccess(null);
-                                        setFile(event.target.files?.[0] ?? null);
-                                    }}
-                                    className="sr-only"
-                                />
-                            </div>
-                            <button type="button" onClick={() => void handleUpload()} disabled={isUploading} className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400">{isUploading ? "Uploading..." : "Upload CSV"}</button>
-                        </div>
-                        {uploadError ? <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">{uploadError}</div> : null}
-                        {uploadSuccess ? <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{uploadSuccess}</div> : null}
-                    </section>
-
-                    <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
-                            <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
-                                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by employee name" className="min-w-[240px] flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white" />
-                                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="min-w-[180px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white"><option value="all">All status</option>{STATUS_OPTIONS.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select>
-                                <select value={departmentFilter} onChange={(event) => setDepartmentFilter(event.target.value)} className="min-w-[220px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:bg-white"><option value="all">All departments</option>{departmentOptions.map((name) => <option key={name} value={name}>{name}</option>)}</select>
-                            </div>
-                            <div className="text-sm text-slate-500">Showing <span className="font-semibold text-slate-900">{pageStart}</span>-<span className="font-semibold text-slate-900">{pageEnd}</span> of <span className="font-semibold text-slate-900">{filteredRows.length}</span> filtered, <span className="font-semibold text-slate-900">{rows.length}</span> records</div>
+                            <button
+                                type="button"
+                                onClick={() => setDetailRecord(null)}
+                                className="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                            >
+                                Close
+                            </button>
                         </div>
 
-                        {loadError ? <div className="border-b border-rose-100 bg-rose-50 px-5 py-3 text-sm text-rose-600">{loadError}</div> : null}
-
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-slate-200">
-                                <thead className="bg-slate-50"><tr className="text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500"><th className="px-5 py-4">Employee</th><th className="px-5 py-4">Department</th><th className="px-5 py-4 text-center">Present</th><th className="px-5 py-4 text-center">Late</th><th className="px-5 py-4 text-center">Absent</th><th className="px-5 py-4">Status</th><th className="px-5 py-4">Uploaded At</th></tr></thead>
-                                <tbody className="divide-y divide-slate-100 bg-white">
-                                    {isLoading ? (
-                                        <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-500">Loading attendance records...</td></tr>
-                                    ) : filteredRows.length === 0 ? (
-                                        <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-500">No attendance records match the current filters.</td></tr>
-                                    ) : (
-                                        paginatedRows.map((row) => (
-                                            <tr key={row.id} className="align-top hover:bg-slate-50/70">
-                                                <td className="px-5 py-4"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">{initials(row.name)}</span><div className="space-y-1"><div className="font-semibold text-slate-950">{row.name}</div><div className="text-sm text-slate-500">{row.position || "--"}{row.email ? ` / ${row.email}` : ""}</div></div></div></td>
-                                                <td className="px-5 py-4 text-sm text-slate-600">{row.department || "--"}</td>
-                                                <td className="px-5 py-4 text-center text-sm font-semibold text-emerald-700">{row.present}</td>
-                                                <td className="px-5 py-4 text-center text-sm font-semibold text-amber-700">{row.late}</td>
-                                                <td className="px-5 py-4 text-center text-sm font-semibold text-rose-700">{row.absent}</td>
-                                                <td className="px-5 py-4"><span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClass(row.status)}`}>{statusLabel(row.status)}</span></td>
-                                                <td className="px-5 py-4 text-sm text-slate-600">{formatDateTime(row.uploadedAt)}</td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {!isLoading && filteredRows.length > 0 ? (
-                            <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-                                <div>Page <span className="font-semibold text-slate-900">{currentPage}</span> of <span className="font-semibold text-slate-900">{totalPages}</span></div>
-                                <div className="flex items-center gap-2">
-                                    <button type="button" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={currentPage === 1} className="inline-flex h-10 items-center rounded-lg border border-slate-200 px-3 font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">Previous</button>
-                                    <button type="button" onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={currentPage === totalPages} className="inline-flex h-10 items-center rounded-lg border border-slate-200 px-3 font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">Next</button>
+                        <div className="space-y-5 overflow-y-auto p-5">
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                    <div className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Status</div>
+                                    <div className="mt-2">
+                                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClass(detailRecord.status)}`}>
+                                            {statusLabel(detailRecord.status)}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                    <div className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Confirmed At</div>
+                                    <div className="mt-2 text-sm font-semibold text-slate-900">{formatDateTime(detailRecord.confirmedAt)}</div>
+                                </div>
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                    <div className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Uploaded At</div>
+                                    <div className="mt-2 text-sm font-semibold text-slate-900">{formatDateTime(detailRecord.uploadedAt)}</div>
+                                </div>
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                    <div className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Totals</div>
+                                    <div className="mt-2 text-sm font-semibold text-slate-900">
+                                        P: {detailRecord.present} · L: {detailRecord.late} · A: {detailRecord.absent}
+                                    </div>
                                 </div>
                             </div>
-                        ) : null}
+
+                            <div className="rounded-2xl border border-slate-200">
+                                <div className="border-b border-slate-200 px-4 py-3">
+                                    <h4 className="text-sm font-semibold text-slate-950">Daily Attendance Breakdown</h4>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-slate-200">
+                                        <thead className="bg-slate-50">
+                                            <tr className="text-left text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                                                <th className="px-4 py-3">Day</th>
+                                                <th className="px-4 py-3">Status</th>
+                                                <th className="px-4 py-3">Check-in</th>
+                                                <th className="px-4 py-3">Check-out</th>
+                                                <th className="px-4 py-3">Work hours</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 bg-white">
+                                            {detailRecord.attendanceDays.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">
+                                                        No day-level attendance details available.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                detailRecord.attendanceDays.map((day) => (
+                                                    <tr key={`${detailRecord.id}-${day.day}`}>
+                                                        <td className="px-4 py-3 text-sm font-semibold text-slate-900">{day.day}</td>
+                                                        <td className="px-4 py-3">
+                                                            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${dayStatusClass(day.status)}`}>
+                                                                {statusLabel(day.status)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm text-slate-700">{day.checkIn || "--"}</td>
+                                                        <td className="px-4 py-3 text-sm text-slate-700">{day.checkOut || "--"}</td>
+                                                        <td className="px-4 py-3 text-sm text-slate-700">{formatWorkHours(day.workHours)}</td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </section>
+                </div>
+            ) : null}
+        </section>
     );
 }
-
