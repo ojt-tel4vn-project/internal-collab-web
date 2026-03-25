@@ -7,11 +7,21 @@ import { asFiniteNumber, asString } from "@/lib/normalize";
 
 type AttendanceDayStatus = "present" | "absent" | "late" | "leave" | "unknown";
 
+type AttendanceApiDayDetail = {
+    status?: string;
+    check_in_time?: string;
+    checkInTime?: string;
+    check_out_time?: string;
+    checkOutTime?: string;
+    work_hours?: number | string;
+    workHours?: number | string;
+};
+
 type AttendanceApiItem = {
     id?: string;
     month?: number;
     year?: number;
-    attendance_data?: Record<string, AttendanceDayStatus | string>;
+    attendance_data?: Record<string, AttendanceDayStatus | string | AttendanceApiDayDetail>;
     total_days_present?: number;
     total_days_absent?: number;
     total_days_late?: number;
@@ -25,11 +35,18 @@ type AttendanceListResponse =
         body?: AttendanceApiItem[] | { data?: AttendanceApiItem[] };
     };
 
+type AttendanceDetailResponse =
+    | AttendanceApiItem
+    | {
+        data?: AttendanceApiItem | { data?: AttendanceApiItem };
+        body?: AttendanceApiItem | { data?: AttendanceApiItem };
+    };
+
 type AttendanceRecord = {
     id: string;
     month: number;
     year: number;
-    attendanceData: Record<string, AttendanceDayStatus | string>;
+    attendanceData: Record<string, AttendanceDayStatus | string | AttendanceApiDayDetail>;
     totalDaysPresent: number;
     totalDaysAbsent: number;
     totalDaysLate: number;
@@ -60,6 +77,58 @@ const weekdayFormatter = new Intl.DateTimeFormat("en-GB", { weekday: "long" });
 
 const monthLabelFormatter = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function normalizeRecordStatus(value: unknown) {
+    const normalized = asString(value).trim().toLowerCase();
+    if (!normalized) return "pending";
+    if (Object.hasOwn(RECORD_STATUS_META, normalized)) return normalized;
+    return normalized;
+}
+
+function canConfirmRecord(status: string | null | undefined) {
+    const normalized = normalizeRecordStatus(status);
+    return normalized !== "confirmed" && normalized !== "auto_confirmed";
+}
+
+function toOptionalFiniteNumber(value: unknown) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim() !== "") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) return parsed;
+    }
+    return null;
+}
+
+function extractAttendanceItems(payload: AttendanceListResponse) {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.body)) return payload.body as AttendanceApiItem[];
+    if (Array.isArray(payload?.body?.data)) return payload.body.data as AttendanceApiItem[];
+    return [];
+}
+
+function extractAttendanceDetailItem(payload: AttendanceDetailResponse) {
+    if (isRecord(payload) && (payload.id || payload.attendance_data || payload.month || payload.year)) {
+        return payload as AttendanceApiItem;
+    }
+
+    const root = isRecord(payload) ? payload : null;
+    const body = isRecord(root?.body) ? root.body : null;
+    const data = isRecord(root?.data) ? root.data : null;
+
+    const candidates = [root?.data, root?.body, data?.data, body?.data];
+    for (const candidate of candidates) {
+        if (isRecord(candidate) && (candidate.id || candidate.attendance_data || candidate.month || candidate.year)) {
+            return candidate as AttendanceApiItem;
+        }
+    }
+
+    return null;
+}
+
 function normalizeAttendance(item: AttendanceApiItem): AttendanceRecord | null {
     const id = asString(item.id);
     const month = asFiniteNumber(item.month);
@@ -74,7 +143,7 @@ function normalizeAttendance(item: AttendanceApiItem): AttendanceRecord | null {
         totalDaysPresent: asFiniteNumber(item.total_days_present),
         totalDaysAbsent: asFiniteNumber(item.total_days_absent),
         totalDaysLate: asFiniteNumber(item.total_days_late),
-        status: asString(item.status, "pending"),
+        status: normalizeRecordStatus(item.status),
     };
 }
 
@@ -90,8 +159,21 @@ export default function AttendancePage() {
     const [commentDay, setCommentDay] = useState<number | null>(null);
     const [commentText, setCommentText] = useState("");
     const [commentSaving, setCommentSaving] = useState(false);
+    const [selectedEntryDay, setSelectedEntryDay] = useState<number | null>(null);
 
     const monthLabel = useMemo(() => monthLabelFormatter.format(new Date(year, month - 1, 1)), [month, year]);
+
+    const loadAttendanceDetail = useCallback(async (attendanceId: string) => {
+        const res = await fetch(`/api/employee/attendances/${attendanceId}`, { cache: "no-store" });
+        if (!res.ok) {
+            const raw = await res.text().catch(() => "");
+            throw new Error(parseApiErrorMessage(raw, "Unable to load attendance detail."));
+        }
+
+        const payload = (await res.json()) as AttendanceDetailResponse;
+        const item = extractAttendanceDetailItem(payload);
+        return item ? normalizeAttendance(item) : null;
+    }, []);
 
     const loadAttendance = useCallback(async () => {
         setLoading(true);
@@ -105,27 +187,27 @@ export default function AttendancePage() {
             }
 
             const payload = (await res.json()) as AttendanceListResponse;
-            let items: AttendanceApiItem[] = [];
-            if (Array.isArray(payload)) {
-                items = payload;
-            } else if (Array.isArray(payload?.data)) {
-                items = payload.data;
-            } else if (Array.isArray(payload?.body)) {
-                items = payload.body as AttendanceApiItem[];
-            } else if (Array.isArray(payload?.body?.data)) {
-                items = payload.body.data as AttendanceApiItem[];
+            const items = extractAttendanceItems(payload);
+            const normalized = items.map(normalizeAttendance).filter(Boolean) as AttendanceRecord[];
+            const baseRecord = normalized[0] ?? null;
+            if (!baseRecord) {
+                setRecord(null);
+                setSelectedEntryDay(null);
+                return;
             }
 
-            const normalized = items.map(normalizeAttendance).filter(Boolean) as AttendanceRecord[];
-            setRecord(normalized[0] ?? null);
+            const detailedRecord = await loadAttendanceDetail(baseRecord.id).catch(() => null);
+            setRecord(detailedRecord ?? baseRecord);
+            setSelectedEntryDay(null);
         } catch (err) {
             const message = err instanceof Error ? err.message : "Unable to load attendance data.";
             setError(message);
             setRecord(null);
+            setSelectedEntryDay(null);
         } finally {
             setLoading(false);
         }
-    }, [month, year]);
+    }, [loadAttendanceDetail, month, year]);
 
     const entries = useMemo(() => {
         if (!record) return [];
@@ -133,17 +215,30 @@ export default function AttendancePage() {
         return Array.from({ length: daysInMonth }, (_, idx) => {
             const dayNumber = idx + 1;
             const date = new Date(record.year, record.month - 1, dayNumber);
-            const rawStatus = record.attendanceData[String(dayNumber)] ?? "unknown";
+            const rawValue = record.attendanceData[String(dayNumber)];
+            const detail = isRecord(rawValue) ? rawValue : null;
+            const rawStatus = typeof rawValue === "string"
+                ? rawValue
+                : asString(detail?.status, "unknown").trim().toLowerCase() || "unknown";
             const normalizedStatus = Object.hasOwn(DAY_STATUS_META, rawStatus) ? rawStatus : "unknown";
             const meta = DAY_STATUS_META[normalizedStatus as AttendanceDayStatus] ?? DAY_STATUS_META.unknown;
             return {
                 dayNumber,
                 dateLabel: dateLabelFormatter.format(date),
                 dayLabel: weekdayFormatter.format(date),
+                checkIn: asString(detail?.check_in_time ?? detail?.checkInTime, ""),
+                checkOut: asString(detail?.check_out_time ?? detail?.checkOutTime, ""),
+                workHours: toOptionalFiniteNumber(detail?.work_hours ?? detail?.workHours),
+                statusKey: normalizedStatus as AttendanceDayStatus,
                 status: meta,
             };
         });
     }, [record]);
+
+    const selectedEntry = useMemo(
+        () => entries.find((entry) => entry.dayNumber === selectedEntryDay) ?? null,
+        [entries, selectedEntryDay],
+    );
 
     const stats = useMemo(() => {
         if (!record) return [];
@@ -224,7 +319,7 @@ export default function AttendancePage() {
                 const raw = await res.text().catch(() => "");
                 throw new Error(parseApiErrorMessage(raw, "Unable to submit comment."));
             }
-            setActionMessage(dayNumber ? `Comment submitted for day ${dayNumber}.` : "Comment submitted.");
+            setActionMessage(dayNumber ? `Dispute submitted for day ${dayNumber}.` : "Dispute submitted.");
             setCommentDay(null);
             setCommentText("");
         } catch (err) {
@@ -238,8 +333,6 @@ export default function AttendancePage() {
     useEffect(() => {
         void loadAttendance();
     }, [loadAttendance]);
-
-    const recordStatus = record ? RECORD_STATUS_META[record.status] ?? RECORD_STATUS_META.pending : null;
 
     return (
                         <section className="flex-1 space-y-6">
@@ -258,7 +351,7 @@ export default function AttendancePage() {
                                     <ChevronRightIcon className="h-4 w-4" />
                                 </button>
                             </div>
-                            {record && record.status === "pending" ? (
+                            {record && canConfirmRecord(record.status) ? (
                                 <button
                                     className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
                                     onClick={handleConfirm}
@@ -269,12 +362,6 @@ export default function AttendancePage() {
                             ) : null}
                         </div>
                     </div>
-
-                    {recordStatus ? (
-                        <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase text-slate-700">
-                            <span className={`rounded-full px-3 py-1 ${recordStatus.tone}`}>{recordStatus.label}</span>
-                        </div>
-                    ) : null}
 
                     {error ? (
                         <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -332,10 +419,16 @@ export default function AttendancePage() {
                                     </div>
                                     <div className="flex items-center justify-end gap-2 text-[11px]">
                                         <button
+                                            className="rounded-md border border-slate-200 bg-white px-3 py-1 font-semibold uppercase text-slate-600 hover:bg-slate-50"
+                                            onClick={() => setSelectedEntryDay(entry.dayNumber)}
+                                        >
+                                            Detail
+                                        </button>
+                                        <button
                                             className="rounded-md bg-slate-100 px-3 py-1 font-semibold uppercase text-slate-600 hover:bg-slate-200"
                                             onClick={() => setCommentDay(entry.dayNumber)}
                                         >
-                                            Comment
+                                            Dispute
                                         </button>
                                     </div>
                                 </div>
@@ -345,7 +438,7 @@ export default function AttendancePage() {
 
                     {commentDay !== null ? (
                         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                            <p className="text-sm font-semibold text-slate-800">Comment for day {commentDay}</p>
+                            <p className="text-sm font-semibold text-slate-800">Dispute for day {commentDay}</p>
                             <p className="mt-1 text-xs text-slate-500">
                                 Use this when you forgot to check in, the record is incorrect, or you worked offsite.
                             </p>
@@ -354,7 +447,7 @@ export default function AttendancePage() {
                                 rows={3}
                                 value={commentText}
                                 onChange={(event) => setCommentText(event.target.value)}
-                                placeholder="Explain what happened so HR can review."
+                                placeholder="Explain the attendance issue so HR can review."
                             />
                             <div className="mt-3 flex items-center gap-3">
                                 <button
@@ -362,7 +455,7 @@ export default function AttendancePage() {
                                     onClick={handleSubmitComment}
                                     disabled={commentSaving}
                                 >
-                                    {commentSaving ? "Submitting..." : "Submit Comment"}
+                                    {commentSaving ? "Submitting..." : "Submit Dispute"}
                                 </button>
                                 <button
                                     className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
@@ -373,6 +466,48 @@ export default function AttendancePage() {
                                 >
                                     Cancel
                                 </button>
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {selectedEntry ? (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+                            <div className="w-full max-w-2xl rounded-2xl bg-white p-5 shadow-2xl">
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <p className="text-lg font-semibold text-slate-900">Attendance Detail</p>
+                                        <p className="mt-1 text-sm text-slate-500">
+                                            {selectedEntry.dateLabel} · {selectedEntry.dayLabel}
+                                        </p>
+                                    </div>
+                                    <button
+                                        className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                                        onClick={() => setSelectedEntryDay(null)}
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+
+                                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                                    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Status</p>
+                                        <p className="mt-1 text-sm font-bold text-slate-800">{selectedEntry.status.label}</p>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Work Hours</p>
+                                        <p className="mt-1 text-sm font-bold text-slate-800">
+                                            {selectedEntry.workHours === null ? "--" : `${selectedEntry.workHours.toFixed(2)} h`}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Check In</p>
+                                        <p className="mt-1 text-sm font-bold text-slate-800">{selectedEntry.checkIn || "--"}</p>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Check Out</p>
+                                        <p className="mt-1 text-sm font-bold text-slate-800">{selectedEntry.checkOut || "--"}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ) : null}
