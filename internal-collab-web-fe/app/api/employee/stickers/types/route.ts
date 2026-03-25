@@ -4,7 +4,7 @@ import { createProxyResponse, hasAuthSession, proxyToBackend } from "@/lib/backe
 export async function GET(request: NextRequest) {
     try {
         if (!hasAuthSession(request)) {
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+            return NextResponse.json({ message: "Your session has expired. Please sign in again." }, { status: 401 });
         }
 
         const upstreamResponse = await proxyToBackend({
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         return createProxyResponse(upstreamResponse);
     } catch {
         return NextResponse.json(
-            { message: "Unable to load sticker types." },
+            { message: "We couldn't load the sticker list right now." },
             { status: 500 },
         );
     }

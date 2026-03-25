@@ -89,7 +89,7 @@ export function SendStickerCard({
                             ) : receiverError ? (
                                 <p className="px-3 py-2 text-xs text-rose-600">{receiverError}</p>
                             ) : receiverMatches.length === 0 ? (
-                                <p className="px-3 py-2 text-xs text-slate-500">No teammate matches your search.</p>
+                                <p className="px-3 py-2 text-xs text-slate-500">No teammates match your search.</p>
                             ) : (
                                 <div className="max-h-64 overflow-y-auto py-1">
                                     {receiverMatches.map((entry) => (
@@ -113,7 +113,7 @@ export function SendStickerCard({
                     {selectedReceiverName ? (
                         <p className="text-[11px] font-semibold text-emerald-600">Selected receiver: {selectedReceiverName}</p>
                     ) : isReceiverPendingSelection ? (
-                        <p className="text-[11px] font-semibold text-amber-600">Choose one teammate from the suggestions to continue.</p>
+                        <p className="text-[11px] font-semibold text-amber-600">Please select a teammate from the suggestion list.</p>
                     ) : (
                         <p className="text-[11px] text-slate-400">Start typing to search teammates.</p>
                     )}
@@ -132,7 +132,7 @@ export function SendStickerCard({
                     ) : stickerTypeError ? (
                         <p className="text-[11px] font-semibold text-rose-600">{stickerTypeError}</p>
                     ) : stickerTypes.length === 0 ? (
-                        <p className="text-[11px] text-slate-400">No active sticker types yet.</p>
+                        <p className="text-[11px] text-slate-400">No stickers are available right now.</p>
                     ) : (
                         <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
                             {stickerTypes.map((item) => {
@@ -212,7 +212,7 @@ export function SendStickerCard({
                             </div>
                         </div>
                     ) : (
-                        <p className="text-[11px] text-slate-400">Choose one active sticker type.</p>
+                        <p className="text-[11px] text-slate-400">Please select a sticker to continue.</p>
                     )}
                 </div>
 
@@ -225,12 +225,12 @@ export function SendStickerCard({
                         value={form.message}
                         onChange={(event) => onMessageChange(event.target.value)}
                         placeholder="Add a short thank-you message..."
-                        maxLength={300}
+                        maxLength={255}
                         className="min-h-[112px] w-full resize-none rounded-2xl border border-slate-200 px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     />
                     <div className="flex items-center justify-between text-[11px] text-slate-400">
                         <span>Optional note for the receiver.</span>
-                        <span>{form.message.length}/300</span>
+                        <span>{form.message.length}/255</span>
                     </div>
                 </div>
 

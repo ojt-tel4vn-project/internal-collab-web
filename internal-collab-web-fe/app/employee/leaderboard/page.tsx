@@ -129,19 +129,15 @@ async function sendSticker(input: {
     const stickerTypeId = input.stickerTypeId.trim();
 
     if (!receiverEmail && !receiverEmployeeCode) {
-        throw new Error("Selected receiver does not have email or employee code.");
+        throw new Error("We couldn't identify the selected teammate. Please choose a teammate again.");
     }
 
     const payload: Record<string, string> = {
         message: input.message.trim(),
+        receiver_email: receiverEmail,
+        receiver_employee_code: receiverEmployeeCode,
         sticker_type_id: stickerTypeId,
     };
-
-    if (receiverEmail) {
-        payload.receiver_email = receiverEmail;
-    } else {
-        payload.receiver_employee_code = receiverEmployeeCode;
-    }
 
     const response = await fetch("/api/employee/stickers/send", {
         method: "POST",
@@ -153,24 +149,114 @@ async function sendSticker(input: {
 
     if (!response.ok) {
         const raw = await response.text().catch(() => "");
-        throw new Error(getErrorMessage(raw, "Unable to send sticker."));
+        throw new Error(getSendErrorMessage(raw));
     }
 }
 
+function normalizeSystemErrorMessage(message: string, fallback: string) {
+    const normalized = message.trim();
+    if (!normalized) {
+        return fallback;
+    }
+
+    const lower = normalized.toLowerCase();
+
+    if (lower.includes("unauthorized")) {
+        return "Your session has expired. Please sign in again.";
+    }
+
+    if (lower.includes("receiver_employee_code") || lower.includes("receiver_email")) {
+        return "We couldn't identify the selected teammate. Please choose a teammate again.";
+    }
+
+    if (lower.includes("sticker_type_id")) {
+        return "The selected sticker is invalid. Please choose another sticker and try again.";
+    }
+
+    if (lower.includes("message") && (lower.includes("255") || lower.includes("characters or fewer"))) {
+        return "Your message can contain up to 255 characters.";
+    }
+
+    if (lower.includes("receiver not found")) {
+        return "The selected teammate could not be found. Please choose another teammate.";
+    }
+
+    if (lower.includes("sticker type not found")) {
+        return "The selected sticker is no longer available. Please choose another sticker.";
+    }
+
+    if (lower.includes("not enough points")) {
+        return "You do not have enough points to send this sticker.";
+    }
+
+    if (lower.includes("point balance not found")) {
+        return "Your sticker balance is not available right now. Please contact HR for support.";
+    }
+
+    if (lower.includes("cannot send sticker to yourself")) {
+        return "You can't send a sticker to yourself.";
+    }
+
+    if (lower.includes("invalid request payload")) {
+        return "The request data is invalid. Please refresh the page and try again.";
+    }
+
+    if (lower.includes("failed to send sticker") || lower.includes("unable to send sticker")) {
+        return "We couldn't send the sticker right now. Please try again in a moment.";
+    }
+
+    if (lower.includes("unable to load sticker balance") || lower.includes("point balance")) {
+        return "We couldn't load your sticker balance right now.";
+    }
+
+    if (lower.includes("unable to load leaderboard")) {
+        return "We couldn't load the leaderboard right now.";
+    }
+
+    if (lower.includes("department filter is temporarily unavailable")) {
+        return "We couldn't load the department list right now.";
+    }
+
+    if (lower.includes("unable to load sticker options") || lower.includes("unable to load sticker types")) {
+        return "We couldn't load the sticker list right now.";
+    }
+
+    return normalized;
+}
+
 function getBalanceError(error: unknown) {
-    return error instanceof Error ? error.message : "Unable to load point balance.";
+    return normalizeSystemErrorMessage(
+        error instanceof Error ? error.message : "",
+        "We couldn't load your sticker balance right now.",
+    );
 }
 
 function getLeaderboardError(error: unknown) {
-    return error instanceof Error ? error.message : "Unable to load leaderboard.";
+    return normalizeSystemErrorMessage(
+        error instanceof Error ? error.message : "",
+        "We couldn't load the leaderboard right now.",
+    );
 }
 
 function getDepartmentError(error: unknown) {
-    return error instanceof Error ? error.message : "Department filter is temporarily unavailable.";
+    return normalizeSystemErrorMessage(
+        error instanceof Error ? error.message : "",
+        "We couldn't load the department list right now.",
+    );
 }
 
 function getStickerTypeError(error: unknown) {
-    return error instanceof Error ? error.message : "Unable to load sticker options.";
+    return normalizeSystemErrorMessage(
+        error instanceof Error ? error.message : "",
+        "We couldn't load the sticker list right now.",
+    );
+}
+
+function getSendErrorMessage(raw: string) {
+    return normalizeSystemErrorMessage(
+        getErrorMessage(raw, "We couldn't send the sticker right now. Please try again in a moment."),
+        "We couldn't send the sticker right now. Please try again in a moment.",
+    );
 }
 
 function getSendAvailabilityLabel(hasAvailablePoints: boolean) {
@@ -570,7 +656,9 @@ export default function LeaderboardPage() {
 
         if (!normalizedReceiverId || !selectedStickerType) {
             setSendState({
-                error: !normalizedReceiverId ? "Please choose a receiver from the suggestions." : "Please choose a sticker.",
+                error: !normalizedReceiverId
+                    ? "Please select a teammate from the suggestion list."
+                    : "Please select a sticker before sending.",
                 loading: false,
                 success: null,
             });
@@ -579,7 +667,7 @@ export default function LeaderboardPage() {
 
         if (!hasAvailablePoints) {
             setSendState({
-                error: "You need remaining points to send a sticker.",
+                error: "You do not have enough points to send this sticker.",
                 loading: false,
                 success: null,
             });
@@ -588,7 +676,7 @@ export default function LeaderboardPage() {
 
         if (isSelfReceiver) {
             setSendState({
-                error: "You cannot send a sticker to yourself.",
+                error: "You can't send a sticker to yourself.",
                 loading: false,
                 success: null,
             });
@@ -603,7 +691,7 @@ export default function LeaderboardPage() {
 
         try {
             if (!selectedReceiver) {
-                throw new Error("Please choose a receiver from the suggestions.");
+                throw new Error("Please select a teammate from the suggestion list.");
             }
 
             await sendSticker({
@@ -621,12 +709,15 @@ export default function LeaderboardPage() {
             setSendState({
                 error: null,
                 loading: false,
-                success: "Sticker sent successfully.",
+                success: "Your sticker has been sent successfully.",
             });
             void refreshAfterSend();
         } catch (error) {
             setSendState({
-                error: error instanceof Error ? error.message : "Unable to send sticker.",
+                error:
+                    error instanceof Error
+                        ? normalizeSystemErrorMessage(error.message, "We couldn't send the sticker right now. Please try again in a moment.")
+                        : "We couldn't send the sticker right now. Please try again in a moment.",
                 loading: false,
                 success: null,
             });
