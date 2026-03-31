@@ -109,6 +109,7 @@ export interface HrCreateEmployeePayload {
     department_id?: string;
     position: string;
     manager_id?: string;
+    role_id?: string;
     join_date?: string;
 }
 

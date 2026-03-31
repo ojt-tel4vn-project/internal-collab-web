@@ -10,6 +10,8 @@ import type {
     HrUpdateEmployeePayload,
 } from "@/types/employee";
 
+type ManagementMode = "hr" | "admin";
+
 type EmployeeFormState = {
     email: string;
     first_name: string;
@@ -20,6 +22,7 @@ type EmployeeFormState = {
     department_id: string;
     position: string;
     manager_id: string;
+    role_id: string;
     status: string;
     join_date: string;
 };
@@ -44,6 +47,7 @@ const EMPTY_FORM: EmployeeFormState = {
     department_id: "",
     position: "",
     manager_id: "",
+    role_id: "",
     status: "active",
     join_date: "",
 };
@@ -279,6 +283,14 @@ function canRoleSkipManager(roleName: string) {
     return roleName === "hr" || roleName === "manager";
 }
 
+function canDeleteRole(roleName: string, mode: ManagementMode) {
+    if (mode === "admin") {
+        return roleName === "employee" || roleName === "hr" || roleName === "manager";
+    }
+
+    return roleName === "employee";
+}
+
 function resolveEmployeeRoleName(detail: HrEmployeeDetail | null, summary: HrEmployeeSummary | null) {
     return getRoleName(detail?.role) || getRoleName(summary?.role);
 }
@@ -298,6 +310,7 @@ function mapDetailToForm(detail: HrEmployeeDetail): EmployeeFormState {
         department_id: normalizeText(detail.department_id),
         position: normalizeText(detail.position),
         manager_id: normalizeText(detail.manager_id),
+        role_id: normalizeText(detail.role_id) || normalizeText(detail.role?.id),
         status: getEditableStatusValue(detail.status),
         join_date: toDateInputValue(detail.join_date),
     };
@@ -316,6 +329,7 @@ function buildCreatePayload(form: EmployeeFormState): HrCreateEmployeePayload {
     const address = form.address.trim();
     const departmentId = form.department_id.trim();
     const managerId = form.manager_id.trim();
+    const roleId = form.role_id.trim();
     const joinDate = form.join_date.trim();
 
     if (phone) {
@@ -329,6 +343,9 @@ function buildCreatePayload(form: EmployeeFormState): HrCreateEmployeePayload {
     }
     if (managerId) {
         payload.manager_id = managerId;
+    }
+    if (roleId) {
+        payload.role_id = roleId;
     }
     if (joinDate) {
         payload.join_date = joinDate;
@@ -445,7 +462,7 @@ function ModalShell({
     );
 }
 
-export default function EmployeeManagementPage() {
+export default function EmployeeManagementPage({ mode = "hr" }: { mode?: ManagementMode }) {
     const [employees, setEmployees] = useState<HrEmployeeSummary[]>([]);
     const [departments, setDepartments] = useState<DepartmentOption[]>([]);
     const [search, setSearch] = useState("");
@@ -474,6 +491,11 @@ export default function EmployeeManagementPage() {
     const [departmentForm, setDepartmentForm] = useState<DepartmentFormState>(EMPTY_DEPARTMENT_FORM);
     const [departmentFormError, setDepartmentFormError] = useState<string | null>(null);
 
+    const isAdminMode = mode === "admin";
+    const managementListView = isAdminMode ? "admin-management" : "hr-management";
+    const employeeDetailView = isAdminMode ? "admin-employee-detail" : "hr-employee-detail";
+    const employeeMutationView = isAdminMode ? "admin-employee" : "hr-employee";
+
     const showToast = useCallback((message: string, tone: "success" | "error") => {
         if (toastTimeoutRef.current) {
             window.clearTimeout(toastTimeoutRef.current);
@@ -491,7 +513,7 @@ export default function EmployeeManagementPage() {
         setLoadError(null);
 
         try {
-            const response = await fetch("/api/employee?view=hr-management", {
+            const response = await fetch(`/api/employee?view=${managementListView}`, {
                 cache: "no-store",
             });
 
@@ -507,7 +529,7 @@ export default function EmployeeManagementPage() {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [managementListView]);
 
     const loadDepartments = useCallback(async () => {
         try {
@@ -663,16 +685,57 @@ export default function EmployeeManagementPage() {
             .sort((left, right) => left.full_name.localeCompare(right.full_name));
     }, [manageableEmployees]);
 
+    const roleOptions = useMemo(() => {
+        const roleByName = new Map<string, { id: string; name: string }>();
+        for (const employee of manageableEmployees) {
+            const roleName = getRoleName(employee.role);
+            const roleId = getRoleId(employee.role);
+            if (!roleName || !roleId || roleName === "admin" || roleByName.has(roleName)) {
+                continue;
+            }
+
+            roleByName.set(roleName, { id: roleId, name: roleName });
+        }
+
+        const preferredOrder = ["employee", "manager", "hr"];
+        return preferredOrder
+            .filter((roleName) => roleByName.has(roleName))
+            .map((roleName) => roleByName.get(roleName) as { id: string; name: string });
+    }, [manageableEmployees]);
+
+    const defaultCreateRoleId = useMemo(() => {
+        const employeeRole = roleOptions.find((role) => role.name === "employee");
+        return employeeRole?.id ?? roleOptions[0]?.id ?? "";
+    }, [roleOptions]);
+
+    const selectedCreateRoleName = useMemo(() => {
+        if (!isAdminMode) {
+            return "employee";
+        }
+
+        const selectedRole = roleOptions.find((role) => role.id === employeeForm.role_id);
+        return selectedRole?.name ?? "";
+    }, [employeeForm.role_id, isAdminMode, roleOptions]);
+
+    const createRequiresManager = useMemo(() => {
+        if (!selectedCreateRoleName) {
+            return false;
+        }
+
+        return !canRoleSkipManager(selectedCreateRoleName);
+    }, [selectedCreateRoleName]);
+
     const openCreateModal = useCallback(() => {
         setFormError(null);
         setSelectedEmployee(null);
         setSelectedEmployeeDetail(null);
         setEmployeeForm({
             ...EMPTY_FORM,
+            role_id: isAdminMode ? defaultCreateRoleId : "",
             join_date: new Date().toISOString().slice(0, 10),
         });
         setIsCreateOpen(true);
-    }, []);
+    }, [defaultCreateRoleId, isAdminMode]);
 
     const openDepartmentCreateModal = useCallback(() => {
         setDepartmentForm(EMPTY_DEPARTMENT_FORM);
@@ -689,7 +752,7 @@ export default function EmployeeManagementPage() {
             setIsDetailLoading(true);
 
             try {
-                const response = await fetch(`/api/employee?view=hr-employee-detail&id=${employee.id}`, {
+                const response = await fetch(`/api/employee?view=${employeeDetailView}&id=${employee.id}`, {
                     cache: "no-store",
                 });
 
@@ -707,7 +770,7 @@ export default function EmployeeManagementPage() {
                 setIsDetailLoading(false);
             }
         },
-        [showToast],
+        [employeeDetailView, showToast],
     );
 
     const closeDepartmentCreateModal = useCallback(() => {
@@ -781,16 +844,23 @@ export default function EmployeeManagementPage() {
 
         try {
             const payload = buildCreatePayload(employeeForm);
+            const selectedRoleNameForCreate = isAdminMode ? selectedCreateRoleName : "employee";
+
             if (
                 !payload.email ||
                 !payload.first_name ||
                 !payload.last_name ||
                 !payload.date_of_birth ||
                 !payload.position ||
-                !payload.department_id ||
-                !payload.manager_id
+                !payload.department_id
             ) {
                 throw new Error("Please fill all required fields.");
+            }
+            if (isAdminMode && !payload.role_id) {
+                throw new Error("Please choose an account role.");
+            }
+            if (createRequiresManager && !payload.manager_id) {
+                throw new Error("This role must have a manager.");
             }
             if (!SIMPLE_EMAIL_PATTERN.test(payload.email)) {
                 throw new Error("Invalid email format.");
@@ -804,11 +874,17 @@ export default function EmployeeManagementPage() {
             if (!isUuid(payload.department_id)) {
                 throw new Error("Invalid department value. Please choose again.");
             }
-            if (!isUuid(payload.manager_id)) {
+            if (payload.role_id && !isUuid(payload.role_id)) {
+                throw new Error("Invalid role value. Please choose again.");
+            }
+            if (payload.manager_id && !isUuid(payload.manager_id)) {
                 throw new Error("Invalid manager value. Please choose again.");
             }
+            if (!selectedRoleNameForCreate) {
+                throw new Error("Unable to determine selected role. Please try again.");
+            }
 
-            const response = await fetch("/api/employee?view=hr-management", {
+            const response = await fetch(`/api/employee?view=${managementListView}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -817,15 +893,15 @@ export default function EmployeeManagementPage() {
             });
 
             if (!response.ok) {
-                throw new Error(await parseErrorMessage(response, "Unable to create employee."));
+                throw new Error(await parseErrorMessage(response, isAdminMode ? "Unable to create account." : "Unable to create employee."));
             }
 
             await loadEmployees();
             resetModals();
             setEmployeeForm(EMPTY_FORM);
-            showToast("Employee created successfully.", "success");
+            showToast(isAdminMode ? "Account created successfully." : "Employee created successfully.", "success");
         } catch (error) {
-            setFormError(error instanceof Error ? error.message : "Unable to create employee.");
+            setFormError(error instanceof Error ? error.message : isAdminMode ? "Unable to create account." : "Unable to create employee.");
         } finally {
             setIsSubmitting(false);
         }
@@ -855,7 +931,7 @@ export default function EmployeeManagementPage() {
                 throw new Error("This role must have a manager.");
             }
 
-            const response = await fetch(`/api/employee?view=hr-employee&id=${selectedEmployee.id}`, {
+            const response = await fetch(`/api/employee?view=${employeeMutationView}&id=${selectedEmployee.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -864,14 +940,14 @@ export default function EmployeeManagementPage() {
             });
 
             if (!response.ok) {
-                throw new Error(await parseErrorMessage(response, "Unable to update employee."));
+                throw new Error(await parseErrorMessage(response, isAdminMode ? "Unable to update account." : "Unable to update employee."));
             }
 
             await loadEmployees();
             resetModals();
-            showToast("Employee updated successfully.", "success");
+            showToast(isAdminMode ? "Account updated successfully." : "Employee updated successfully.", "success");
         } catch (error) {
-            setFormError(error instanceof Error ? error.message : "Unable to update employee.");
+            setFormError(error instanceof Error ? error.message : isAdminMode ? "Unable to update account." : "Unable to update employee.");
         } finally {
             setIsSubmitting(false);
         }
@@ -880,14 +956,17 @@ export default function EmployeeManagementPage() {
     const openDeleteConfirmation = useCallback(
         (employee: HrEmployeeSummary) => {
             const roleName = getRoleName(employee.role);
-            if (roleName !== "employee") {
-                showToast("Only employee role can be deleted.", "error");
+            if (!canDeleteRole(roleName, mode)) {
+                showToast(
+                    isAdminMode ? "Only employee, HR, or manager accounts can be deleted." : "Only employee role can be deleted.",
+                    "error",
+                );
                 return;
             }
 
             setEmployeePendingDelete(employee);
         },
-        [showToast],
+        [isAdminMode, mode, showToast],
     );
 
     const handleDeleteEmployee = useCallback(async () => {
@@ -897,12 +976,12 @@ export default function EmployeeManagementPage() {
 
         setDeletingEmployeeId(employeePendingDelete.id);
         try {
-            const response = await fetch(`/api/employee?view=hr-employee&id=${employeePendingDelete.id}`, {
+            const response = await fetch(`/api/employee?view=${employeeMutationView}&id=${employeePendingDelete.id}`, {
                 method: "DELETE",
             });
 
             if (!response.ok) {
-                throw new Error(await parseErrorMessage(response, "Unable to delete employee."));
+                throw new Error(await parseErrorMessage(response, isAdminMode ? "Unable to delete account." : "Unable to delete employee."));
             }
 
             await loadEmployees();
@@ -911,16 +990,16 @@ export default function EmployeeManagementPage() {
             } else {
                 setEmployeePendingDelete(null);
             }
-            showToast("Employee deleted successfully.", "success");
+            showToast(isAdminMode ? "Account deleted successfully." : "Employee deleted successfully.", "success");
         } catch (error) {
-            showToast(error instanceof Error ? error.message : "Unable to delete employee.", "error");
+            showToast(error instanceof Error ? error.message : isAdminMode ? "Unable to delete account." : "Unable to delete employee.", "error");
         } finally {
             setDeletingEmployeeId(null);
         }
-    }, [employeePendingDelete, loadEmployees, resetModals, selectedEmployee?.id, showToast]);
+    }, [employeeMutationView, employeePendingDelete, isAdminMode, loadEmployees, resetModals, selectedEmployee?.id, showToast]);
 
     const stats = [
-        { label: "Total employees", value: summary.total.toString() },
+        { label: isAdminMode ? "Total accounts" : "Total employees", value: summary.total.toString() },
         { label: "Pending", value: summary.pending.toString() },
         { label: "Active", value: summary.active.toString() },
         { label: "Offboard", value: summary.offboard.toString() },
@@ -933,7 +1012,7 @@ export default function EmployeeManagementPage() {
     const isManagerOptional = canRoleSkipManager(selectedRoleName);
     const requiresManager = !isManagerOptional;
     const pendingDeleteLabel = employeePendingDelete
-        ? normalizeText(employeePendingDelete.full_name) || normalizeText(employeePendingDelete.email) || "this employee"
+        ? normalizeText(employeePendingDelete.full_name) || normalizeText(employeePendingDelete.email) || (isAdminMode ? "this account" : "this employee")
         : "";
     const isDeletingPendingEmployee = Boolean(employeePendingDelete && deletingEmployeeId === employeePendingDelete.id);
 
@@ -942,9 +1021,13 @@ export default function EmployeeManagementPage() {
             <section className="w-full space-y-6">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div className="space-y-2">
-                        <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Employee Management</h1>
+                        <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
+                            {isAdminMode ? "Account Management" : "Employee Management"}
+                        </h1>
                         <p className="text-sm text-slate-500">
-                            Search, filter, onboard, and maintain employee records from one place.
+                            {isAdminMode
+                                ? "Search, filter, onboard, and maintain accounts for employee, HR, and manager roles."
+                                : "Search, filter, onboard, and maintain employee records from one place."}
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -960,7 +1043,7 @@ export default function EmployeeManagementPage() {
                             onClick={openCreateModal}
                             className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
                         >
-                            Add employee
+                            {isAdminMode ? "Add account" : "Add employee"}
                         </button>
                     </div>
                 </div>
@@ -981,8 +1064,8 @@ export default function EmployeeManagementPage() {
                                 <TextInput
                                     value={search}
                                     onChange={(event) => setSearch(event.target.value)}
-                                    placeholder="Search by employee name"
-                                    aria-label="Search employees by name"
+                                    placeholder={isAdminMode ? "Search by account name" : "Search by employee name"}
+                                    aria-label={isAdminMode ? "Search accounts by name" : "Search employees by name"}
                                 />
                             </div>
 
@@ -1021,7 +1104,8 @@ export default function EmployeeManagementPage() {
                             Showing <span className="font-semibold text-slate-900">{pageStart}</span>-
                             <span className="font-semibold text-slate-900">{pageEnd}</span> of{" "}
                             <span className="font-semibold text-slate-900">{filteredEmployees.length}</span> filtered,{" "}
-                            <span className="font-semibold text-slate-900">{manageableEmployees.length}</span> employees
+                            <span className="font-semibold text-slate-900">{manageableEmployees.length}</span>{" "}
+                            {isAdminMode ? "accounts" : "employees"}
                         </div>
                     </div>
 
@@ -1033,7 +1117,7 @@ export default function EmployeeManagementPage() {
                         <table className="min-w-full divide-y divide-slate-200">
                             <thead className="bg-slate-50">
                                 <tr className="text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                                    <th className="px-5 py-4">Employee</th>
+                                    <th className="px-5 py-4">{isAdminMode ? "Account" : "Employee"}</th>
                                     <th className="px-5 py-4">Code</th>
                                     <th className="px-5 py-4">Department</th>
                                     <th className="px-5 py-4">Role</th>
@@ -1046,19 +1130,19 @@ export default function EmployeeManagementPage() {
                                 {isLoading ? (
                                     <tr>
                                         <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-500">
-                                            Loading employees...
+                                            {isAdminMode ? "Loading accounts..." : "Loading employees..."}
                                         </td>
                                     </tr>
                                 ) : filteredEmployees.length === 0 ? (
                                     <tr>
                                         <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-500">
-                                            No employees match the current filters.
+                                            {isAdminMode ? "No accounts match the current filters." : "No employees match the current filters."}
                                         </td>
                                     </tr>
                                 ) : (
                                     paginatedEmployees.map((employee) => {
                                         const employeeRoleName = getRoleName(employee.role);
-                                        const canDeleteEmployee = employeeRoleName === "employee";
+                                        const canDeleteEmployee = canDeleteRole(employeeRoleName, mode);
                                         const isDeletingThisEmployee = deletingEmployeeId === employee.id;
 
                                         return (
@@ -1092,7 +1176,15 @@ export default function EmployeeManagementPage() {
                                                             type="button"
                                                             onClick={() => openDeleteConfirmation(employee)}
                                                             disabled={!canDeleteEmployee || isDeletingThisEmployee}
-                                                            title={canDeleteEmployee ? "Delete employee" : "Only employee role can be deleted"}
+                                                            title={
+                                                                canDeleteEmployee
+                                                                    ? isAdminMode
+                                                                        ? "Delete account"
+                                                                        : "Delete employee"
+                                                                    : isAdminMode
+                                                                      ? "Only employee, HR, or manager accounts can be deleted"
+                                                                      : "Only employee role can be deleted"
+                                                            }
                                                             className="inline-flex items-center rounded-lg border border-rose-200 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
                                                         >
                                                             {isDeletingThisEmployee ? "Deleting..." : "Delete"}
@@ -1139,7 +1231,7 @@ export default function EmployeeManagementPage() {
 
             {employeePendingDelete ? (
                 <ModalShell
-                    title="Delete employee"
+                    title={isAdminMode ? "Delete account" : "Delete employee"}
                     description="This action is permanent. Please confirm before deleting."
                     onClose={() => {
                         if (!isDeletingPendingEmployee) {
@@ -1153,7 +1245,11 @@ export default function EmployeeManagementPage() {
                             Are you sure you want to delete <span className="font-semibold">{pendingDeleteLabel}</span>?
                         </div>
 
-                        <div className="text-sm text-slate-500">Only employees with role employee can be deleted.</div>
+                        <div className="text-sm text-slate-500">
+                            {isAdminMode
+                                ? "Only accounts with role employee, HR, or manager can be deleted."
+                                : "Only employees with role employee can be deleted."}
+                        </div>
 
                         <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
                             <button
@@ -1170,7 +1266,7 @@ export default function EmployeeManagementPage() {
                                 disabled={isDeletingPendingEmployee}
                                 className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                {isDeletingPendingEmployee ? "Deleting..." : "Delete employee"}
+                                {isDeletingPendingEmployee ? "Deleting..." : isAdminMode ? "Delete account" : "Delete employee"}
                             </button>
                         </div>
                     </div>
@@ -1179,8 +1275,12 @@ export default function EmployeeManagementPage() {
 
             {isCreateOpen ? (
                 <ModalShell
-                    title="Add employee"
-                    description="Create a new employee profile and trigger the onboarding flow."
+                    title={isAdminMode ? "Add account" : "Add employee"}
+                    description={
+                        isAdminMode
+                            ? "Create a new account for employee, HR, or manager and trigger the onboarding flow."
+                            : "Create a new employee profile and trigger the onboarding flow."
+                    }
                     onClose={resetModals}
                 >
                     <form className="space-y-5" onSubmit={handleCreateSubmit}>
@@ -1208,7 +1308,7 @@ export default function EmployeeManagementPage() {
                                     type="email"
                                     value={employeeForm.email}
                                     onChange={(event) => setEmployeeForm((current) => ({ ...current, email: event.target.value }))}
-                                    placeholder="employee@company.com"
+                                    placeholder={isAdminMode ? "account@company.com" : "employee@company.com"}
                                 />
                             </FieldShell>
                             <FieldShell label="Position" required>
@@ -1262,15 +1362,45 @@ export default function EmployeeManagementPage() {
                                     ))}
                                 </SelectInput>
                             </FieldShell>
-                            <FieldShell label="Manager" required>
+                            {isAdminMode ? (
+                                <FieldShell label="Role" required>
+                                    <SelectInput
+                                        value={employeeForm.role_id}
+                                        disabled={roleOptions.length === 0}
+                                        onChange={(event) =>
+                                            setEmployeeForm((current) => ({ ...current, role_id: event.target.value }))
+                                        }
+                                    >
+                                        {roleOptions.length === 0 ? (
+                                            <option value="">No role available</option>
+                                        ) : (
+                                            <>
+                                                <option value="" disabled>
+                                                    Select role
+                                                </option>
+                                                {roleOptions.map((role) => (
+                                                    <option key={role.id} value={role.id}>
+                                                        {formatRoleLabel(role.name)}
+                                                    </option>
+                                                ))}
+                                            </>
+                                        )}
+                                    </SelectInput>
+                                </FieldShell>
+                            ) : null}
+                            <FieldShell label="Manager" required={createRequiresManager}>
                                 <SelectInput
                                     value={employeeForm.manager_id}
-                                    disabled={managerOptions.length === 0}
+                                    disabled={createRequiresManager && managerOptions.length === 0}
                                     onChange={(event) => setEmployeeForm((current) => ({ ...current, manager_id: event.target.value }))}
                                 >
-                                    <option value="" disabled>
-                                        Select manager
-                                    </option>
+                                    {createRequiresManager ? (
+                                        <option value="" disabled>
+                                            Select manager
+                                        </option>
+                                    ) : (
+                                        <option value="">No manager</option>
+                                    )}
                                     {managerOptions.map((manager) => (
                                         <option key={manager.id} value={manager.id}>
                                             {manager.full_name}
@@ -1293,7 +1423,7 @@ export default function EmployeeManagementPage() {
                                 disabled={isSubmitting}
                                 className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                {isSubmitting ? "Creating..." : "Create employee"}
+                                {isSubmitting ? "Creating..." : isAdminMode ? "Create account" : "Create employee"}
                             </button>
                         </div>
                     </form>
@@ -1358,12 +1488,18 @@ export default function EmployeeManagementPage() {
 
             {isEditOpen ? (
                 <ModalShell
-                    title="Edit employee"
-                    description="Update employee information and status in one place."
+                    title={isAdminMode ? "Edit account" : "Edit employee"}
+                    description={
+                        isAdminMode
+                            ? "Update account information and status in one place."
+                            : "Update employee information and status in one place."
+                    }
                     onClose={resetModals}
                 >
                     {isDetailLoading ? (
-                        <div className="py-12 text-center text-sm text-slate-500">Loading employee details...</div>
+                        <div className="py-12 text-center text-sm text-slate-500">
+                            {isAdminMode ? "Loading account details..." : "Loading employee details..."}
+                        </div>
                     ) : selectedEmployeeDetail ? (
                         <form className="space-y-5" onSubmit={handleEditSubmit}>
                             {formError ? (

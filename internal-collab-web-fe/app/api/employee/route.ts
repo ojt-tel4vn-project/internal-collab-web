@@ -227,6 +227,19 @@ function normalizeStatus(value: unknown) {
     return normalized;
 }
 
+function canDeleteRoleForView(view: string | null, roleName: string) {
+    const normalizedRole = normalizeString(roleName).toLowerCase();
+    if (!normalizedRole) {
+        return false;
+    }
+
+    if (view === "admin-employee") {
+        return normalizedRole === "employee" || normalizedRole === "hr" || normalizedRole === "manager";
+    }
+
+    return normalizedRole === "employee";
+}
+
 function normalizeNumber(value: unknown) {
     if (typeof value === "number" && Number.isFinite(value)) {
         return value;
@@ -319,6 +332,15 @@ function sanitizeCreateEmployeePayload(body: Record<string, unknown>) {
         payload.manager_id = managerId;
     }
 
+    const roleId = normalizeString(body.role_id);
+    if (roleId) {
+        if (!isUuid(roleId)) {
+            return { payload: null, message: "Invalid role value." } as const;
+        }
+
+        payload.role_id = roleId;
+    }
+
     const joinDate = normalizeDate(body.join_date);
     if (joinDate) {
         if (!isIsoDate(joinDate)) {
@@ -333,7 +355,7 @@ function sanitizeCreateEmployeePayload(body: Record<string, unknown>) {
 
 export async function GET(request: NextRequest) {
     const view = request.nextUrl.searchParams.get("view");
-    if (view === "hr-management") {
+    if (view === "hr-management" || view === "admin-management") {
         if (!hasAuthSession(request)) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
@@ -347,7 +369,7 @@ export async function GET(request: NextRequest) {
         return createProxyResponse(upstreamResponse);
     }
 
-    if (view === "hr-employee-detail") {
+    if (view === "hr-employee-detail" || view === "admin-employee-detail") {
         if (!hasAuthSession(request)) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
@@ -380,7 +402,7 @@ export async function GET(request: NextRequest) {
         return createProxyResponse(upstreamResponse);
     }
 
-    if (view !== "hr-dashboard") {
+    if (view !== "hr-dashboard" && view !== "admin-dashboard") {
         return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
 
@@ -463,7 +485,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     const view = request.nextUrl.searchParams.get("view");
-    if (view !== "hr-management") {
+    if (view !== "hr-management" && view !== "admin-management") {
         return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
 
@@ -493,7 +515,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
     const view = request.nextUrl.searchParams.get("view");
-    if (view !== "hr-employee") {
+    if (view !== "hr-employee" && view !== "admin-employee") {
         return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
 
@@ -574,7 +596,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
     const view = request.nextUrl.searchParams.get("view");
-    if (view !== "hr-employee") {
+    if (view !== "hr-employee" && view !== "admin-employee") {
         return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
 
@@ -608,9 +630,13 @@ export async function DELETE(request: NextRequest) {
         return finalizeJsonResponse({ message: "Unable to read employee details." }, state, 502);
     }
 
-    const roleName = normalizeString(detailPayload.role?.name).toLowerCase();
-    if (roleName !== "employee") {
-        return finalizeJsonResponse({ message: "Only employee role can be deleted." }, state, 422);
+    const roleName = normalizeString(detailPayload.role?.name);
+    if (!canDeleteRoleForView(view, roleName)) {
+        return finalizeJsonResponse(
+            { message: view === "admin-employee" ? "Only employee, HR, or manager accounts can be deleted." : "Only employee role can be deleted." },
+            state,
+            422,
+        );
     }
 
     const upstreamResponse = await proxyToBackend({
