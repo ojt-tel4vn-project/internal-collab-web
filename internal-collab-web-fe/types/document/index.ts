@@ -5,7 +5,7 @@ export interface DocumentRecord {
     roles: string;
     file_path: string;
     file_name?: string;
-    file_size?: number;
+    file_size?: number | string;
     mime_type?: string;
     description?: string;
     is_read?: boolean;
@@ -21,7 +21,7 @@ export interface DocumentApiItem {
     roles?: string;
     file_name?: string;
     file_path?: string;
-    file_size?: number;
+    file_size?: number | string;
     mime_type?: string;
     is_read?: boolean;
     uploaded_by?: string;
@@ -33,7 +33,7 @@ export interface DocumentApiItem {
     Roles?: string;
     FileName?: string;
     FilePath?: string;
-    FileSize?: number;
+    FileSize?: number | string;
     MimeType?: string;
     IsRead?: boolean;
     UploadedBy?: string;
@@ -64,6 +64,13 @@ function asNumber(value: unknown) {
     return undefined;
 }
 
+function asFileSize(value: unknown) {
+    const numeric = asNumber(value);
+    if (numeric !== undefined) return numeric;
+    if (typeof value === "string" && value.trim() !== "") return value.trim();
+    return undefined;
+}
+
 function asBoolean(value: unknown) {
     if (typeof value === "boolean") return value;
     if (value === "true") return true;
@@ -80,7 +87,7 @@ export function normalizeDocument(item: DocumentApiItem): DocumentRecord {
         roles: asText(item.roles ?? item.Roles),
         file_name: asText(item.file_name ?? item.FileName),
         file_path: asText(item.file_path ?? item.FilePath),
-        file_size: asNumber(item.file_size ?? item.FileSize),
+        file_size: asFileSize(item.file_size ?? item.FileSize),
         mime_type: asText(item.mime_type ?? item.MimeType),
         is_read: asBoolean(item.is_read ?? item.IsRead),
         uploaded_by: asText(item.uploaded_by ?? item.UploadedBy),

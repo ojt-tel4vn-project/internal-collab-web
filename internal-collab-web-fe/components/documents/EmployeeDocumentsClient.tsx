@@ -52,7 +52,11 @@ function getDocumentSummary(doc: DocumentRecord) {
     return "No description available";
 }
 
-function formatFileSize(size?: number) {
+function formatFileSize(size?: number | string) {
+    if (typeof size === "string") {
+        const trimmed = size.trim();
+        return trimmed || "-";
+    }
     if (typeof size !== "number" || Number.isNaN(size) || size <= 0) return "-";
     if (size < 1024) return `${size} B`;
     const kb = size / 1024;
