@@ -337,6 +337,7 @@ export function HRDocumentsClient({ documents, categoryMap, userId }: Props) {
                 roleLabel="HR"
                 userId={userId}
                 canDelete
+                showRoleFilter
                 deleteEndpointBase="/api/hr/documents"
                 onDeleteSuccess={(message) => {
                     setError(null);

@@ -31,9 +31,14 @@ function formatIdLabel(value: string) {
 function formatRolesLabel(value: string) {
     const roles = value
         .split(",")
-        .map((role) => role.trim())
+        .map((role) => {
+            const trimmed = role.trim();
+            if (!trimmed) return "";
+            if (trimmed.toLowerCase() === "hr") return "HR";
+            return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+        })
         .filter(Boolean);
-    if (roles.length === 0) return "employee";
+    if (roles.length === 0) return "Employee";
     return roles.join(", ");
 }
 
@@ -66,6 +71,7 @@ type Props = {
     canDelete?: boolean;
     deleteEndpointBase?: string;
     onDeleteSuccess?: (message: string) => void;
+    showRoleFilter?: boolean;
 };
 
 type IndexedDocument = DocumentRecord & {
@@ -82,12 +88,14 @@ export function EmployeeDocumentsClient({
     canDelete = false,
     deleteEndpointBase = "/api/hr/documents",
     onDeleteSuccess,
+    showRoleFilter = false,
 }: Props) {
     const router = useRouter();
     const [query, setQuery] = useState("");
     const deferredQuery = useDeferredValue(query);
     const [statusFilter, setStatusFilter] = useState<"all" | "read" | "unread">("all");
     const [categoryFilter, setCategoryFilter] = useState("all");
+    const [roleFilter, setRoleFilter] = useState("");
     const [readIds, setReadIds] = useState<Set<string>>(new Set());
     const [busyId, setBusyId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -160,8 +168,15 @@ export function EmployeeDocumentsClient({
                 return statusFilter === "read" ? isRead : !isRead;
             });
         }
+        if (roleFilter !== "") {
+            next = next.filter((doc) => {
+                const r = (doc.roles || "").split(",").map((x) => x.trim()).filter(Boolean);
+                if (r.length === 0) return roleFilter === "employee";
+                return r.includes(roleFilter);
+            });
+        }
         return next;
-    }, [indexedDocuments, deferredQuery, categoryFilter, statusFilter, isDocumentRead]);
+    }, [indexedDocuments, deferredQuery, categoryFilter, statusFilter, roleFilter, isDocumentRead]);
 
     const categories = useMemo(() => {
         if (categoryMap && Object.keys(categoryMap).length > 0) {
@@ -181,6 +196,27 @@ export function EmployeeDocumentsClient({
             title: id,
         }));
     }, [documents, categoryMap]);
+
+    const rolesList = useMemo(() => {
+        const unique = new Set<string>();
+        documents.forEach((doc) => {
+            const docRoles = (doc.roles || "")
+                .split(",")
+                .map((r) => r.trim())
+                .filter(Boolean);
+            if (docRoles.length === 0) {
+                unique.add("employee");
+            } else {
+                docRoles.forEach((r) => unique.add(r));
+            }
+        });
+        return Array.from(unique)
+            .sort((a, b) => a.localeCompare(b))
+            .map((role) => {
+                const label = role.toLowerCase() === "hr" ? "HR" : role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+                return { value: role, label };
+            });
+    }, [documents]);
 
     const stats = useMemo(() => {
         const totalDocuments = documents.length;
@@ -358,6 +394,20 @@ export function EmployeeDocumentsClient({
                                 </option>
                             ))}
                         </select>
+                        {showRoleFilter && (
+                            <select
+                                value={roleFilter}
+                                onChange={(e) => setRoleFilter(e.target.value)}
+                                className="h-11 rounded-2xl border border-slate-200 bg-white px-3 shadow-sm outline-none focus:border-blue-500"
+                            >
+                                <option value="">All roles</option>
+                                {rolesList.map((role) => (
+                                    <option key={role.value} value={role.value}>
+                                        {role.label}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
                     </div>
                 </div>
 
@@ -395,7 +445,6 @@ export function EmployeeDocumentsClient({
                         const titleText = doc.title || "Untitled document";
                         const isTitleLong = titleText.length > 60;
                         const isTitleExpanded = Boolean(doc.id && expandedTitles.has(doc.id));
-                        const displayRoleLabel = roleLabel ?? docRoleLabel;
                         return (
                             <article key={doc.id} className="flex h-full flex-col rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
                                 <div className="flex items-start justify-between gap-3">
@@ -428,9 +477,9 @@ export function EmployeeDocumentsClient({
                                             </div>
                                             <span
                                                 className="inline-flex max-w-[16rem] items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 truncate"
-                                                title={displayRoleLabel}
+                                                title={docRoleLabel}
                                             >
-                                                {displayRoleLabel}
+                                                {docRoleLabel}
                                             </span>
                                             <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${isRead ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}>
                                                 {isRead ? "Read" : "Unread"}
