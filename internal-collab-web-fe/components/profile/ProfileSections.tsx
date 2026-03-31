@@ -15,7 +15,6 @@ type ProfileSummaryCardProps = {
     positionLabel: string;
     statusLabel: string;
     initials: string;
-    managerDisplay: string;
     avatarPreviewSrc?: string;
     formAvatar: string;
     formPhone: string;
@@ -53,7 +52,6 @@ export function ProfileSummaryCard({
     positionLabel,
     statusLabel,
     initials,
-    managerDisplay,
     avatarPreviewSrc,
     formAvatar,
     formPhone,
@@ -139,7 +137,6 @@ export function ProfileSummaryCard({
                 <DetailRow label="Phone" value={profile?.phone || "-"} />
                 <DetailRow label="Address" value={profile?.address || "-"} alignStart />
                 <DetailRow label="Join date" value={formatDate(profile?.join_date)} />
-                <DetailRow label="Manager" value={managerDisplay} />
                 <DetailRow label="Birthday" value={formatDate(profile?.date_of_birth)} />
             </div>
 
@@ -281,4 +278,3 @@ export function InfoSectionCard({ title, badge, fields, compact = false }: InfoS
         </div>
     );
 }
-

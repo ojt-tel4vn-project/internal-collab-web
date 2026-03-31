@@ -259,9 +259,6 @@ export default function SelfProfilePage({
     const displayName = profile?.full_name || defaultName;
     const departmentName = profile?.department?.name || "-";
     const positionLabel = normalizeProfileText(profile?.position) || fallbackPosition || "-";
-    const managerName = profile?.manager?.full_name || profile?.manager?.name || "-";
-    const managerId = profile?.manager?.id ?? profile?.manager_id;
-    const managerDisplay = managerId && managerName !== "-" ? `${managerName} (#${managerId})` : managerName;
     const statusLabel = profile?.status ? profile.status.replace(/_/g, " ") : "Unknown";
 
     const personalFields = useMemo(
@@ -523,7 +520,6 @@ export default function SelfProfilePage({
                                 positionLabel={positionLabel}
                                 statusLabel={statusLabel}
                                 initials={initials}
-                                managerDisplay={managerDisplay}
                                 avatarPreviewSrc={avatarPreviewSrc}
                                 formAvatar={formAvatar}
                                 formPhone={formPhone}
