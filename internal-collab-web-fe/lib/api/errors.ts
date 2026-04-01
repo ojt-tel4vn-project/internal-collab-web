@@ -11,7 +11,9 @@ export type ApiErrorPayload = {
 };
 
 const TECHNICAL_ERROR_PATTERNS = [
+    /^\[object object\]$/i,
     /\bat\s+\S+/i,
+    /\bobject object\b/i,
     /\b(?:type|reference|syntax|range|runtime)error\b/i,
     /\btraceback\b/i,
     /\bexception\b/i,
@@ -28,6 +30,7 @@ const TECHNICAL_ERROR_PATTERNS = [
     /\bgateway timeout\b/i,
     /\bproxy\b/i,
     /\bpayload\b/i,
+    /\btostring\b/i,
     /\bjson\b/i,
     /\bhtml\b/i,
     /\bsql\b/i,
@@ -100,6 +103,18 @@ export function toUserFriendlyErrorMessage(message: string | null | undefined, f
 
     if (lower.includes("invalid request payload")) {
         return "Some information is missing or invalid. Please review and try again.";
+    }
+
+    if (lower.includes("expected string to match pattern")) {
+        if (normalized.includes("0[0-9]{9}") || normalized.includes("%+-]+@[a-zA-Z0-9.-]+")) {
+            return "Contact during leave must be a valid phone number or email address.";
+        }
+
+        if (lower.includes("email")) {
+            return "Please enter a valid email address.";
+        }
+
+        return fallback;
     }
 
     if (lower.includes("unexpected server response")) {
