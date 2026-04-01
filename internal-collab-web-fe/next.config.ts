@@ -18,17 +18,16 @@ const nextConfig: NextConfig = {
 };
 
 if (process.env.NODE_ENV === "development" && process.env.VERCEL !== "1") {
-  void import("@opennextjs/cloudflare")
-    .then((module) => module.initOpenNextCloudflareForDev())
+  const importOpenNextCloudflare = new Function(
+    "specifier",
+    "return import(specifier)",
+  ) as (specifier: string) => Promise<{ initOpenNextCloudflareForDev?: () => void }>;
+
+  void importOpenNextCloudflare("@opennextjs/cloudflare")
+    .then((module) => module.initOpenNextCloudflareForDev?.())
     .catch((error) => {
       console.warn("Unable to initialize OpenNext Cloudflare dev context.", error);
     });
-}
-
-if (process.env.NODE_ENV === "development" && !process.env.VERCEL) {
-  import("@opennextjs/cloudflare").then(({ initOpenNextCloudflareForDev }) => {
-    initOpenNextCloudflareForDev();
-  });
 }
 
 export default nextConfig;
