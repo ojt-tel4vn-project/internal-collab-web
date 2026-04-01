@@ -54,7 +54,7 @@ async function fetchDocuments(): Promise<LoadResult> {
     const url = new URL("/api/employee/documents", baseUrl).toString();
 
     const res = await fetch(url, {
-        next: { revalidate: 3600 },
+        cache: "no-store",
         headers: {
             accept: "application/json, application/problem+json",
             cookie: cookieHeader,

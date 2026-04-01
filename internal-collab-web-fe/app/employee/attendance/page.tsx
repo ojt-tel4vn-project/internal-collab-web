@@ -110,20 +110,26 @@ function extractAttendanceItems(payload: AttendanceListResponse) {
     return [];
 }
 
+function isAttendanceApiItem(value: unknown): value is AttendanceApiItem {
+    if (!isRecord(value)) return false;
+    return (
+        value["id"] !== undefined
+        || value["attendance_data"] !== undefined
+        || value["month"] !== undefined
+        || value["year"] !== undefined
+    );
+}
+
 function extractAttendanceDetailItem(payload: AttendanceDetailResponse) {
-    if (isRecord(payload) && (payload.id || payload.attendance_data || payload.month || payload.year)) {
-        return payload as AttendanceApiItem;
-    }
+    if (isAttendanceApiItem(payload)) return payload;
 
-    const root = isRecord(payload) ? payload : null;
-    const body = isRecord(root?.body) ? root.body : null;
-    const data = isRecord(root?.data) ? root.data : null;
+    const root = isRecord(payload) ? (payload as Record<string, unknown>) : null;
+    const body = isRecord(root?.["body"]) ? (root["body"] as Record<string, unknown>) : null;
+    const data = isRecord(root?.["data"]) ? (root["data"] as Record<string, unknown>) : null;
 
-    const candidates = [root?.data, root?.body, data?.data, body?.data];
+    const candidates: unknown[] = [root?.["data"], root?.["body"], data?.["data"], body?.["data"]];
     for (const candidate of candidates) {
-        if (isRecord(candidate) && (candidate.id || candidate.attendance_data || candidate.month || candidate.year)) {
-            return candidate as AttendanceApiItem;
-        }
+        if (isAttendanceApiItem(candidate)) return candidate;
     }
 
     return null;
