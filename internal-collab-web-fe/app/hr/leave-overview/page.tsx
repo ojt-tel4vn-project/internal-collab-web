@@ -407,7 +407,6 @@ export default function HrLeaveRequestPage() {
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div className="space-y-1">
                             <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Leave Request</h1>
-                            <p className="text-sm text-slate-500">HR can view leave requests. Approve/reject is handled by managers only.</p>
                         </div>
 
                         <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm">
@@ -419,10 +418,6 @@ export default function HrLeaveRequestPage() {
                                 <ChevronRightIcon className="h-4 w-4" />
                             </button>
                         </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-                        Read-only view for HR. Pending list is shown when the current account is assigned as manager approver.
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
