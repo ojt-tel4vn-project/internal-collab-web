@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 import type { LeaveHistoryItem } from "@/types/leave";
 
 interface LeaveHistoryProps {
@@ -44,15 +45,16 @@ export function LeaveHistory({ items }: LeaveHistoryProps) {
         try {
             const res = await fetch(`/api/employee/leave-requests/${id}`, { method: "DELETE" });
             if (!res.ok) {
-                const raw = await res.text();
-                throw new Error(raw || "Unable to cancel leave request");
+                const raw = await res.text().catch(() => "");
+                throw new Error(parseApiErrorMessage(raw, "Unable to cancel leave request"));
             }
             setRows((prev) =>
                 prev.map((r) => (r.id === id ? { ...r, status: { label: "Cancelled", tone: statusClass.Cancelled } } : r)),
             );
             showToast("Leave request cancelled", "success");
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Unable to cancel leave request";
+            logErrorToConsole("LeaveHistory.handleCancel", err, { id });
+            const message = toUserFriendlyError(err, "We couldn't cancel the leave request right now.");
             showToast(message, "error");
         } finally {
             setBusyId(null);

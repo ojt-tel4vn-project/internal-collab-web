@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/dashboard/home/Icons";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 
 type AttendanceDayStatus = "present" | "absent" | "late" | "leave" | "unknown";
 
@@ -90,13 +91,7 @@ function normalizeAttendance(item: AttendanceApiItem): AttendanceRecord | null {
 }
 
 function getErrorMessage(raw: string, fallback: string) {
-    if (!raw) return fallback;
-    try {
-        const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string; error?: string };
-        return parsed.message || parsed.detail || parsed.title || parsed.error || fallback;
-    } catch {
-        return raw.slice(0, 200);
-    }
+    return parseApiErrorMessage(raw, fallback);
 }
 
 export default function ManagerAttendancePage() {
@@ -140,8 +135,8 @@ export default function ManagerAttendancePage() {
             const normalized = items.map(normalizeAttendance).filter(Boolean) as AttendanceRecord[];
             setRecord(normalized[0] ?? null);
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Unable to load attendance data.";
-            setError(message);
+            logErrorToConsole("ManagerAttendance.loadAttendance", err, { month, year });
+            setError(toUserFriendlyError(err, "We couldn't load attendance data right now."));
             setRecord(null);
         } finally {
             setLoading(false);
@@ -218,8 +213,8 @@ export default function ManagerAttendancePage() {
             await loadAttendance();
             setActionMessage("Attendance confirmed.");
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Unable to confirm attendance.";
-            setError(message);
+            logErrorToConsole("ManagerAttendance.handleConfirm", err, { recordId: record.id });
+            setError(toUserFriendlyError(err, "We couldn't confirm attendance right now."));
         } finally {
             setConfirming(false);
         }
@@ -249,8 +244,8 @@ export default function ManagerAttendancePage() {
             setCommentDay(null);
             setCommentText("");
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Unable to submit comment.";
-            setError(message);
+            logErrorToConsole("ManagerAttendance.handleSubmitComment", err, { recordId: record.id, dayNumber });
+            setError(toUserFriendlyError(err, "We couldn't submit your comment right now."));
         } finally {
             setCommentSaving(false);
         }

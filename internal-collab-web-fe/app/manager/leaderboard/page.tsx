@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { logErrorToConsole, toUserFriendlyError } from "@/lib/api/errors";
 import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
 import { LeaderboardResults } from "@/components/leaderboard/LeaderboardResults";
 import type { DepartmentOption, LeaderboardEntry, LeaderboardFilters } from "@/types/employee";
@@ -38,11 +39,11 @@ async function readLeaderboard(filters: LeaderboardFilters, signal?: AbortSignal
 }
 
 function getLeaderboardError(error: unknown) {
-    return error instanceof Error ? error.message : "Unable to load leaderboard.";
+    return toUserFriendlyError(error, "We couldn't load the leaderboard right now.");
 }
 
 function getDepartmentError(error: unknown) {
-    return error instanceof Error ? error.message : "Department filter is temporarily unavailable.";
+    return toUserFriendlyError(error, "We couldn't load the department list right now.");
 }
 
 export default function ManagerLeaderboardPage() {
@@ -77,6 +78,7 @@ export default function ManagerLeaderboardPage() {
             })
             .catch((error) => {
                 if (cancelled || isAbortError(error)) return;
+                logErrorToConsole("ManagerLeaderboard.readDepartmentsCached", error);
                 setDepartmentsState({ data: [], error: getDepartmentError(error) });
                 setFilters((current) => (current.departmentId === "all" ? current : { ...current, departmentId: "all" }));
             });
@@ -97,6 +99,7 @@ export default function ManagerLeaderboardPage() {
             })
             .catch((error) => {
                 if (cancelled || isAbortError(error)) return;
+                logErrorToConsole("ManagerLeaderboard.readLeaderboard", error, { filters });
                 setLeaderboardState({ data: [], error: getLeaderboardError(error), loading: false });
             });
 

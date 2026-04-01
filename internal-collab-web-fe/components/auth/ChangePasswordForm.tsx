@@ -1,6 +1,7 @@
 "use client";
 
 import { type SubmitEventHandler, useEffect, useState } from "react";
+import { logErrorToConsole, toUserFriendlyErrorMessage } from "@/lib/api/errors";
 
 type ChangePasswordFormProps = {
   roleLabel: string;
@@ -13,13 +14,13 @@ function readApiMessage(payload: unknown): string | null {
 
   const data = payload as { detail?: unknown; message?: unknown; title?: unknown };
   if (typeof data.detail === "string" && data.detail.trim()) {
-    return data.detail;
+    return toUserFriendlyErrorMessage(data.detail, "We couldn't change the password right now.");
   }
   if (typeof data.message === "string" && data.message.trim()) {
-    return data.message;
+    return toUserFriendlyErrorMessage(data.message, "We couldn't change the password right now.");
   }
   if (typeof data.title === "string" && data.title.trim()) {
-    return data.title;
+    return toUserFriendlyErrorMessage(data.title, "We couldn't change the password right now.");
   }
 
   return null;
@@ -106,8 +107,9 @@ export default function ChangePasswordForm({ roleLabel }: ChangePasswordFormProp
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch {
-      setError("Unable to connect to the server. Please try again later.");
+    } catch (error) {
+      logErrorToConsole("ChangePasswordForm.handleSubmit", error, { isForcedChange });
+      setError("The system is temporarily unavailable. Please try again in a moment.");
     } finally {
       setLoading(false);
     }

@@ -8,6 +8,7 @@ import {
   type NotificationItem,
   type UnreadCountResponse,
 } from "@/types/notification";
+import { logErrorToConsole, toUserFriendlyError, toUserFriendlyErrorMessage } from "@/lib/api/errors";
 
 const LIMIT = 10;
 
@@ -70,9 +71,9 @@ function readApiMessage(payload: unknown): string {
   }
 
   const data = payload as { message?: unknown; detail?: unknown; title?: unknown };
-  if (typeof data.message === "string" && data.message.trim()) return data.message;
-  if (typeof data.detail === "string" && data.detail.trim()) return data.detail;
-  if (typeof data.title === "string" && data.title.trim()) return data.title;
+  if (typeof data.message === "string" && data.message.trim()) return data.message.trim();
+  if (typeof data.detail === "string" && data.detail.trim()) return data.detail.trim();
+  if (typeof data.title === "string" && data.title.trim()) return data.title.trim();
   return "Unexpected server response.";
 }
 
@@ -143,8 +144,8 @@ export default function NotificationCenter({
         await Promise.all([fetchNotifications(nextPage), fetchUnreadCount()]);
         setPage(nextPage);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Unable to load notifications.";
-        setError(message);
+        logErrorToConsole("NotificationCenter.loadPage", err, { nextPage });
+        setError(toUserFriendlyError(err, "We couldn't load notifications right now."));
       } finally {
         setLoading(false);
       }
@@ -196,8 +197,8 @@ export default function NotificationCenter({
           read_at: item.read_at ?? new Date().toISOString(),
         });
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Unable to mark notification as read.";
-        setError(message);
+        logErrorToConsole("NotificationCenter.handleOpenNotification", err, { id: item.id });
+        setError(toUserFriendlyError(err, "We couldn't update the notification right now."));
         setSelectedNotification(item);
       } finally {
         setActionLoading(false);
@@ -226,12 +227,14 @@ export default function NotificationCenter({
         throw new Error(readApiMessage(data));
       }
 
-      setActionMessage(readApiMessage(data));
+      setActionMessage(
+        toUserFriendlyErrorMessage(readApiMessage(data), "Notifications were marked as read."),
+      );
       await Promise.all([fetchNotifications(page), fetchUnreadCount()]);
       setSelectedNotification((prev) => (prev ? { ...prev, is_read: true } : prev));
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to mark all notifications as read.";
-      setError(message);
+      logErrorToConsole("NotificationCenter.handleMarkAllAsRead", err, { page });
+      setError(toUserFriendlyError(err, "We couldn't update notifications right now."));
     } finally {
       setActionLoading(false);
     }

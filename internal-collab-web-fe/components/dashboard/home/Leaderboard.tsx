@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 import type { LeaderboardItem } from "@/types/dashboard";
 import { ArrowUpRightIcon, MedalIcon } from "./Icons";
 import { SectionCard } from "./common/SectionCard";
@@ -81,22 +82,7 @@ function extractEnvelopeData(payload: HomeLeaderboardResponse | null | undefined
 }
 
 function getErrorMessage(raw: string, fallback: string) {
-    if (!raw) {
-        return fallback;
-    }
-
-    try {
-        const parsed = JSON.parse(raw) as {
-            detail?: string;
-            error?: string;
-            message?: string;
-            title?: string;
-        };
-
-        return parsed.message || parsed.detail || parsed.title || parsed.error || fallback;
-    } catch {
-        return fallback;
-    }
+    return parseApiErrorMessage(raw, fallback);
 }
 
 function getCurrentMonthRange() {
@@ -185,9 +171,10 @@ export function LeaderboardCard({ entries, viewAllHref = "/employee/leaderboard"
                     return;
                 }
 
+                logErrorToConsole("DashboardLeaderboard.readHomeLeaderboard", error);
                 setState({
                     data: [],
-                    error: error instanceof Error ? error.message : "Unable to load leaderboard.",
+                    error: toUserFriendlyError(error, "We couldn't load the leaderboard right now."),
                     loading: false,
                 });
             });

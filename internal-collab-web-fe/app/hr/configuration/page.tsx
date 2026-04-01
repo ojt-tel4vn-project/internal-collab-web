@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 
 type AttendanceConfiguration = {
     confirmationDeadlineDays: number;
@@ -104,22 +105,7 @@ function asStringArray(value: unknown): string[] {
 }
 
 function parseErrorMessage(raw: string, fallback: string): string {
-    if (!raw) {
-        return fallback;
-    }
-
-    try {
-        const parsed = JSON.parse(raw) as {
-            message?: string;
-            detail?: string;
-            title?: string;
-            error?: string;
-        };
-
-        return parsed.message || parsed.detail || parsed.title || parsed.error || fallback;
-    } catch {
-        return raw.slice(0, 200) || fallback;
-    }
+    return parseApiErrorMessage(raw, fallback);
 }
 
 function findConfigRecord(payload: unknown, keys: string[]): Record<string, unknown> | null {
@@ -377,10 +363,10 @@ export default function HrConfigurationPage() {
                 );
             }
         } catch (error) {
-            const fallback = error instanceof Error ? error.message : "Unable to load configuration.";
-            setAttendanceLoadError(fallback);
-            setPointLoadError("Unable to load point configuration.");
-            setBirthdayLoadError("Unable to load birthday configuration.");
+            logErrorToConsole("HrConfigurationPage.loadConfigurations", error);
+            setAttendanceLoadError(toUserFriendlyError(error, "We couldn't load attendance settings right now."));
+            setPointLoadError("We couldn't load point settings right now.");
+            setBirthdayLoadError("We couldn't load birthday settings right now.");
         } finally {
             setIsLoading(false);
         }
@@ -447,9 +433,8 @@ export default function HrConfigurationPage() {
             }));
             setAttendanceSuccess(parseSuccessMessage(payload, "Attendance configuration updated."));
         } catch (error) {
-            setAttendanceError(
-                error instanceof Error ? error.message : "Unable to update attendance configuration.",
-            );
+            logErrorToConsole("HrConfigurationPage.handleSaveAttendance", error);
+            setAttendanceError(toUserFriendlyError(error, "We couldn't update attendance settings right now."));
         } finally {
             setAttendanceSaving(false);
         }
@@ -514,7 +499,8 @@ export default function HrConfigurationPage() {
             }));
             setPointSuccess(parseSuccessMessage(payload, "Point configuration updated."));
         } catch (error) {
-            setPointError(error instanceof Error ? error.message : "Unable to update point configuration.");
+            logErrorToConsole("HrConfigurationPage.handleSavePoint", error);
+            setPointError(toUserFriendlyError(error, "We couldn't update point settings right now."));
         } finally {
             setPointSaving(false);
         }
@@ -571,7 +557,8 @@ export default function HrConfigurationPage() {
             }));
             setBirthdaySuccess(parseSuccessMessage(payload, "Birthday configuration updated."));
         } catch (error) {
-            setBirthdayError(error instanceof Error ? error.message : "Unable to update birthday configuration.");
+            logErrorToConsole("HrConfigurationPage.handleSaveBirthday", error);
+            setBirthdayError(toUserFriendlyError(error, "We couldn't update birthday settings right now."));
         } finally {
             setBirthdaySaving(false);
         }
