@@ -20,4 +20,8 @@ if (process.env.NODE_ENV === "development" && process.env.VERCEL !== "1") {
     });
 }
 
-export default nextConfig;
+if (process.env.NODE_ENV === "development" && !process.env.VERCEL) {
+  import("@opennextjs/cloudflare").then(({ initOpenNextCloudflareForDev }) => {
+    initOpenNextCloudflareForDev();
+  });
+}
