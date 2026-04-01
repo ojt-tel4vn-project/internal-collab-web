@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { parseApiErrorMessage } from "@/lib/api/errors";
 import { HRDocumentsClient } from "@/components/documents/HRDocumentsClient";
 import type { DocumentApiItem, DocumentsApiResponse } from "@/types/document";
 import { normalizeDocument } from "@/types/document";
@@ -63,16 +64,10 @@ async function fetchDocuments(): Promise<LoadResult> {
 
     if (!res.ok) {
         const raw = await res.text().catch(() => "");
-        let message = `Unable to load documents (HTTP ${res.status})`;
-        if (raw) {
-            try {
-                const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string };
-                message = parsed.message || parsed.detail || parsed.title || message;
-            } catch {
-                message = raw.slice(0, 200);
-            }
-        }
-        return { documents: [], error: message };
+        return {
+            documents: [],
+            error: parseApiErrorMessage(raw, "We couldn't load documents right now."),
+        };
     }
 
     const payload = (await res.json()) as DocumentsApiResponse;

@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 import type {
     CreateLeaveRequestPayload,
-    CreateLeaveRequestResponse,
     GetLeaveTypesResponse,
     LeaveType,
 } from "@/types/leave";
@@ -69,7 +69,8 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
                 }
             } catch (err) {
                 if (!mounted) return;
-                const message = err instanceof Error ? err.message : "Unable to load leave types";
+                logErrorToConsole("LeaveRequestForm.loadTypes", err);
+                const message = toUserFriendlyError(err, "We couldn't load leave types right now.");
                 setError(message);
             } finally {
                 if (mounted) setLoadingTypes(false);
@@ -115,17 +116,8 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
             });
 
             if (!res.ok) {
-                const raw = await res.text();
-                let body: CreateLeaveRequestResponse | null = null;
-                try {
-                    body = JSON.parse(raw);
-                } catch {
-                    body = null;
-                }
-                const message =
-                    (body?.message && typeof body.message === "string" ? body.message : "") ||
-                    (raw ? raw.slice(0, 200) : "Unable to submit leave request");
-                throw new Error(message);
+                const raw = await res.text().catch(() => "");
+                throw new Error(parseApiErrorMessage(raw, "Unable to submit leave request"));
             }
 
             showToast("Leave request submitted", "success");
@@ -138,7 +130,8 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
                 refreshTimeoutRef.current = null;
             }, SUCCESS_REFRESH_DELAY_MS);
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Unable to submit leave request";
+            logErrorToConsole("LeaveRequestForm.handleSubmit", err);
+            const message = toUserFriendlyError(err, "We couldn't submit the leave request right now.");
             setError(message);
             showToast(message, "error");
         } finally {

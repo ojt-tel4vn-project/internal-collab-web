@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { logErrorToConsole, toUserFriendlyError } from "@/lib/api/errors";
 
 type LeaderboardEntry = {
     employee_id: string;
@@ -75,7 +76,8 @@ export function LeaderboardClient({ sideNav }: Props) {
                     .sort((left: StickerType, right: StickerType) => (left.display_order ?? 0) - (right.display_order ?? 0)),
             );
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Something went wrong");
+            logErrorToConsole("LeaderboardClient.fetchData", err);
+            setError(toUserFriendlyError(err, "We couldn't load leaderboard data right now."));
         } finally {
             setLoading(false);
         }

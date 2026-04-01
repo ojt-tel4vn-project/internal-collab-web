@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, type SubmitEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { logErrorToConsole, toUserFriendlyError, toUserFriendlyErrorMessage } from "@/lib/api/errors";
 import type {
     DepartmentOption,
     HrCreateEmployeePayload,
@@ -183,7 +184,7 @@ async function parseErrorMessage(response: Response, fallback: string) {
         }
     }
 
-    return payload?.message ?? payload?.detail ?? fallback;
+    return toUserFriendlyErrorMessage(payload?.message ?? payload?.detail ?? fallback, fallback);
 }
 
 function normalizeDepartmentsPayload(payload: unknown): DepartmentOption[] {
@@ -525,7 +526,8 @@ export default function EmployeeManagementPage({ mode = "hr" }: { mode?: Managem
             setEmployees(payload.employees ?? []);
         } catch (error) {
             setEmployees([]);
-            setLoadError(error instanceof Error ? error.message : "Unable to load employees.");
+            logErrorToConsole("EmployeeManagementPage.loadEmployees", error, { managementListView });
+            setLoadError(toUserFriendlyError(error, "We couldn't load the employee list right now."));
         } finally {
             setIsLoading(false);
         }
@@ -765,7 +767,8 @@ export default function EmployeeManagementPage({ mode = "hr" }: { mode?: Managem
                 setEmployeeForm(mapDetailToForm(payload));
             } catch (error) {
                 setIsEditOpen(false);
-                showToast(error instanceof Error ? error.message : "Unable to load employee details.", "error");
+                logErrorToConsole("EmployeeManagementPage.openEditModal", error, { employeeId: employee.id });
+                showToast(toUserFriendlyError(error, "We couldn't load employee details right now."), "error");
             } finally {
                 setIsDetailLoading(false);
             }
@@ -831,7 +834,8 @@ export default function EmployeeManagementPage({ mode = "hr" }: { mode?: Managem
             setDepartmentFormError(null);
             showToast("Department added successfully.", "success");
         } catch (error) {
-            setDepartmentFormError(error instanceof Error ? error.message : "Unable to create department.");
+            logErrorToConsole("EmployeeManagementPage.handleDepartmentCreateSubmit", error, { name });
+            setDepartmentFormError(toUserFriendlyError(error, "We couldn't create the department right now."));
         } finally {
             setIsDepartmentSubmitting(false);
         }
@@ -901,7 +905,10 @@ export default function EmployeeManagementPage({ mode = "hr" }: { mode?: Managem
             setEmployeeForm(EMPTY_FORM);
             showToast(isAdminMode ? "Account created successfully." : "Employee created successfully.", "success");
         } catch (error) {
-            setFormError(error instanceof Error ? error.message : isAdminMode ? "Unable to create account." : "Unable to create employee.");
+            logErrorToConsole("EmployeeManagementPage.handleCreateSubmit", error, { mode, managementListView });
+            setFormError(
+                toUserFriendlyError(error, isAdminMode ? "We couldn't create the account right now." : "We couldn't create the employee right now."),
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -947,7 +954,10 @@ export default function EmployeeManagementPage({ mode = "hr" }: { mode?: Managem
             resetModals();
             showToast(isAdminMode ? "Account updated successfully." : "Employee updated successfully.", "success");
         } catch (error) {
-            setFormError(error instanceof Error ? error.message : isAdminMode ? "Unable to update account." : "Unable to update employee.");
+            logErrorToConsole("EmployeeManagementPage.handleEditSubmit", error, { employeeId: selectedEmployee.id, mode });
+            setFormError(
+                toUserFriendlyError(error, isAdminMode ? "We couldn't update the account right now." : "We couldn't update the employee right now."),
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -992,11 +1002,15 @@ export default function EmployeeManagementPage({ mode = "hr" }: { mode?: Managem
             }
             showToast(isAdminMode ? "Account deleted successfully." : "Employee deleted successfully.", "success");
         } catch (error) {
-            showToast(error instanceof Error ? error.message : isAdminMode ? "Unable to delete account." : "Unable to delete employee.", "error");
+            logErrorToConsole("EmployeeManagementPage.handleDeleteEmployee", error, { employeeId: employeePendingDelete.id, mode });
+            showToast(
+                toUserFriendlyError(error, isAdminMode ? "We couldn't delete the account right now." : "We couldn't delete the employee right now."),
+                "error",
+            );
         } finally {
             setDeletingEmployeeId(null);
         }
-    }, [employeeMutationView, employeePendingDelete, isAdminMode, loadEmployees, resetModals, selectedEmployee?.id, showToast]);
+    }, [employeeMutationView, employeePendingDelete, isAdminMode, loadEmployees, mode, resetModals, selectedEmployee?.id, showToast]);
 
     const stats = [
         { label: isAdminMode ? "Total accounts" : "Total employees", value: summary.total.toString() },

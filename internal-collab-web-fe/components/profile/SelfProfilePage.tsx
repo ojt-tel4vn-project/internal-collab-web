@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { type ReactNode, type SubmitEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { logErrorToConsole, toUserFriendlyError, toUserFriendlyErrorMessage } from "@/lib/api/errors";
 import { InfoSectionCard, ProfileSummaryCard } from "@/components/profile/ProfileSections";
 import type { EmployeeProfile, UpdateEmployeeProfilePayload } from "@/types/employee";
 
@@ -109,9 +110,9 @@ async function readErrorMessage(response: Response, fallback: string) {
 
     try {
         const payload = JSON.parse(raw) as unknown;
-        return extractApiMessage(payload) ?? fallback;
+        return toUserFriendlyErrorMessage(extractApiMessage(payload) ?? fallback, fallback);
     } catch {
-        return raw.slice(0, 200);
+        return toUserFriendlyErrorMessage(raw.slice(0, 200), fallback);
     }
 }
 
@@ -309,8 +310,8 @@ export default function SelfProfilePage({
             });
             resetForm(data);
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Something went wrong";
-            setError(message);
+            logErrorToConsole("SelfProfilePage.loadProfile", err);
+            setError(toUserFriendlyError(err, "We couldn't load your profile right now."));
         } finally {
             setLoading(false);
         }
@@ -341,7 +342,8 @@ export default function SelfProfilePage({
                 setPendingAvatarFile(processed.file);
                 setAvatarPreviewSrc(processed.previewSrc);
             } catch (err) {
-                const message = err instanceof Error ? err.message : "Unable to process avatar.";
+                logErrorToConsole("SelfProfilePage.handleAvatarFileChange", err);
+                const message = toUserFriendlyError(err, "We couldn't process that avatar image.");
                 setPendingAvatarFile(null);
                 setAvatarPreviewSrc("");
                 setError(message);
@@ -488,8 +490,8 @@ export default function SelfProfilePage({
             setEditing(false);
             showToast(statusMessage, "success");
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Something went wrong";
-            setError(message);
+            logErrorToConsole("SelfProfilePage.handleSave", err);
+            setError(toUserFriendlyError(err, "We couldn't save your profile right now."));
         } finally {
             setSaving(false);
         }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/dashboard/home/Icons";
-import { parseApiErrorMessage } from "@/lib/api/errors";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 import { asFiniteNumber, asString } from "@/lib/normalize";
 
 type AttendanceDayStatus = "present" | "absent" | "late" | "leave" | "unknown";
@@ -206,8 +206,8 @@ export default function AttendancePage() {
             setRecord(detailedRecord ?? baseRecord);
             setSelectedEntryDay(null);
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Unable to load attendance data.";
-            setError(message);
+            logErrorToConsole("EmployeeAttendance.loadAttendance", err, { month, year });
+            setError(toUserFriendlyError(err, "We couldn't load attendance data right now."));
             setRecord(null);
             setSelectedEntryDay(null);
         } finally {
@@ -298,8 +298,8 @@ export default function AttendancePage() {
             await loadAttendance();
             setActionMessage("Attendance confirmed.");
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Unable to confirm attendance.";
-            setError(message);
+            logErrorToConsole("EmployeeAttendance.handleConfirm", err, { recordId: record.id });
+            setError(toUserFriendlyError(err, "We couldn't confirm attendance right now."));
         } finally {
             setConfirming(false);
         }
@@ -329,8 +329,8 @@ export default function AttendancePage() {
             setCommentDay(null);
             setCommentText("");
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Unable to submit comment.";
-            setError(message);
+            logErrorToConsole("EmployeeAttendance.handleSubmitComment", err, { recordId: record.id, dayNumber });
+            setError(toUserFriendlyError(err, "We couldn't submit your comment right now."));
         } finally {
             setCommentSaving(false);
         }
