@@ -124,6 +124,7 @@ function normalizeQuota(input: unknown, index: number): LeaveQuota {
     const id = String(row.id ?? "");
     const employeeId = String(row.employee_id ?? row.employeeId ?? "");
     const leaveTypeId = String(row.leave_type_id ?? row.leaveTypeId ?? "");
+    const leaveTypeName = asText(row.leave_type_name ?? row.leaveTypeName, "");
     const year = asNumber(row.year);
     const totalDays = asNumber(row.total_days ?? row.totalDays);
     const usedDays = asNumber(row.used_days ?? row.usedDays);
@@ -133,6 +134,7 @@ function normalizeQuota(input: unknown, index: number): LeaveQuota {
         id: id || `${employeeId || "emp"}-${leaveTypeId || "type"}-${year || 0}-${index}`,
         employee_id: employeeId,
         leave_type_id: leaveTypeId,
+        leave_type_name: leaveTypeName,
         year,
         total_days: totalDays,
         used_days: usedDays,
@@ -281,12 +283,16 @@ function buildSummary(quotas: LeaveQuota[]): LeaveSummary {
         return { used: 0, total: 0, remaining: 0, progress: 0 };
     }
 
-    const primary = quotas.reduce((best, current) => {
-        if (!best) return current;
-        const bestTotal = best.total_days ?? 0;
-        const currentTotal = current.total_days ?? 0;
-        return currentTotal > bestTotal ? current : best;
-    }, quotas[0] as LeaveQuota);
+    let primary = quotas.find((q) => q.leave_type_name && q.leave_type_name.toLowerCase().includes("annual"));
+
+    if (!primary) {
+        primary = quotas.reduce((best, current) => {
+            if (!best) return current;
+            const bestTotal = best.total_days ?? 0;
+            const currentTotal = current.total_days ?? 0;
+            return currentTotal > bestTotal ? current : best;
+        }, quotas[0] as LeaveQuota);
+    }
 
     const total = primary.total_days ?? 0;
     const used = primary.used_days ?? 0;

@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "@/components/dashboard/home/Icons";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 
 type AttendanceDayDetail = {
     day: number;
@@ -89,12 +90,7 @@ function parseError(raw: string, fallback: string): string {
         return fallback;
     }
 
-    try {
-        const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string; error?: string };
-        return parsed.message || parsed.detail || parsed.title || parsed.error || fallback;
-    } catch {
-        return raw.slice(0, 200) || fallback;
-    }
+    return parseApiErrorMessage(raw, fallback);
 }
 
 function statusLabel(status: string): string {
@@ -445,7 +441,8 @@ export default function HrAttendanceManagementPage() {
         } catch (error) {
             setRawItems([]);
             setDepartmentById({});
-            setLoadError(error instanceof Error ? error.message : "Unable to load attendance data.");
+            logErrorToConsole("HrAttendanceManagementPage.loadData", error, { month, year });
+            setLoadError(toUserFriendlyError(error, "We couldn't load attendance data right now."));
         } finally {
             setIsLoading(false);
         }
@@ -519,8 +516,15 @@ export default function HrAttendanceManagementPage() {
         setIsUploading(true);
         try {
             const csvText = (await file.text()).replace(/^\uFEFF/, "");
-            if (!csvText.trim()) {
-                throw new Error("CSV file is empty.");
+            const lines = csvText.split(/\r?\n/).filter(line => line.trim());
+            
+            if (lines.length < 2) {
+                throw new Error("File CSV rỗng hoặc thiếu dữ liệu. Vui lòng kiểm tra lại.");
+            }
+
+            const headerCols = lines[0].split(",");
+            if (headerCols.length < 8 && !lines[0].includes(";")) {
+                throw new Error("Sai định dạng. File mẫu yêu cầu tối thiểu 8 cột (Mã NV, Tên, BP, ...)");
             }
 
             const response = await fetch(`/api/employee/attendances?month=${month}&year=${year}`, {
@@ -548,7 +552,8 @@ export default function HrAttendanceManagementPage() {
             setFileInputKey((current) => current + 1);
             await loadData();
         } catch (error) {
-            setUploadError(error instanceof Error ? error.message : "Unable to upload attendance CSV.");
+            logErrorToConsole("HrAttendanceManagementPage.handleUpload", error, { month, year, fileName: file?.name ?? null });
+            setUploadError(toUserFriendlyError(error, "We couldn't upload the attendance file right now."));
         } finally {
             setIsUploading(false);
         }

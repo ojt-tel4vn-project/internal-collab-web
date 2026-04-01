@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { validateLoginPayload } from "@/schemas/auth/login.schema";
 import { getChangePasswordPathForRoles, getHomePathForRoles } from "@/lib/auth";
+import { logErrorToConsole, toUserFriendlyErrorMessage } from "@/lib/api/errors";
 
 type LoginResponse = {
   require_password_change: boolean;
@@ -69,7 +70,8 @@ export default function Home() {
           // Ignore JSON parse errors and use default message.
         }
 
-        setError(message);
+        logErrorToConsole("LoginPage.handleLogin.response", { status: response.status, message });
+        setError(toUserFriendlyErrorMessage(message, "We couldn't sign you in right now. Please try again."));
         return;
       }
 
@@ -99,8 +101,9 @@ export default function Home() {
       }
 
       router.push(homePath);
-    } catch {
-      setError("Unable to connect to the server. Please try again later.");
+    } catch (error) {
+      logErrorToConsole("LoginPage.handleLogin", error);
+      setError("The system is temporarily unavailable. Please try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -215,4 +218,3 @@ export default function Home() {
     </>
   );
 }
-

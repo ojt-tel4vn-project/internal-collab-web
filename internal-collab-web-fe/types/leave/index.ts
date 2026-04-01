@@ -2,6 +2,7 @@ export interface LeaveQuota {
     id: string;
     employee_id: string;
     leave_type_id: string;
+    leave_type_name?: string;
     remaining_days: number;
     total_days: number;
     used_days: number;

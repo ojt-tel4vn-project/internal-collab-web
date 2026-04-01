@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 import type {
     CreateLeaveRequestPayload,
-    CreateLeaveRequestResponse,
     GetLeaveTypesResponse,
     LeaveType,
 } from "@/types/leave";
@@ -15,6 +15,17 @@ interface LeaveRequestFormProps {
 
 const TOAST_DURATION_MS = 1500;
 const SUCCESS_REFRESH_DELAY_MS = 800;
+
+function getTomorrowDateInputValue() {
+    const tomorrow = new Date();
+    tomorrow.setHours(0, 0, 0, 0);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+    const day = String(tomorrow.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
 
 export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) {
     const router = useRouter();
@@ -32,6 +43,7 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
+    const minLeaveDate = useMemo(() => getTomorrowDateInputValue(), []);
 
     function showToast(message: string, tone: "success" | "error") {
         if (toastTimeoutRef.current) {
@@ -69,7 +81,8 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
                 }
             } catch (err) {
                 if (!mounted) return;
-                const message = err instanceof Error ? err.message : "Unable to load leave types";
+                logErrorToConsole("LeaveRequestForm.loadTypes", err);
+                const message = toUserFriendlyError(err, "We couldn't load leave types right now.");
                 setError(message);
             } finally {
                 if (mounted) setLoadingTypes(false);
@@ -107,6 +120,30 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
             contact_during_leave: form.contact_during_leave.trim(),
         };
 
+        if (payload.from_date < minLeaveDate) {
+            const message = "Leave requests must start from tomorrow onward.";
+            setError(message);
+            showToast(message, "error");
+            setSubmitting(false);
+            return;
+        }
+
+        if (payload.to_date < minLeaveDate) {
+            const message = "Leave requests must end on or after tomorrow.";
+            setError(message);
+            showToast(message, "error");
+            setSubmitting(false);
+            return;
+        }
+
+        if (payload.to_date < payload.from_date) {
+            const message = "To Date must be after From Date.";
+            setError(message);
+            showToast(message, "error");
+            setSubmitting(false);
+            return;
+        }
+
         try {
             const res = await fetch("/api/employee/leave-requests", {
                 method: "POST",
@@ -115,17 +152,11 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
             });
 
             if (!res.ok) {
-                const raw = await res.text();
-                let body: CreateLeaveRequestResponse | null = null;
-                try {
-                    body = JSON.parse(raw);
-                } catch {
-                    body = null;
-                }
-                const message =
-                    (body?.message && typeof body.message === "string" ? body.message : "") ||
-                    (raw ? raw.slice(0, 200) : "Unable to submit leave request");
-                throw new Error(message);
+                const raw = await res.text().catch(() => "");
+                const message = parseApiErrorMessage(raw, "Unable to submit leave request");
+                setError(message);
+                showToast(message, "error");
+                return;
             }
 
             showToast("Leave request submitted", "success");
@@ -138,7 +169,8 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
                 refreshTimeoutRef.current = null;
             }, SUCCESS_REFRESH_DELAY_MS);
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Unable to submit leave request";
+            logErrorToConsole("LeaveRequestForm.handleSubmit", err);
+            const message = toUserFriendlyError(err, "We couldn't submit the leave request right now.");
             setError(message);
             showToast(message, "error");
         } finally {
@@ -179,17 +211,21 @@ export function LeaveRequestForm({ defaultLeaveTypeId }: LeaveRequestFormProps) 
                     <input
                         type="date"
                         required
+                        min={minLeaveDate}
                         value={form.from_date}
                         onChange={(e) => update("from_date", e.target.value)}
                         className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
                     />
+                    {form.from_date && form.from_date < minLeaveDate ? (
+                        <p className="text-[11px] font-semibold text-rose-600">Start date must be after today.</p>
+                    ) : null}
                 </div>
                 <div className="space-y-1">
                     <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">To Date</label>
                     <input
                         type="date"
                         required
-                        min={form.from_date || undefined}
+                        min={form.from_date && form.from_date >= minLeaveDate ? form.from_date : minLeaveDate}
                         value={form.to_date}
                         onChange={(e) => update("to_date", e.target.value)}
                         className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"

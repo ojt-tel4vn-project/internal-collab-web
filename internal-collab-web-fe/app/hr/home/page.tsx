@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { logErrorToConsole, toUserFriendlyError } from "@/lib/api/errors";
 import { TaskList } from "@/components/dashboard/home/TaskList";
 import { LeaderboardCard } from "@/components/dashboard/home/Leaderboard";
 import { DashboardCalendar } from "@/components/dashboard/home/Calendar";
@@ -42,8 +43,9 @@ export default function HrDashboardPage() {
                 }
             } catch (error) {
                 if (!isCancelled) {
+                    logErrorToConsole("HrHomePage.loadMetrics", error);
                     setMetrics(null);
-                    setMetricsError(error instanceof Error ? error.message : "Failed to load dashboard metrics");
+                    setMetricsError(toUserFriendlyError(error, "We couldn't load dashboard metrics right now."));
                 }
             }
         }

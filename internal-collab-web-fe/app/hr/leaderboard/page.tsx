@@ -1,16 +1,16 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { logErrorToConsole, toUserFriendlyError } from "@/lib/api/errors";
 import {
-    DepartmentsResponse,
     buildLeaderboardSearchParams,
     getErrorMessage,
     getTimeFilterMeta,
     isAbortError,
     LeaderboardResponse,
-    normalizeDepartments,
     normalizeLeaderboard,
     normalizeStickerTypes,
+    readDepartmentsCached,
     StickerTypesResponse,
 } from "@/app/employee/leaderboard/data";
 import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
@@ -63,20 +63,6 @@ function parseSuccessMessage(payload: unknown, fallback: string): string {
     const data = asRecord(root?.data);
 
     return asText(body?.message) || asText(data?.message) || asText(root?.message) || fallback;
-}
-
-async function readDepartments(signal?: AbortSignal) {
-    const response = await fetch("/api/employee?view=departments", {
-        cache: "no-store",
-        signal,
-    });
-
-    if (!response.ok) {
-        const raw = await response.text().catch(() => "");
-        throw new Error(getErrorMessage(raw, "Department filter is temporarily unavailable."));
-    }
-
-    return normalizeDepartments((await response.json()) as DepartmentsResponse);
 }
 
 async function readLeaderboard(filters: LeaderboardFilters, signal?: AbortSignal) {
@@ -157,15 +143,15 @@ async function createStickerType(input: {
 }
 
 function getLeaderboardError(error: unknown) {
-    return error instanceof Error ? error.message : "Unable to load leaderboard.";
+    return toUserFriendlyError(error, "We couldn't load the leaderboard right now.");
 }
 
 function getDepartmentError(error: unknown) {
-    return error instanceof Error ? error.message : "Department filter is temporarily unavailable.";
+    return toUserFriendlyError(error, "We couldn't load the department list right now.");
 }
 
 function getStickerPoolError(error: unknown) {
-    return error instanceof Error ? error.message : "Unable to load sticker pool.";
+    return toUserFriendlyError(error, "We couldn't load the sticker pool right now.");
 }
 
 export default function HrLeaderboardPage() {
@@ -209,10 +195,9 @@ export default function HrLeaderboardPage() {
 
     useEffect(() => {
         let cancelled = false;
-        const departmentsController = new AbortController();
         const stickersController = new AbortController();
 
-        void readDepartments(departmentsController.signal)
+        void readDepartmentsCached()
             .then((departments) => {
                 if (cancelled) {
                     return;
@@ -235,6 +220,7 @@ export default function HrLeaderboardPage() {
                     return;
                 }
 
+                logErrorToConsole("HrLeaderboard.readDepartmentsCached", error);
                 setDepartmentsState({
                     data: [],
                     error: getDepartmentError(error),
@@ -261,6 +247,7 @@ export default function HrLeaderboardPage() {
                     return;
                 }
 
+                logErrorToConsole("HrLeaderboard.readStickerTypes", error);
                 setStickerTypesState({
                     data: [],
                     error: getStickerPoolError(error),
@@ -270,7 +257,6 @@ export default function HrLeaderboardPage() {
 
         return () => {
             cancelled = true;
-            departmentsController.abort();
             stickersController.abort();
         };
     }, []);
@@ -296,6 +282,7 @@ export default function HrLeaderboardPage() {
                     return;
                 }
 
+                logErrorToConsole("HrLeaderboard.readLeaderboard", error, { filters });
                 setLeaderboardState({
                     data: [],
                     error: getLeaderboardError(error),
@@ -433,8 +420,9 @@ export default function HrLeaderboardPage() {
 
             await reloadStickerTypes();
         } catch (error) {
+            logErrorToConsole("HrLeaderboard.handleAddStickerType", error, { name: addForm.name.trim() });
             setAddState({
-                error: error instanceof Error ? error.message : "Unable to add sticker type.",
+                error: toUserFriendlyError(error, "We couldn't add the sticker type right now."),
                 loading: false,
                 success: null,
             });

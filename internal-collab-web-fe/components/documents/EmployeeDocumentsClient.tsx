@@ -2,8 +2,9 @@
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 import { AlertTriangleIcon, DocumentIcon, DownloadIcon } from "@/components/dashboard/home/Icons";
-import type { DocumentRecord, MarkReadResponse } from "@/types/document";
+import type { DocumentRecord } from "@/types/document";
 
 function formatDate(value: string) {
     const parsed = new Date(value);
@@ -265,16 +266,7 @@ export function EmployeeDocumentsClient({
             const res = await fetch(`/api/employee/documents/${id}/read`, { method: "POST" });
             if (!res.ok) {
                 const raw = await res.text().catch(() => "");
-                let message = `Unable to mark document as read (HTTP ${res.status})`;
-                if (raw) {
-                    try {
-                        const parsed = JSON.parse(raw) as MarkReadResponse & { detail?: string; title?: string; error?: string };
-                        message = parsed.message || parsed.detail || parsed.title || parsed.error || message;
-                    } catch {
-                        message = raw.slice(0, 200);
-                    }
-                }
-                throw new Error(message);
+                throw new Error(parseApiErrorMessage(raw, "Unable to mark document as read."));
             }
             setReadIds((prev) => {
                 const next = new Set(prev);
@@ -282,7 +274,8 @@ export function EmployeeDocumentsClient({
                 return next;
             });
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Unable to mark document as read");
+            logErrorToConsole("EmployeeDocumentsClient.handleMarkRead", err, { id });
+            setError(toUserFriendlyError(err, "We couldn't open the document right now."));
         } finally {
             setBusyId(null);
         }
@@ -319,16 +312,7 @@ export function EmployeeDocumentsClient({
 
             if (!response.ok) {
                 const raw = await response.text().catch(() => "");
-                let message = `Unable to delete document (HTTP ${response.status})`;
-                if (raw) {
-                    try {
-                        const parsed = JSON.parse(raw) as MarkReadResponse & { detail?: string; title?: string; error?: string };
-                        message = parsed.message || parsed.detail || parsed.title || parsed.error || message;
-                    } catch {
-                        message = raw.slice(0, 200);
-                    }
-                }
-                throw new Error(message);
+                throw new Error(parseApiErrorMessage(raw, "Unable to delete document."));
             }
 
             setReadIds((prev) => {
@@ -339,7 +323,8 @@ export function EmployeeDocumentsClient({
             onDeleteSuccess?.("Document deleted successfully.");
             router.refresh();
         } catch (deleteError) {
-            setError(deleteError instanceof Error ? deleteError.message : "Unable to delete document.");
+            logErrorToConsole("EmployeeDocumentsClient.handleDelete", deleteError, { documentId: doc.id });
+            setError(toUserFriendlyError(deleteError, "We couldn't delete the document right now."));
         } finally {
             setDeletingId(null);
         }

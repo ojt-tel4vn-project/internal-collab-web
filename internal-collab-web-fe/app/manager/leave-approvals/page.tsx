@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { logErrorToConsole, toUserFriendlyErrorMessage } from "@/lib/api/errors";
 import { ChevronDownIcon } from "@/components/dashboard/home/Icons";
 
 type LeaveEmployee = {
@@ -101,15 +102,16 @@ export default function ManagerLeaveApprovalsPage() {
                 setRequests(data.data ?? []);
                 setTotal(data.total ?? data.data?.length ?? 0);
             } else {
-                setError("Failed to load leave requests.");
+                setError("We couldn't load leave requests right now.");
             }
 
             if (overviewRes.ok) {
                 const data = (await overviewRes.json()) as { data: LeaveOverview };
                 setOverview(data.data);
             }
-        } catch {
-            setError("Unable to connect to server.");
+        } catch (error) {
+            logErrorToConsole("ManagerLeaveApprovalsPage.fetchData", error, { page });
+            setError("The system is temporarily unavailable. Please try again in a moment.");
         } finally {
             setLoading(false);
         }
@@ -127,13 +129,17 @@ export default function ManagerLeaveApprovalsPage() {
     function extractErrorMessage(data: unknown): string {
         if (!data || typeof data !== "object") return "An unexpected error occurred.";
         const d = data as Record<string, unknown>;
-        if (typeof d.detail === "string" && d.detail) return d.detail;
+        if (typeof d.detail === "string" && d.detail) return toUserFriendlyErrorMessage(d.detail, "We couldn't complete this request right now.");
         if (Array.isArray(d.errors) && d.errors.length > 0) {
             const first = d.errors[0] as Record<string, unknown>;
-            if (typeof first.message === "string") return first.message;
+            if (typeof first.message === "string") {
+                return toUserFriendlyErrorMessage(first.message, "We couldn't complete this request right now.");
+            }
         }
-        if (typeof d.message === "string" && d.message) return d.message;
-        return "An unexpected error occurred.";
+        if (typeof d.message === "string" && d.message) {
+            return toUserFriendlyErrorMessage(d.message, "We couldn't complete this request right now.");
+        }
+        return "We couldn't complete this request right now.";
     }
 
     function openApproveModal(req: LeaveRequest) {
@@ -167,8 +173,9 @@ export default function ManagerLeaveApprovalsPage() {
                 const data = await res.json();
                 setApproveError(extractErrorMessage(data));
             }
-        } catch {
-            setApproveError("Unable to connect to server.");
+        } catch (error) {
+            logErrorToConsole("ManagerLeaveApprovalsPage.handleApproveConfirm", error, { id: approveTarget.id });
+            setApproveError("The system is temporarily unavailable. Please try again in a moment.");
         } finally {
             setApproveLoading(false);
             setBusyId(null);
@@ -208,8 +215,9 @@ export default function ManagerLeaveApprovalsPage() {
                 const data = await res.json();
                 setRejectError(extractErrorMessage(data));
             }
-        } catch {
-            setRejectError("Unable to connect to server.");
+        } catch (error) {
+            logErrorToConsole("ManagerLeaveApprovalsPage.handleRejectConfirm", error, { id: rejectTarget.id });
+            setRejectError("The system is temporarily unavailable. Please try again in a moment.");
         } finally {
             setRejectLoading(false);
         }

@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { logErrorToConsole, toUserFriendlyError } from "@/lib/api/errors";
 import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
 import { LeaderboardResults } from "@/components/leaderboard/LeaderboardResults";
 import type { DepartmentOption, LeaderboardEntry, LeaderboardFilters } from "@/types/employee";
 import {
-    DepartmentsResponse,
     buildLeaderboardSearchParams,
     getErrorMessage,
     getTimeFilterMeta,
     isAbortError,
     LeaderboardResponse,
-    normalizeDepartments,
     normalizeLeaderboard,
+    readDepartmentsCached,
 } from "@/app/employee/leaderboard/data";
 
 const DEFAULT_LEADERBOARD_LIMIT = 10;
@@ -22,20 +22,6 @@ type RemoteState<T> = {
     error: string | null;
     loading: boolean;
 };
-
-async function readDepartments(signal?: AbortSignal) {
-    const response = await fetch("/api/employee?view=departments", {
-        cache: "no-store",
-        signal,
-    });
-
-    if (!response.ok) {
-        const raw = await response.text().catch(() => "");
-        throw new Error(getErrorMessage(raw, "Department filter is temporarily unavailable."));
-    }
-
-    return normalizeDepartments((await response.json()) as DepartmentsResponse);
-}
 
 async function readLeaderboard(filters: LeaderboardFilters, signal?: AbortSignal) {
     const params = buildLeaderboardSearchParams(filters);
@@ -53,11 +39,11 @@ async function readLeaderboard(filters: LeaderboardFilters, signal?: AbortSignal
 }
 
 function getLeaderboardError(error: unknown) {
-    return error instanceof Error ? error.message : "Unable to load leaderboard.";
+    return toUserFriendlyError(error, "We couldn't load the leaderboard right now.");
 }
 
 function getDepartmentError(error: unknown) {
-    return error instanceof Error ? error.message : "Department filter is temporarily unavailable.";
+    return toUserFriendlyError(error, "We couldn't load the department list right now.");
 }
 
 export default function ManagerLeaderboardPage() {
@@ -81,9 +67,7 @@ export default function ManagerLeaderboardPage() {
 
     useEffect(() => {
         let cancelled = false;
-        const departmentsController = new AbortController();
-
-        void readDepartments(departmentsController.signal)
+        void readDepartmentsCached()
             .then((departments) => {
                 if (cancelled) return;
                 setDepartmentsState({ data: departments, error: null });
@@ -94,13 +78,13 @@ export default function ManagerLeaderboardPage() {
             })
             .catch((error) => {
                 if (cancelled || isAbortError(error)) return;
+                logErrorToConsole("ManagerLeaderboard.readDepartmentsCached", error);
                 setDepartmentsState({ data: [], error: getDepartmentError(error) });
                 setFilters((current) => (current.departmentId === "all" ? current : { ...current, departmentId: "all" }));
             });
 
         return () => {
             cancelled = true;
-            departmentsController.abort();
         };
     }, []);
 
@@ -115,6 +99,7 @@ export default function ManagerLeaderboardPage() {
             })
             .catch((error) => {
                 if (cancelled || isAbortError(error)) return;
+                logErrorToConsole("ManagerLeaderboard.readLeaderboard", error, { filters });
                 setLeaderboardState({ data: [], error: getLeaderboardError(error), loading: false });
             });
 

@@ -1,6 +1,9 @@
 import RoleNavbar from "@/components/layout/navbar/RoleNavbar";
+import type { EmployeeProfile } from "@/types/employee";
 
-export default function EmployeeNavbar() {
+type NavbarProfile = Pick<EmployeeProfile, "full_name" | "first_name" | "last_name" | "email" | "avatar_url">;
+
+export default function EmployeeNavbar({ initialProfile }: { initialProfile?: NavbarProfile | null }) {
   return (
     <RoleNavbar
       homeHref="/employee/home"
@@ -8,6 +11,7 @@ export default function EmployeeNavbar() {
       profileHref="/employee/myprofile"
       changePasswordHref="/employee/change-password"
       defaultName="Employee"
+      initialProfile={initialProfile}
       roleLabel="Employee"
     />
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { logErrorToConsole, toUserFriendlyErrorMessage } from "@/lib/api/errors";
 import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
 import { LeaderboardResults } from "@/components/leaderboard/LeaderboardResults";
 import { PointsBalanceCard } from "@/components/leaderboard/PointsBalanceCard";
@@ -13,17 +14,16 @@ import type {
     StickerTypeOption,
 } from "@/types/employee";
 import {
-    DepartmentsResponse,
     buildLeaderboardSearchParams,
     getErrorMessage,
     getTimeFilterMeta,
     isAbortError,
     LeaderboardResponse,
-    normalizeDepartments,
     normalizeLeaderboard,
     normalizePointBalance,
     normalizeStickerTypes,
     PointBalanceResponse,
+    readDepartmentsCached,
     StickerTypesResponse,
 } from "./data";
 
@@ -62,20 +62,6 @@ async function readPointBalance(signal?: AbortSignal) {
     }
 
     return normalizePointBalance((await response.json()) as PointBalanceResponse);
-}
-
-async function readDepartments(signal?: AbortSignal) {
-    const response = await fetch("/api/employee?view=departments", {
-        cache: "no-store",
-        signal,
-    });
-
-    if (!response.ok) {
-        const raw = await response.text().catch(() => "");
-        throw new Error(getErrorMessage(raw, "Department filter is temporarily unavailable."));
-    }
-
-    return normalizeDepartments((await response.json()) as DepartmentsResponse);
 }
 
 async function readLeaderboard(filters: LeaderboardFilters, signal?: AbortSignal) {
@@ -154,74 +140,7 @@ async function sendSticker(input: {
 }
 
 function normalizeSystemErrorMessage(message: string, fallback: string) {
-    const normalized = message.trim();
-    if (!normalized) {
-        return fallback;
-    }
-
-    const lower = normalized.toLowerCase();
-
-    if (lower.includes("unauthorized")) {
-        return "Your session has expired. Please sign in again.";
-    }
-
-    if (lower.includes("receiver_employee_code") || lower.includes("receiver_email")) {
-        return "We couldn't identify the selected teammate. Please choose a teammate again.";
-    }
-
-    if (lower.includes("sticker_type_id")) {
-        return "The selected sticker is invalid. Please choose another sticker and try again.";
-    }
-
-    if (lower.includes("message") && (lower.includes("255") || lower.includes("characters or fewer"))) {
-        return "Your message can contain up to 255 characters.";
-    }
-
-    if (lower.includes("receiver not found")) {
-        return "The selected teammate could not be found. Please choose another teammate.";
-    }
-
-    if (lower.includes("sticker type not found")) {
-        return "The selected sticker is no longer available. Please choose another sticker.";
-    }
-
-    if (lower.includes("not enough points")) {
-        return "You do not have enough points to send this sticker.";
-    }
-
-    if (lower.includes("point balance not found")) {
-        return "Your sticker balance is not available right now. Please contact HR for support.";
-    }
-
-    if (lower.includes("cannot send sticker to yourself")) {
-        return "You can't send a sticker to yourself.";
-    }
-
-    if (lower.includes("invalid request payload")) {
-        return "The request data is invalid. Please refresh the page and try again.";
-    }
-
-    if (lower.includes("failed to send sticker") || lower.includes("unable to send sticker")) {
-        return "We couldn't send the sticker right now. Please try again in a moment.";
-    }
-
-    if (lower.includes("unable to load sticker balance") || lower.includes("point balance")) {
-        return "We couldn't load your sticker balance right now.";
-    }
-
-    if (lower.includes("unable to load leaderboard")) {
-        return "We couldn't load the leaderboard right now.";
-    }
-
-    if (lower.includes("department filter is temporarily unavailable")) {
-        return "We couldn't load the department list right now.";
-    }
-
-    if (lower.includes("unable to load sticker options") || lower.includes("unable to load sticker types")) {
-        return "We couldn't load the sticker list right now.";
-    }
-
-    return normalized;
+    return toUserFriendlyErrorMessage(message, fallback);
 }
 
 function getBalanceError(error: unknown) {
@@ -337,7 +256,6 @@ export default function LeaderboardPage() {
     useEffect(() => {
         let cancelled = false;
         const balanceController = new AbortController();
-        const departmentsController = new AbortController();
         const receiverController = new AbortController();
         const stickerTypesController = new AbortController();
 
@@ -358,6 +276,7 @@ export default function LeaderboardPage() {
                     return;
                 }
 
+                logErrorToConsole("EmployeeLeaderboard.readPointBalance", error);
                 setBalanceState({
                     data: null,
                     error: getBalanceError(error),
@@ -365,7 +284,7 @@ export default function LeaderboardPage() {
                 });
             });
 
-        void readDepartments(departmentsController.signal)
+        void readDepartmentsCached()
             .then((departments) => {
                 if (cancelled) {
                     return;
@@ -385,6 +304,7 @@ export default function LeaderboardPage() {
                     return;
                 }
 
+                logErrorToConsole("EmployeeLeaderboard.readDepartmentsCached", error);
                 setDepartmentsState({
                     data: [],
                     error: getDepartmentError(error),
@@ -409,6 +329,7 @@ export default function LeaderboardPage() {
                     return;
                 }
 
+                logErrorToConsole("EmployeeLeaderboard.readReceiverSuggestions", error);
                 setReceiverState({
                     data: [],
                     error: getLeaderboardError(error),
@@ -433,6 +354,7 @@ export default function LeaderboardPage() {
                     return;
                 }
 
+                logErrorToConsole("EmployeeLeaderboard.readStickerTypes", error);
                 setStickerTypesState({
                     data: [],
                     error: getStickerTypeError(error),
@@ -443,7 +365,6 @@ export default function LeaderboardPage() {
         return () => {
             cancelled = true;
             balanceController.abort();
-            departmentsController.abort();
             receiverController.abort();
             stickerTypesController.abort();
         };
@@ -470,6 +391,7 @@ export default function LeaderboardPage() {
                     return;
                 }
 
+                logErrorToConsole("EmployeeLeaderboard.readLeaderboard", error, { filters });
                 setLeaderboardState({
                     data: [],
                     error: getLeaderboardError(error),
@@ -610,6 +532,7 @@ export default function LeaderboardPage() {
                 loading: false,
             });
         } else if (!isAbortError(balanceResult.reason)) {
+            logErrorToConsole("EmployeeLeaderboard.refreshAfterSend.balance", balanceResult.reason);
             setBalanceState((current) => ({
                 ...current,
                 error: getBalanceError(balanceResult.reason),
@@ -624,6 +547,7 @@ export default function LeaderboardPage() {
                 loading: false,
             });
         } else if (!isAbortError(leaderboardResult.reason)) {
+            logErrorToConsole("EmployeeLeaderboard.refreshAfterSend.leaderboard", leaderboardResult.reason, { filters });
             setLeaderboardState((current) => ({
                 ...current,
                 error: getLeaderboardError(leaderboardResult.reason),
@@ -639,6 +563,7 @@ export default function LeaderboardPage() {
                 loading: false,
             }));
         } else if (!isAbortError(receiverResult.reason)) {
+            logErrorToConsole("EmployeeLeaderboard.refreshAfterSend.receiver", receiverResult.reason);
             setReceiverState((current) => ({
                 ...current,
                 error: getLeaderboardError(receiverResult.reason),
@@ -713,6 +638,10 @@ export default function LeaderboardPage() {
             });
             void refreshAfterSend();
         } catch (error) {
+            logErrorToConsole("EmployeeLeaderboard.handleSendSticker", error, {
+                receiverId: normalizedReceiverId,
+                stickerTypeId: normalizedStickerTypeId,
+            });
             setSendState({
                 error:
                     error instanceof Error
