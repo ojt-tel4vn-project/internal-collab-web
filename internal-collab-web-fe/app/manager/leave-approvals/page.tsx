@@ -40,7 +40,7 @@ type LeaveOverview = {
     employees_on_leave_today: number;
 };
 
-const FILTERS = ["All", "Pending"] as const;
+const FILTERS = ["All", "Pending", "Approved", "Rejected", "Canceled"] as const;
 type Filter = (typeof FILTERS)[number];
 
 const LIMIT = 20;
@@ -92,13 +92,14 @@ export default function ManagerLeaveApprovalsPage() {
         setLoading(true);
         setError(null);
         try {
-            const [pendingRes, overviewRes] = await Promise.all([
-                fetch(`/api/manager/leave-requests/pending-approval?page=${page}&limit=${LIMIT}`),
+            const statusParam = activeFilter === "All" ? "" : activeFilter.toLowerCase();
+            const [approvalsRes, overviewRes] = await Promise.all([
+                fetch(`/api/manager/leave-requests/approvals?page=${page}&limit=${LIMIT}&status=${statusParam}`),
                 fetch("/api/manager/leave-overview"),
             ]);
 
-            if (pendingRes.ok) {
-                const data = (await pendingRes.json()) as { data: LeaveRequest[]; total?: number };
+            if (approvalsRes.ok) {
+                const data = (await approvalsRes.json()) as { data: LeaveRequest[]; total?: number };
                 setRequests(data.data ?? []);
                 setTotal(data.total ?? data.data?.length ?? 0);
             } else {
@@ -115,16 +116,13 @@ export default function ManagerLeaveApprovalsPage() {
         } finally {
             setLoading(false);
         }
-    }, [page]);
+    }, [page, activeFilter]);
 
     useEffect(() => {
         void fetchData();
     }, [fetchData]);
 
-    const filteredRequests = requests.filter((r) => {
-        if (activeFilter === "All") return true;
-        return r.status === activeFilter.toLowerCase();
-    });
+    const filteredRequests = requests;
 
     function extractErrorMessage(data: unknown): string {
         if (!data || typeof data !== "object") return "An unexpected error occurred.";

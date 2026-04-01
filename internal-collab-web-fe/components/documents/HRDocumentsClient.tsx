@@ -22,7 +22,6 @@ const ROLE_OPTIONS = [
     { value: "employee", label: "Employee" },
     { value: "manager", label: "Manager" },
     { value: "hr", label: "HR" },
-    { value: "admin", label: "Admin" },
 ] as const;
 
 const FILE_ACCEPT = ".pdf,.png,.jpg,.jpeg,.doc,.docx";

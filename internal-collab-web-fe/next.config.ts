@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: "www.betterup.com",
         pathname: "/hubfs/**",
       },
+      {
+        protocol: "https",
+        hostname: "betterup.com",
+        pathname: "/hubfs/**",
+      },
     ],
   },
 };
@@ -25,3 +30,5 @@ if (process.env.NODE_ENV === "development" && !process.env.VERCEL) {
     initOpenNextCloudflareForDev();
   });
 }
+
+export default nextConfig;

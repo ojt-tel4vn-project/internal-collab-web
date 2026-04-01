@@ -28,6 +28,7 @@ const TONE_STYLES = {
     focus: "focus:border-blue-500",
     unreadValue: "text-blue-700",
     softRing: "ring-blue-100",
+    type: "bg-blue-50 text-blue-600 border-blue-100",
   },
   emerald: {
     badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -35,6 +36,7 @@ const TONE_STYLES = {
     focus: "focus:border-emerald-500",
     unreadValue: "text-emerald-700",
     softRing: "ring-emerald-100",
+    type: "bg-emerald-50 text-emerald-600 border-emerald-100",
   },
   violet: {
     badge: "bg-violet-50 text-violet-700 border-violet-200",
@@ -42,6 +44,7 @@ const TONE_STYLES = {
     focus: "focus:border-violet-500",
     unreadValue: "text-violet-700",
     softRing: "ring-violet-100",
+    type: "bg-violet-50 text-violet-600 border-violet-100",
   },
   slate: {
     badge: "bg-slate-100 text-slate-700 border-slate-300",
@@ -49,6 +52,7 @@ const TONE_STYLES = {
     focus: "focus:border-slate-500",
     unreadValue: "text-slate-700",
     softRing: "ring-slate-200",
+    type: "bg-slate-100 text-slate-600 border-slate-200",
   },
 } as const;
 
@@ -294,8 +298,8 @@ export default function NotificationCenter({
             >
               <option value="all">All types</option>
               {NOTIFICATION_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+                <option key={type} value={type} className="capitalize">
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
                 </option>
               ))}
             </select>
@@ -335,7 +339,7 @@ export default function NotificationCenter({
                     >
                       {item.title}
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-700">{item.type}</td>
+                    <td className="px-4 py-3 text-sm text-slate-700 capitalize">{item.type}</td>
                     <td className="px-4 py-3 text-sm text-slate-700">{formatDateTime(item.created_at)}</td>
                   </tr>
                 );
@@ -387,40 +391,77 @@ export default function NotificationCenter({
       ) : content}
 
       {selectedNotification ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">{selectedNotification.title}</h2>
-                <p className="mt-1 text-sm text-slate-500">Notification details</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-slate-200">
+            <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50/50 p-6">
+              <div className="space-y-1">
+                <h2 className="text-xl font-bold tracking-tight text-slate-900">{selectedNotification.title}</h2>
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${styles.type} border opacity-80 capitalize`}>
+                    {selectedNotification.type || "System"}
+                  </span>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedNotification(null)}
-                className="h-8 w-8 rounded-full border border-slate-200 text-slate-600"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 active:scale-95"
                 aria-label="Close"
               >
-                X
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5">
+                  <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
             </div>
 
-            <div className="mt-5 grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
-              <p><span className="font-semibold">ID:</span> {selectedNotification.id}</p>
-              <p><span className="font-semibold">Employee ID:</span> {selectedNotification.employee_id}</p>
-              <p><span className="font-semibold">Type:</span> {selectedNotification.type}</p>
-              <p><span className="font-semibold">Priority:</span> {selectedNotification.priority}</p>
-              <p><span className="font-semibold">Read status:</span> {selectedNotification.is_read ? "Read" : "Unread"}</p>
-              <p><span className="font-semibold">Action URL:</span> {selectedNotification.action_url || "-"}</p>
-              <p><span className="font-semibold">Created at:</span> {formatDateTime(selectedNotification.created_at)}</p>
-              <p>
-                <span className="font-semibold">Read at:</span>{" "}
-                {selectedNotification.read_at ? formatDateTime(selectedNotification.read_at) : "-"}
-              </p>
-            </div>
+            <div className="p-8 space-y-8">
+              <div className="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-900/5 transition hover:shadow-md">
+                <p className="text-sm font-medium uppercase tracking-wider text-slate-400 mb-3">Message</p>
+                <p className="text-slate-800 leading-relaxed text-lg whitespace-pre-wrap">
+                  {selectedNotification.message}
+                </p>
+              </div>
 
-            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Message</p>
-              <p className="mt-2 text-sm text-slate-800">{selectedNotification.message}</p>
+              {selectedNotification.action_url && (
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Action Required</p>
+                  <a
+                    href={selectedNotification.action_url}
+                    className="group flex items-center gap-4 w-full rounded-2xl border border-blue-100 bg-blue-50/30 p-5 font-semibold text-blue-700 ring-1 ring-blue-700/5 transition hover:bg-blue-100/50 hover:text-blue-800 active:scale-[0.98]"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-blue-200 group-hover:bg-blue-50">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-6 w-6 rotate-45 text-blue-600 transition group-hover:scale-110">
+                        <path d="M13 7h8m0 0v8m0-8l-8 8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-sm">Link Reference</p>
+                      <p className="truncate text-xs font-normal text-blue-500/80">{selectedNotification.action_url}</p>
+                    </div>
+                  </a>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 border-t border-slate-100 pt-8">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Received On</p>
+                  <p className="text-sm font-medium text-slate-600">{formatDateTime(selectedNotification.created_at)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Read Status</p>
+                  <div className="flex items-center gap-2">
+                    {selectedNotification.is_read ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100/80 px-3 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-700/10">
+                        Read on {selectedNotification.read_at ? formatDateTime(selectedNotification.read_at) : "N/A"}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/80 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-700/10">
+                        Unread
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

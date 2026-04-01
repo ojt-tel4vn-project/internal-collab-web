@@ -19,7 +19,7 @@ export type NotificationItem = {
   created_at: string;
   read_at: string | null;
   employee_id: string;
-  action_url: string;
+  action_url?: string;
 };
 
 export type ListNotificationResponse = {

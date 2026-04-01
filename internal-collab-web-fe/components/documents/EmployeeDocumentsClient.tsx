@@ -215,6 +215,7 @@ export function EmployeeDocumentsClient({
             }
         });
         return Array.from(unique)
+            .filter((role) => role.toLowerCase() !== "admin")
             .sort((a, b) => a.localeCompare(b))
             .map((role) => {
                 const label = role.toLowerCase() === "hr" ? "HR" : role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();

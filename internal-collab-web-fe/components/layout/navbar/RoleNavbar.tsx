@@ -95,6 +95,7 @@ export default function RoleNavbar({
 }: RoleNavbarProps) {
   const router = useRouter();
   const [profile, setProfile] = useState<NavbarProfile | null>(initialProfile);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -155,6 +156,23 @@ export default function RoleNavbar({
       window.removeEventListener("employee-profile-updated", handleProfileUpdated);
     };
   }, [initialProfile]);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await fetch("/api/notifications/unread-count", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as { count: number };
+        setUnreadCount(data.count || 0);
+      } catch {
+        // Silently fail for unread count
+      }
+    };
+
+    void fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000); // 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   const userName = buildDisplayName(profile, defaultName);
   const avatarUrl = useMemo(() => {
@@ -231,17 +249,24 @@ export default function RoleNavbar({
         <div className="flex items-center gap-5">
           <Link
             href={notificationHref}
-            className="text-slate-300 transition hover:text-white"
+            className="group relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700/50 bg-[#0c1b33]/40 text-slate-300 transition-all hover:border-[#2f81f7]/50 hover:bg-[#2f81f7]/10 hover:text-white"
             aria-label="Notifications"
           >
-            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current">
-              <path
-                d="M15 17H9m10-1V11a7 7 0 10-14 0v5l-2 2h18l-2-2zM13.73 21a2 2 0 01-3.46 0"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <div className="relative">
+              <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current">
+                <path
+                  d="M15 17H9m10-1V11a7 7 0 10-14 0v5l-2 2h18l-2-2zM13.73 21a2 2 0 01-3.46 0"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-[#050d1b] animate-in zoom-in duration-300">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </div>
           </Link>
 
           <div className="relative">
@@ -253,8 +278,8 @@ export default function RoleNavbar({
               aria-haspopup="menu"
             >
               <div className="hidden text-right leading-tight sm:block">
-                <p className="text-sm font-semibold">{userName}</p>
-                <p className="text-xs text-slate-300">{roleLabel}</p>
+                <p className="text-sm font-semibold text-white">{userName}</p>
+                <p className="text-xs text-slate-400">{roleLabel}</p>
               </div>
               <div className="relative h-8 w-8 overflow-hidden rounded-full bg-[#2f81f7] text-sm font-semibold text-white">
                 {avatarUrl && !avatarLoadError ? (
