@@ -6,17 +6,20 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { EmployeeProfile } from "@/types/employee";
 
+type NavbarProfile = Pick<EmployeeProfile, "full_name" | "first_name" | "last_name" | "email" | "avatar_url">;
+
 type RoleNavbarProps = {
   homeHref: string;
   notificationHref: string;
   profileHref: string;
   changePasswordHref: string;
   defaultName: string;
+  initialProfile?: NavbarProfile | null;
   roleLabel: string;
 };
 
 type NavbarProfilePatch = Partial<
-  Pick<EmployeeProfile, "full_name" | "first_name" | "last_name" | "email" | "avatar_url">
+  NavbarProfile
 >;
 
 function toStringOrUndefined(value: unknown) {
@@ -63,7 +66,7 @@ function toNavbarProfilePatch(value: unknown): NavbarProfilePatch | null {
   return patch;
 }
 
-function buildDisplayName(profile: EmployeeProfile | null, fallbackName: string) {
+function buildDisplayName(profile: NavbarProfile | null, fallbackName: string) {
   if (!profile) {
     return fallbackName;
   }
@@ -87,10 +90,11 @@ export default function RoleNavbar({
   profileHref,
   changePasswordHref,
   defaultName,
+  initialProfile = null,
   roleLabel,
 }: RoleNavbarProps) {
   const router = useRouter();
-  const [profile, setProfile] = useState<EmployeeProfile | null>(null);
+  const [profile, setProfile] = useState<NavbarProfile | null>(initialProfile);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -100,6 +104,10 @@ export default function RoleNavbar({
     const controller = new AbortController();
 
     const loadProfile = async () => {
+      if (initialProfile) {
+        return;
+      }
+
       try {
         const response = await fetch("/api/employee/me", {
           method: "GET",
@@ -146,7 +154,7 @@ export default function RoleNavbar({
       controller.abort();
       window.removeEventListener("employee-profile-updated", handleProfileUpdated);
     };
-  }, []);
+  }, [initialProfile]);
 
   const userName = buildDisplayName(profile, defaultName);
   const avatarUrl = useMemo(() => {

@@ -9,9 +9,8 @@ import {
 } from "@/components/dashboard/home/Icons";
 import type { DepartmentOption } from "@/types/employee";
 import {
-    type DepartmentsResponse,
     getErrorMessage,
-    normalizeDepartments,
+    readDepartmentsCached,
 } from "@/app/employee/leaderboard/data";
 
 type Subordinate = {
@@ -122,30 +121,28 @@ export default function ManagerTeamPage() {
 
     useEffect(() => {
         async function fetchData() {
-            const [teamRes, overviewRes, departmentsRes] = await Promise.all([
+            const [teamRes, overviewRes, departmentsResult] = await Promise.allSettled([
                 fetch("/api/manager/team"),
                 fetch("/api/manager/leave-overview"),
-                fetch("/api/employee?view=departments", { cache: "no-store" }),
+                readDepartmentsCached(),
             ]);
 
-            if (teamRes.ok) {
-                const json = (await teamRes.json()) as TeamData;
+            if (teamRes.status === "fulfilled" && teamRes.value.ok) {
+                const json = (await teamRes.value.json()) as TeamData;
                 setTeamData(json);
             }
 
-            if (overviewRes.ok) {
-                const json = (await overviewRes.json()) as { data: { employees_on_leave_today: number } };
+            if (overviewRes.status === "fulfilled" && overviewRes.value.ok) {
+                const json = (await overviewRes.value.json()) as { data: { employees_on_leave_today: number } };
                 setOnLeaveCount(json.data.employees_on_leave_today);
             }
 
-            if (departmentsRes.ok) {
-                const json = (await departmentsRes.json()) as DepartmentsResponse;
-                setDepartments(normalizeDepartments(json));
+            if (departmentsResult.status === "fulfilled") {
+                setDepartments(departmentsResult.value);
                 setDepartmentError(null);
             } else {
-                const raw = await departmentsRes.text().catch(() => "");
                 setDepartments([]);
-                setDepartmentError(getErrorMessage(raw, "Department filter is temporarily unavailable."));
+                setDepartmentError(getErrorMessage("", "Department filter is temporarily unavailable."));
                 setDepartmentFilter("all");
             }
         }

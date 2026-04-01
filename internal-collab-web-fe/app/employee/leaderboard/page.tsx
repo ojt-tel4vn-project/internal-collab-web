@@ -13,17 +13,16 @@ import type {
     StickerTypeOption,
 } from "@/types/employee";
 import {
-    DepartmentsResponse,
     buildLeaderboardSearchParams,
     getErrorMessage,
     getTimeFilterMeta,
     isAbortError,
     LeaderboardResponse,
-    normalizeDepartments,
     normalizeLeaderboard,
     normalizePointBalance,
     normalizeStickerTypes,
     PointBalanceResponse,
+    readDepartmentsCached,
     StickerTypesResponse,
 } from "./data";
 
@@ -62,20 +61,6 @@ async function readPointBalance(signal?: AbortSignal) {
     }
 
     return normalizePointBalance((await response.json()) as PointBalanceResponse);
-}
-
-async function readDepartments(signal?: AbortSignal) {
-    const response = await fetch("/api/employee?view=departments", {
-        cache: "no-store",
-        signal,
-    });
-
-    if (!response.ok) {
-        const raw = await response.text().catch(() => "");
-        throw new Error(getErrorMessage(raw, "Department filter is temporarily unavailable."));
-    }
-
-    return normalizeDepartments((await response.json()) as DepartmentsResponse);
 }
 
 async function readLeaderboard(filters: LeaderboardFilters, signal?: AbortSignal) {
@@ -337,7 +322,6 @@ export default function LeaderboardPage() {
     useEffect(() => {
         let cancelled = false;
         const balanceController = new AbortController();
-        const departmentsController = new AbortController();
         const receiverController = new AbortController();
         const stickerTypesController = new AbortController();
 
@@ -365,7 +349,7 @@ export default function LeaderboardPage() {
                 });
             });
 
-        void readDepartments(departmentsController.signal)
+        void readDepartmentsCached()
             .then((departments) => {
                 if (cancelled) {
                     return;
@@ -443,7 +427,6 @@ export default function LeaderboardPage() {
         return () => {
             cancelled = true;
             balanceController.abort();
-            departmentsController.abort();
             receiverController.abort();
             stickerTypesController.abort();
         };

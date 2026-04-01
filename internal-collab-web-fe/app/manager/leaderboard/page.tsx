@@ -5,14 +5,13 @@ import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOvervie
 import { LeaderboardResults } from "@/components/leaderboard/LeaderboardResults";
 import type { DepartmentOption, LeaderboardEntry, LeaderboardFilters } from "@/types/employee";
 import {
-    DepartmentsResponse,
     buildLeaderboardSearchParams,
     getErrorMessage,
     getTimeFilterMeta,
     isAbortError,
     LeaderboardResponse,
-    normalizeDepartments,
     normalizeLeaderboard,
+    readDepartmentsCached,
 } from "@/app/employee/leaderboard/data";
 
 const DEFAULT_LEADERBOARD_LIMIT = 10;
@@ -22,20 +21,6 @@ type RemoteState<T> = {
     error: string | null;
     loading: boolean;
 };
-
-async function readDepartments(signal?: AbortSignal) {
-    const response = await fetch("/api/employee?view=departments", {
-        cache: "no-store",
-        signal,
-    });
-
-    if (!response.ok) {
-        const raw = await response.text().catch(() => "");
-        throw new Error(getErrorMessage(raw, "Department filter is temporarily unavailable."));
-    }
-
-    return normalizeDepartments((await response.json()) as DepartmentsResponse);
-}
 
 async function readLeaderboard(filters: LeaderboardFilters, signal?: AbortSignal) {
     const params = buildLeaderboardSearchParams(filters);
@@ -81,9 +66,7 @@ export default function ManagerLeaderboardPage() {
 
     useEffect(() => {
         let cancelled = false;
-        const departmentsController = new AbortController();
-
-        void readDepartments(departmentsController.signal)
+        void readDepartmentsCached()
             .then((departments) => {
                 if (cancelled) return;
                 setDepartmentsState({ data: departments, error: null });
@@ -100,7 +83,6 @@ export default function ManagerLeaderboardPage() {
 
         return () => {
             cancelled = true;
-            departmentsController.abort();
         };
     }, []);
 

@@ -62,6 +62,10 @@ export type StickerTypesResponse = ApiEnvelope<StickerTypeApiItem[]>;
 
 export const asNumber = asFiniteNumber;
 export const asText = (value: unknown, fallback = "") => asTrimmedString(value, fallback);
+const DEPARTMENTS_CACHE_TTL_MS = 5 * 60 * 1000;
+
+let departmentsCache: { data: DepartmentOption[]; expiresAt: number } | null = null;
+let departmentsPromise: Promise<DepartmentOption[]> | null = null;
 
 export function asBoolean(value: unknown, fallback = false) {
     if (typeof value === "boolean") {
@@ -151,6 +155,37 @@ export function normalizeDepartments(payload: DepartmentsResponse) {
     }
 
     return Array.from(uniqueDepartments.values());
+}
+
+export async function readDepartmentsCached() {
+    const now = Date.now();
+    if (departmentsCache && departmentsCache.expiresAt > now) {
+        return departmentsCache.data;
+    }
+
+    if (!departmentsPromise) {
+        departmentsPromise = (async () => {
+            const response = await fetch("/api/employee?view=departments", {
+                cache: "no-store",
+            });
+
+            if (!response.ok) {
+                const raw = await response.text().catch(() => "");
+                throw new Error(getErrorMessage(raw, "Department filter is temporarily unavailable."));
+            }
+
+            const departments = normalizeDepartments((await response.json()) as DepartmentsResponse);
+            departmentsCache = {
+                data: departments,
+                expiresAt: Date.now() + DEPARTMENTS_CACHE_TTL_MS,
+            };
+            return departments;
+        })().finally(() => {
+            departmentsPromise = null;
+        });
+    }
+
+    return departmentsPromise;
 }
 
 export function normalizeStickerTypes(payload: StickerTypesResponse) {
