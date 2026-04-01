@@ -20,8 +20,9 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
 
         return createProxyResponse(upstreamResponse);
     } catch (error) {
+        console.error("[api/employee/leave-requests/[id]#DELETE]", error);
         return NextResponse.json(
-            { message: error instanceof Error ? error.message : "Unable to cancel leave request." },
+            { message: "Unable to cancel leave request." },
             { status: 500 },
         );
     }

@@ -174,10 +174,10 @@ export default function NotificationCenter({
       prev.map((item) =>
         item.id === id
           ? {
-              ...item,
-              is_read: true,
-              read_at: item.read_at ?? new Date().toISOString(),
-            }
+            ...item,
+            is_read: true,
+            read_at: item.read_at ?? new Date().toISOString(),
+          }
           : item,
       ),
     );
@@ -239,141 +239,140 @@ export default function NotificationCenter({
 
   const content = (
     <section className="flex-1 space-y-6">
-          <div className="space-y-1">
-            <div className="flex items-center justify-between gap-3">
-              <h1 className="text-2xl font-bold">Notifications</h1>
-              {roleLabel ? (
-                <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${styles.badge}`}>
-                  {roleLabel}
-                </span>
-              ) : null}
-            </div>
-            <p className="text-sm text-slate-500">Stay on top of updates across your workspace.</p>
+      <div className="space-y-1">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold">Notifications</h1>
+          {roleLabel ? (
+            <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${styles.badge}`}>
+              {roleLabel}
+            </span>
+          ) : null}
+        </div>
+        <p className="text-sm text-slate-500">Stay on top of updates across your workspace.</p>
+      </div>
+
+      {error ? (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          {error}
+        </div>
+      ) : null}
+
+      {actionMessage ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+          {actionMessage}
+        </div>
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className={`rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ${styles.softRing}`}>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Notifications</p>
+          <p className="mt-2 text-3xl font-extrabold text-slate-900">{total.toLocaleString()}</p>
+        </div>
+        <div className={`rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ${styles.softRing}`}>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Unread</p>
+          <p className={`mt-2 text-3xl font-extrabold ${styles.unreadValue}`}>{unreadCount.toLocaleString()}</p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={readFilter}
+              onChange={(event) => setReadFilter(event.target.value as ReadFilter)}
+              className={`rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none ${styles.focus}`}
+            >
+              <option value="all">All status</option>
+              <option value="unread">Unread</option>
+              <option value="read">Read</option>
+            </select>
+
+            <select
+              value={typeFilter}
+              onChange={(event) => setTypeFilter(event.target.value as TypeFilter)}
+              className={`rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none ${styles.focus}`}
+            >
+              <option value="all">All types</option>
+              {NOTIFICATION_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {error ? (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
-              {error}
-            </div>
-          ) : null}
+          <button
+            type="button"
+            onClick={handleMarkAllAsRead}
+            disabled={actionLoading || unreadCount === 0}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold text-white shadow disabled:cursor-not-allowed disabled:opacity-60 ${styles.button}`}
+          >
+            Mark all as read
+          </button>
+        </div>
 
-          {actionMessage ? (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-              {actionMessage}
-            </div>
-          ) : null}
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className={`rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ${styles.softRing}`}>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Notifications</p>
-              <p className="mt-2 text-3xl font-extrabold text-slate-900">{total.toLocaleString()}</p>
-            </div>
-            <div className={`rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ${styles.softRing}`}>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Unread</p>
-              <p className={`mt-2 text-3xl font-extrabold ${styles.unreadValue}`}>{unreadCount.toLocaleString()}</p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <select
-                  value={readFilter}
-                  onChange={(event) => setReadFilter(event.target.value as ReadFilter)}
-                  className={`rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none ${styles.focus}`}
-                >
-                  <option value="all">All status</option>
-                  <option value="unread">Unread</option>
-                  <option value="read">Read</option>
-                </select>
-
-                <select
-                  value={typeFilter}
-                  onChange={(event) => setTypeFilter(event.target.value as TypeFilter)}
-                  className={`rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none ${styles.focus}`}
-                >
-                  <option value="all">All types</option>
-                  {NOTIFICATION_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleMarkAllAsRead}
-                disabled={actionLoading || unreadCount === 0}
-                className={`rounded-xl px-4 py-2 text-sm font-semibold text-white shadow disabled:cursor-not-allowed disabled:opacity-60 ${styles.button}`}
-              >
-                Mark all as read
-              </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-slate-50">
-                  <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    <th className="px-4 py-3">Title</th>
-                    <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Created at</th>
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-slate-50">
+              <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th className="px-4 py-3">Title</th>
+                <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">Created at</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredNotifications.map((item) => {
+                const isHigh = item.priority.toLowerCase() === "high";
+                return (
+                  <tr
+                    key={item.id}
+                    className="cursor-pointer hover:bg-slate-50"
+                    onClick={() => handleOpenNotification(item)}
+                  >
+                    <td
+                      className={`px-4 py-3 text-sm ${item.is_read ? "font-medium" : "font-bold"
+                        } ${isHigh ? "text-rose-600" : "text-slate-900"}`}
+                    >
+                      {item.title}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-700">{item.type}</td>
+                    <td className="px-4 py-3 text-sm text-slate-700">{formatDateTime(item.created_at)}</td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredNotifications.map((item) => {
-                    const isHigh = item.priority.toLowerCase() === "high";
-                    return (
-                      <tr
-                        key={item.id}
-                        className="cursor-pointer hover:bg-slate-50"
-                        onClick={() => handleOpenNotification(item)}
-                      >
-                        <td
-                          className={`px-4 py-3 text-sm ${
-                            item.is_read ? "font-medium" : "font-bold"
-                          } ${isHigh ? "text-rose-600" : "text-slate-900"}`}
-                        >
-                          {item.title}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-700">{item.type}</td>
-                        <td className="px-4 py-3 text-sm text-slate-700">{formatDateTime(item.created_at)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
-            {!loading && filteredNotifications.length === 0 ? (
-              <div className="px-4 py-6 text-sm text-slate-500">No notifications found for current filters.</div>
-            ) : null}
+        {!loading && filteredNotifications.length === 0 ? (
+          <div className="px-4 py-6 text-sm text-slate-500">No notifications found for current filters.</div>
+        ) : null}
 
-            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-              <button
-                type="button"
-                onClick={() => loadPage(page - 1)}
-                disabled={loading || page <= 1}
-                className="h-9 w-9 rounded-full border border-slate-200 text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Previous page"
-              >
-                {"<"}
-              </button>
-              <span className="text-sm font-semibold text-slate-700">
-                {page}/{totalPages}
-              </span>
-              <button
-                type="button"
-                onClick={() => loadPage(page + 1)}
-                disabled={loading || page >= totalPages}
-                className="h-9 w-9 rounded-full border border-slate-200 text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Next page"
-              >
-                {">"}
-              </button>
-            </div>
-          </div>
-        </section>
+        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
+          <button
+            type="button"
+            onClick={() => loadPage(page - 1)}
+            disabled={loading || page <= 1}
+            className="h-9 w-9 rounded-full border border-slate-200 text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Previous page"
+          >
+            {"<"}
+          </button>
+          <span className="text-sm font-semibold text-slate-700">
+            {page}/{totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => loadPage(page + 1)}
+            disabled={loading || page >= totalPages}
+            className="h-9 w-9 rounded-full border border-slate-200 text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Next page"
+          >
+            {">"}
+          </button>
+        </div>
+      </div>
+    </section>
   );
 
   return (

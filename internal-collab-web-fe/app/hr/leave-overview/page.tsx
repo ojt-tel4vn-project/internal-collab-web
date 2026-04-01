@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/dashboard/home/Icons";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 
 type LeaveRequestApi = {
     id?: unknown;
@@ -88,16 +89,7 @@ function asNumber(value: unknown, fallback = 0): number {
 }
 
 function parseErrorMessage(raw: string, fallback: string): string {
-    if (!raw) {
-        return fallback;
-    }
-
-    try {
-        const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string; error?: string };
-        return parsed.message || parsed.detail || parsed.title || parsed.error || fallback;
-    } catch {
-        return raw.slice(0, 200) || fallback;
-    }
+    return parseApiErrorMessage(raw, fallback);
 }
 
 function normalizeStatus(value: unknown): string {
@@ -293,7 +285,8 @@ export default function HrLeaveRequestPage() {
             setPendingRequests([]);
             setDepartmentByEmployeeId({});
             setDepartmentByName({});
-            setLoadError(error instanceof Error ? error.message : "Unable to load leave requests.");
+            logErrorToConsole("HrLeaveOverviewPage.loadData", error, { month, year });
+            setLoadError(toUserFriendlyError(error, "We couldn't load leave requests right now."));
         } finally {
             setIsLoading(false);
         }

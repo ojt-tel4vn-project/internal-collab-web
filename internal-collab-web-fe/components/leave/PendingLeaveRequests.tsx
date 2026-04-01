@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { parseApiErrorMessage } from "@/lib/api/errors";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 import type { LeaveStatusMeta } from "@/types/leave";
 
 type PendingLeaveRequestItem = {
@@ -52,7 +52,8 @@ export function PendingLeaveRequests({ items }: Props) {
             const raw = await res.text();
             throw new Error(parseApiErrorMessage(raw, "Unable to cancel leave request"));
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Unable to cancel leave request";
+            logErrorToConsole("PendingLeaveRequests.handleCancel", err, { id });
+            const message = toUserFriendlyError(err, "We couldn't cancel the leave request right now.");
             setError(message);
         } finally {
             setBusyId(null);

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { type SubmitEventHandler, useEffect, useState } from "react";
+import { logErrorToConsole, toUserFriendlyErrorMessage } from "@/lib/api/errors";
 
 function readApiMessage(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") {
@@ -11,13 +12,13 @@ function readApiMessage(payload: unknown): string | null {
 
   const data = payload as { detail?: unknown; message?: unknown; title?: unknown };
   if (typeof data.detail === "string" && data.detail.trim()) {
-    return data.detail;
+    return toUserFriendlyErrorMessage(data.detail, "We couldn't reset the password right now.");
   }
   if (typeof data.message === "string" && data.message.trim()) {
-    return data.message;
+    return toUserFriendlyErrorMessage(data.message, "We couldn't reset the password right now.");
   }
   if (typeof data.title === "string" && data.title.trim()) {
-    return data.title;
+    return toUserFriendlyErrorMessage(data.title, "We couldn't reset the password right now.");
   }
 
   return null;
@@ -79,8 +80,9 @@ export default function ResetPasswordPage() {
 
       setSuccess(readApiMessage(responseData) ?? "Password reset successful. You can sign in now.");
       setNewPassword("");
-    } catch {
-      setError("Unable to connect to the server. Please try again later.");
+    } catch (error) {
+      logErrorToConsole("ResetPasswordPage.handleSubmit", error, { hasToken: Boolean(token) });
+      setError("The system is temporarily unavailable. Please try again in a moment.");
     } finally {
       setLoading(false);
     }

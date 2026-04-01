@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "@/components/dashboard/home/Icons";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 
 type AttendanceDayDetail = {
     day: number;
@@ -89,12 +90,7 @@ function parseError(raw: string, fallback: string): string {
         return fallback;
     }
 
-    try {
-        const parsed = JSON.parse(raw) as { message?: string; detail?: string; title?: string; error?: string };
-        return parsed.message || parsed.detail || parsed.title || parsed.error || fallback;
-    } catch {
-        return raw.slice(0, 200) || fallback;
-    }
+    return parseApiErrorMessage(raw, fallback);
 }
 
 function statusLabel(status: string): string {
@@ -445,7 +441,8 @@ export default function HrAttendanceManagementPage() {
         } catch (error) {
             setRawItems([]);
             setDepartmentById({});
-            setLoadError(error instanceof Error ? error.message : "Unable to load attendance data.");
+            logErrorToConsole("HrAttendanceManagementPage.loadData", error, { month, year });
+            setLoadError(toUserFriendlyError(error, "We couldn't load attendance data right now."));
         } finally {
             setIsLoading(false);
         }
@@ -555,7 +552,8 @@ export default function HrAttendanceManagementPage() {
             setFileInputKey((current) => current + 1);
             await loadData();
         } catch (error) {
-            setUploadError(error instanceof Error ? error.message : "Unable to upload attendance CSV.");
+            logErrorToConsole("HrAttendanceManagementPage.handleUpload", error, { month, year, fileName: file?.name ?? null });
+            setUploadError(toUserFriendlyError(error, "We couldn't upload the attendance file right now."));
         } finally {
             setIsUploading(false);
         }

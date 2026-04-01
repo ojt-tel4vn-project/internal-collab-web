@@ -54,9 +54,9 @@ export async function POST(request: NextRequest) {
 
         return createProxyResponse(upstreamResponse);
     } catch (error) {
-        const message = error instanceof Error ? error.message : "Unable to upload document.";
+        console.error("[api/hr/documents#POST]", error);
         return NextResponse.json(
-            { message },
+            { message: "Unable to upload document." },
             { status: 500 },
         );
     }

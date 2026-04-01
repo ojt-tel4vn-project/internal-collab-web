@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { type SubmitEventHandler, useState } from "react";
+import { logErrorToConsole, toUserFriendlyErrorMessage } from "@/lib/api/errors";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -12,15 +13,15 @@ function readApiMessage(payload: unknown): string | null {
   }
 
   const data = payload as { detail?: unknown; message?: unknown; title?: unknown };
-  if (typeof data.detail === "string" && data.detail.trim()) {
-    return data.detail;
-  }
-  if (typeof data.message === "string" && data.message.trim()) {
-    return data.message;
-  }
-  if (typeof data.title === "string" && data.title.trim()) {
-    return data.title;
-  }
+    if (typeof data.detail === "string" && data.detail.trim()) {
+      return toUserFriendlyErrorMessage(data.detail, "We couldn't send reset instructions right now.");
+    }
+    if (typeof data.message === "string" && data.message.trim()) {
+      return toUserFriendlyErrorMessage(data.message, "We couldn't send reset instructions right now.");
+    }
+    if (typeof data.title === "string" && data.title.trim()) {
+      return toUserFriendlyErrorMessage(data.title, "We couldn't send reset instructions right now.");
+    }
 
   return null;
 }
@@ -74,8 +75,9 @@ export default function ForgotPasswordPage() {
         readApiMessage(responseData) ??
           "If your email exists in the system, password reset instructions have been sent.",
       );
-    } catch {
-      setError("Unable to connect to the server. Please try again later.");
+    } catch (error) {
+      logErrorToConsole("ForgotPasswordPage.handleSubmit", error, { email: normalizedEmail });
+      setError("The system is temporarily unavailable. Please try again in a moment.");
     } finally {
       setLoading(false);
     }

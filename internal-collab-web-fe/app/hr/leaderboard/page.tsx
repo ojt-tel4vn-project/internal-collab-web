@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { logErrorToConsole, toUserFriendlyError } from "@/lib/api/errors";
 import {
     buildLeaderboardSearchParams,
     getErrorMessage,
@@ -142,15 +143,15 @@ async function createStickerType(input: {
 }
 
 function getLeaderboardError(error: unknown) {
-    return error instanceof Error ? error.message : "Unable to load leaderboard.";
+    return toUserFriendlyError(error, "We couldn't load the leaderboard right now.");
 }
 
 function getDepartmentError(error: unknown) {
-    return error instanceof Error ? error.message : "Department filter is temporarily unavailable.";
+    return toUserFriendlyError(error, "We couldn't load the department list right now.");
 }
 
 function getStickerPoolError(error: unknown) {
-    return error instanceof Error ? error.message : "Unable to load sticker pool.";
+    return toUserFriendlyError(error, "We couldn't load the sticker pool right now.");
 }
 
 export default function HrLeaderboardPage() {
@@ -219,6 +220,7 @@ export default function HrLeaderboardPage() {
                     return;
                 }
 
+                logErrorToConsole("HrLeaderboard.readDepartmentsCached", error);
                 setDepartmentsState({
                     data: [],
                     error: getDepartmentError(error),
@@ -245,6 +247,7 @@ export default function HrLeaderboardPage() {
                     return;
                 }
 
+                logErrorToConsole("HrLeaderboard.readStickerTypes", error);
                 setStickerTypesState({
                     data: [],
                     error: getStickerPoolError(error),
@@ -279,6 +282,7 @@ export default function HrLeaderboardPage() {
                     return;
                 }
 
+                logErrorToConsole("HrLeaderboard.readLeaderboard", error, { filters });
                 setLeaderboardState({
                     data: [],
                     error: getLeaderboardError(error),
@@ -416,8 +420,9 @@ export default function HrLeaderboardPage() {
 
             await reloadStickerTypes();
         } catch (error) {
+            logErrorToConsole("HrLeaderboard.handleAddStickerType", error, { name: addForm.name.trim() });
             setAddState({
-                error: error instanceof Error ? error.message : "Unable to add sticker type.",
+                error: toUserFriendlyError(error, "We couldn't add the sticker type right now."),
                 loading: false,
                 success: null,
             });

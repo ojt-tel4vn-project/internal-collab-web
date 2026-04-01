@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 import { EmployeeDocumentsClient } from "@/components/documents/EmployeeDocumentsClient";
 import type { DocumentRecord } from "@/types/document";
 
@@ -15,13 +16,6 @@ type CategoryOption = {
     id: string;
     label: string;
     title: string;
-};
-
-type ErrorPayload = {
-    message?: string;
-    detail?: string;
-    title?: string;
-    error?: string;
 };
 
 const ROLE_OPTIONS = [
@@ -64,13 +58,7 @@ function buildCategoryOptions(documents: DocumentRecord[], categoryMap?: Record<
 }
 
 function extractErrorMessage(raw: string, fallback: string) {
-    if (!raw) return fallback;
-    try {
-        const parsed = JSON.parse(raw) as ErrorPayload;
-        return parsed.message || parsed.detail || parsed.title || parsed.error || fallback;
-    } catch {
-        return raw.slice(0, 200) || fallback;
-    }
+    return parseApiErrorMessage(raw, fallback);
 }
 
 export function HRDocumentsClient({ documents, categoryMap, userId }: Props) {
@@ -188,7 +176,8 @@ export function HRDocumentsClient({ documents, categoryMap, userId }: Props) {
             showSuccess("Document uploaded successfully.");
             router.refresh();
         } catch (uploadError) {
-            setError(uploadError instanceof Error ? uploadError.message : "Unable to upload document.");
+            logErrorToConsole("HRDocumentsClient.handleSubmit", uploadError, { categoryId, selectedRoles });
+            setError(toUserFriendlyError(uploadError, "We couldn't upload the document right now."));
         } finally {
             setIsSubmitting(false);
         }
