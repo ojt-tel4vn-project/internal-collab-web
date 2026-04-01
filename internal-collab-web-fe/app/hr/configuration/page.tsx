@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { logErrorToConsole, parseApiErrorMessage, toUserFriendlyError } from "@/lib/api/errors";
 import { QuotaConfigurationSection } from "@/components/configuration/QuotaConfigurationSection";
 
 type AttendanceConfiguration = {
