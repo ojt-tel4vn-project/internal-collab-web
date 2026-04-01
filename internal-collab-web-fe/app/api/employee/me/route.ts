@@ -71,9 +71,9 @@ export async function PUT(request: NextRequest) {
 
         return createProxyResponse(upstreamResponse);
     } catch (error) {
-        const message = error instanceof Error ? error.message : "Unable to update profile.";
+        console.error("[api/employee/me#PUT]", error);
         return NextResponse.json(
-            { message },
+            { message: "Unable to update profile." },
             { status: 500 },
         );
     }
@@ -100,9 +100,9 @@ export async function POST(request: NextRequest) {
 
         return createProxyResponse(upstreamResponse);
     } catch (error) {
-        const message = error instanceof Error ? error.message : "Unable to upload avatar.";
+        console.error("[api/employee/me#POST]", error);
         return NextResponse.json(
-            { message },
+            { message: "Unable to upload avatar." },
             { status: 500 },
         );
     }
