@@ -7,6 +7,7 @@ import {
     ClockIcon,
     DocumentIcon,
     GridIcon,
+    NoteIcon,
 } from "@/components/dashboard/home/Icons";
 import type { NavItem } from "@/types/dashboard";
 
@@ -15,6 +16,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Team", href: "/manager/team", icon: ClockIcon },
     { label: "Leave Approvals", href: "/manager/leave-approvals", icon: CalendarIcon },
     { label: "Documents", href: "/manager/documents", icon: DocumentIcon },
+    { label: "Configuration", href: "/manager/configuration", icon: NoteIcon },
 ];
 
 function isActive(pathname: string, href: string) {
