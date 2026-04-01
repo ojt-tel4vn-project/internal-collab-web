@@ -3,27 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { extractBirthdayEntries, filterBirthdaysByDate } from "@/lib/birthdays";
 
-type ProfileSummary = {
-    id?: unknown;
-    email?: unknown;
-    employee_code?: unknown;
-    data?: {
-        id?: unknown;
-        email?: unknown;
-        employee_code?: unknown;
-    };
-    body?: {
-        id?: unknown;
-        email?: unknown;
-        employee_code?: unknown;
-        data?: {
-            id?: unknown;
-            email?: unknown;
-            employee_code?: unknown;
-        };
-    };
-};
-
 type BirthdayNotificationConfig = {
     enabled: boolean;
     notificationTime: string;
@@ -43,41 +22,6 @@ function asText(value: unknown) {
     }
 
     return "";
-}
-
-function getProfileIdentifier(payload: ProfileSummary | null) {
-    if (!payload) {
-        return "";
-    }
-
-    const rootId = asText(payload.id);
-    if (rootId) {
-        return rootId;
-    }
-
-    const rootCode = asText(payload.employee_code);
-    if (rootCode) {
-        return rootCode;
-    }
-
-    const rootEmail = asText(payload.email);
-    if (rootEmail) {
-        return rootEmail;
-    }
-
-    const bodyId = asText(payload.body?.id ?? payload.body?.data?.id ?? payload.data?.id);
-    if (bodyId) {
-        return bodyId;
-    }
-
-    const bodyCode = asText(
-        payload.body?.employee_code ?? payload.body?.data?.employee_code ?? payload.data?.employee_code,
-    );
-    if (bodyCode) {
-        return bodyCode;
-    }
-
-    return asText(payload.body?.email ?? payload.body?.data?.email ?? payload.data?.email);
 }
 
 function getTodayKey(now = new Date()) {
@@ -180,7 +124,11 @@ function getNotificationDelayMs(notificationTime: string, now = new Date()) {
     return diff > 0 ? diff : 0;
 }
 
-export function BirthdayAnnouncementModal() {
+export function BirthdayAnnouncementModal({
+    userId,
+}: {
+    userId?: string | null;
+}) {
     const [names, setNames] = useState<string[]>([]);
     const [isOpen, setIsOpen] = useState(false);
 
@@ -198,19 +146,12 @@ export function BirthdayAnnouncementModal() {
 
         async function checkBirthdays() {
             try {
-                const [profileRes, birthdaysRes, configRes] = await Promise.all([
-                    fetch("/api/employee/me", { cache: "no-store" }),
+                const [birthdaysRes, configRes] = await Promise.all([
                     fetch("/api/employee/birthdays", { cache: "no-store" }),
                     fetch("/api/employee/birthdays/config", { cache: "no-store" }),
                 ]);
 
-                if (!profileRes.ok || !birthdaysRes.ok || !configRes.ok) {
-                    return;
-                }
-
-                const profilePayload = (await profileRes.json().catch(() => null)) as ProfileSummary | null;
-                const profileId = getProfileIdentifier(profilePayload);
-                if (!profileId) {
+                if (!birthdaysRes.ok || !configRes.ok) {
                     return;
                 }
 
@@ -238,6 +179,7 @@ export function BirthdayAnnouncementModal() {
                     return;
                 }
 
+                const profileId = asText(userId) || "anonymous";
                 const storageKey = `${STORAGE_PREFIX}:${profileId}:${getTodayKey()}`;
                 const showModal = () => {
                     try {
@@ -283,7 +225,7 @@ export function BirthdayAnnouncementModal() {
                 window.clearTimeout(timerId);
             }
         };
-    }, []);
+    }, [userId]);
 
     if (!isOpen || names.length === 0) {
         return null;

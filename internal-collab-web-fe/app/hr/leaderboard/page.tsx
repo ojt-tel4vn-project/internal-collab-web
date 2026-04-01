@@ -2,15 +2,14 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
-    DepartmentsResponse,
     buildLeaderboardSearchParams,
     getErrorMessage,
     getTimeFilterMeta,
     isAbortError,
     LeaderboardResponse,
-    normalizeDepartments,
     normalizeLeaderboard,
     normalizeStickerTypes,
+    readDepartmentsCached,
     StickerTypesResponse,
 } from "@/app/employee/leaderboard/data";
 import { LeaderboardOverview } from "@/components/leaderboard/LeaderboardOverview";
@@ -63,20 +62,6 @@ function parseSuccessMessage(payload: unknown, fallback: string): string {
     const data = asRecord(root?.data);
 
     return asText(body?.message) || asText(data?.message) || asText(root?.message) || fallback;
-}
-
-async function readDepartments(signal?: AbortSignal) {
-    const response = await fetch("/api/employee?view=departments", {
-        cache: "no-store",
-        signal,
-    });
-
-    if (!response.ok) {
-        const raw = await response.text().catch(() => "");
-        throw new Error(getErrorMessage(raw, "Department filter is temporarily unavailable."));
-    }
-
-    return normalizeDepartments((await response.json()) as DepartmentsResponse);
 }
 
 async function readLeaderboard(filters: LeaderboardFilters, signal?: AbortSignal) {
@@ -209,10 +194,9 @@ export default function HrLeaderboardPage() {
 
     useEffect(() => {
         let cancelled = false;
-        const departmentsController = new AbortController();
         const stickersController = new AbortController();
 
-        void readDepartments(departmentsController.signal)
+        void readDepartmentsCached()
             .then((departments) => {
                 if (cancelled) {
                     return;
@@ -270,7 +254,6 @@ export default function HrLeaderboardPage() {
 
         return () => {
             cancelled = true;
-            departmentsController.abort();
             stickersController.abort();
         };
     }, []);

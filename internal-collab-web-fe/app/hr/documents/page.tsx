@@ -95,7 +95,7 @@ async function fetchCategories(): Promise<CategoryMap> {
     const url = new URL("/api/hr/document-category", baseUrl).toString();
 
     const res = await fetch(url, {
-        cache: "no-store",
+        next: { revalidate: 86400 },
         headers: {
             accept: "application/json, application/problem+json",
             cookie: cookieHeader,
