@@ -87,7 +87,6 @@ const READ_IDS_STORAGE_KEY = "employee_documents_read_ids";
 export function EmployeeDocumentsClient({
     documents,
     categoryMap,
-    roleLabel,
     userId,
     canDelete = false,
     deleteEndpointBase = "/api/hr/documents",
