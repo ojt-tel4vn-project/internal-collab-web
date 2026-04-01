@@ -519,8 +519,15 @@ export default function HrAttendanceManagementPage() {
         setIsUploading(true);
         try {
             const csvText = (await file.text()).replace(/^\uFEFF/, "");
-            if (!csvText.trim()) {
-                throw new Error("CSV file is empty.");
+            const lines = csvText.split(/\r?\n/).filter(line => line.trim());
+            
+            if (lines.length < 2) {
+                throw new Error("File CSV rỗng hoặc thiếu dữ liệu. Vui lòng kiểm tra lại.");
+            }
+
+            const headerCols = lines[0].split(",");
+            if (headerCols.length < 8 && !lines[0].includes(";")) {
+                throw new Error("Sai định dạng. File mẫu yêu cầu tối thiểu 8 cột (Mã NV, Tên, BP, ...)");
             }
 
             const response = await fetch(`/api/employee/attendances?month=${month}&year=${year}`, {
